@@ -25,10 +25,10 @@ func init() {
 }
 
 func includeLaunchFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&machineArch, "arch", "a", "x86_64", "Machine architecture. default: x86_64")
+	cmd.Flags().StringVarP(&machineArch, "arch", "a", "aarch64", "Machine architecture. default: aarch64")
 	cmd.Flags().StringVarP(&machineCPU, "cpu", "c", "1", "Number of CPUs to allocate. Minimum: 1, default: 1.")
-	cmd.Flags().StringVarP(&machineMemory, "memory", "m", "1GB", "Amount of memory to allocate. Positive integers, in bytes, or with K, M, G suffix. Minimum: 128M, default: 1G.")
-	cmd.Flags().StringVarP(&machineDisk, "disk", "d", "5GB", "Disk space to allocate. Positive integers, in bytes, or with K, M, G suffix. Minimum: 512M, default: 5G.")
+	cmd.Flags().StringVarP(&machineMemory, "memory", "m", "2048", "Amount of memory to allocate. Positive integers, in bytes, or with K, M, G suffix. Minimum: 128M, default: 1G.")
+	cmd.Flags().StringVarP(&machineDisk, "disk", "d", "5G", "Disk space to allocate. Positive integers, in bytes, or with K, M, G suffix. Minimum: 512M, default: 5G.")
 	cmd.Flags().StringVarP(&machinePort, "port", "p", "10022", "Make VM accessible via SSH on this port. default: 10022")
 }
 
@@ -42,10 +42,10 @@ func launch(cmd *cobra.Command, args []string) {
 	machineConfig := vm.MachineConfig{
 		Alias:   utils.GenerateRandomAlias(),
 		Arch:    machineArch,
-		Version: "3.9.0",
+		Version: "3.15.4",
 		CPU:     machineCPU,
 		Memory:  machineMemory,
-		Disk:    machineDisk[0:1],
+		Disk:    machineDisk,
 		Port:    machinePort,
 	}
 	machineConfig.Location = filepath.Join(userHomeDir, ".macpine", machineConfig.Alias)
