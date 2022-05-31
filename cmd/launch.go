@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 
 	"github.com/beringresearch/macpine/host"
+	qemu "github.com/beringresearch/macpine/qemu"
 	"github.com/beringresearch/macpine/utils"
-	vm "github.com/beringresearch/macpine/vm"
 	"github.com/spf13/cobra"
 )
 
@@ -25,10 +25,10 @@ func init() {
 }
 
 func includeLaunchFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&machineArch, "arch", "a", "aarch64", "Machine architecture. default: aarch64")
+	cmd.Flags().StringVarP(&machineArch, "arch", "a", "x86-64", "Machine architecture. default: x86-64")
 	cmd.Flags().StringVarP(&machineCPU, "cpu", "c", "1", "Number of CPUs to allocate. Minimum: 1, default: 1.")
-	cmd.Flags().StringVarP(&machineMemory, "memory", "m", "2048", "Amount of memory to allocate. Positive integers, in bytes, or with K, M, G suffix. Minimum: 128M, default: 1G.")
-	cmd.Flags().StringVarP(&machineDisk, "disk", "d", "5G", "Disk space to allocate. Positive integers, in bytes, or with K, M, G suffix. Minimum: 512M, default: 5G.")
+	cmd.Flags().StringVarP(&machineMemory, "memory", "m", "2048", "Amount of memory to allocate. Positive integers, in bytes. Minimum: 128, default: 2048.")
+	cmd.Flags().StringVarP(&machineDisk, "disk", "d", "10G", "Disk space to allocate. Positive integers, in bytes, or with K, M, G suffix. Minimum: 512M, default: 10G.")
 	cmd.Flags().StringVarP(&machinePort, "port", "p", "10022", "Make VM accessible via SSH on this port. default: 10022")
 }
 
@@ -39,10 +39,10 @@ func launch(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	machineConfig := vm.MachineConfig{
+	machineConfig := qemu.MachineConfig{
 		Alias:   utils.GenerateRandomAlias(),
 		Arch:    machineArch,
-		Version: "3.15.4",
+		Version: "3.16.0",
 		CPU:     machineCPU,
 		Memory:  machineMemory,
 		Disk:    machineDisk,

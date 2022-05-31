@@ -1,4 +1,4 @@
-package vm
+package qemu
 
 import (
 	"errors"
@@ -35,6 +35,8 @@ func (c *MachineConfig) Install() error {
 		"-device", "virtio-rng-pci",
 		"-device", "virtio-balloon",
 		"-nographic", "-no-reboot",
+		"-no-acpi", //Disables ACPI support, usually used to control the power states of the host (i.e. standby modes)
+		"-no-user-config",
 		"-serial", "mon:stdio",
 		"-drive", "if=virtio,file="+filepath.Join(c.Location, "user-data.qcow2"),
 		"-monitor", "unix:monitor.sock,server,nowait",
