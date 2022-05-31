@@ -2,85 +2,85 @@ package qemu
 
 import (
 	"errors"
-	"io"
+	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"sync"
+	"strconv"
+	"strings"
+	"syscall"
 
 	"github.com/beringresearch/macpine/utils"
+	"gopkg.in/yaml.v2"
 )
 
 type MachineConfig struct {
-	Alias    string
-	Arch     string
-	Version  string
-	CPU      string
-	Memory   string
-	Disk     string
-	Port     string
-	Location string
+	Alias    string `yaml:"alias"`
+	Image    string `yaml:"image"`
+	Arch     string `yaml:"arch"`
+	Version  string `yaml:"version"`
+	CPU      string `yaml:"cpu"`
+	Memory   string `yaml:"memory"`
+	Disk     string `yaml:"disk"`
+	Port     string `yaml:"port"`
+	Location string `yaml:"location"`
 }
 
-func (c *MachineConfig) Install() error {
+//Stop stops an Alpine VM
+func (c *MachineConfig) Stop() error {
+	pid, err := ioutil.ReadFile(filepath.Join(c.Location, "alpine.pid"))
 
-	imageName, _ := utils.GetAlpineURL(c.Version, c.Arch)
-
-	cmd := exec.Command("qemu-system-aarch64",
-		"-M", "virt,highmem=off",
-		"-m", "2048",
-		"-rtc", "base=utc,clock=host,driftfix=slew",
-		"-bios", filepath.Join(c.Location, "QEMU_EFI.fd"),
-		"-device", "virtio-rng-pci",
-		"-device", "virtio-balloon",
-		"-nographic", "-no-reboot",
-		"-no-acpi", //Disables ACPI support, usually used to control the power states of the host (i.e. standby modes)
-		"-no-user-config",
-		"-serial", "mon:stdio",
-		"-drive", "if=virtio,file="+filepath.Join(c.Location, "user-data.qcow2"),
-		"-monitor", "unix:monitor.sock,server,nowait",
-		"-netdev", "user,id=net1,hostfwd=tcp:127.0.0.1:"+c.Port+"-:22",
-		"-device", "virtio-net-pci,netdev=net1",
-		"-smp", "4",
-		"-cdrom", filepath.Join(c.Location, imageName),
-		"-drive", "if=virtio,file="+filepath.Join(c.Location, "tmp.qcow2"),
-		"-cpu", "host",
-		"-accel", "hvf")
-
-	var errStdout, errStderr error
-	stdoutIn, _ := cmd.StdoutPipe()
-	stderrIn, _ := cmd.StderrPipe()
-	err := cmd.Start()
 	if err != nil {
-		return errors.New("cmd.Start() failed with " + err.Error())
+		log.Fatalf("unable to read file: %v", err)
 	}
 
-	var wg sync.WaitGroup
+	process := string(pid)
+	process = strings.TrimSuffix(process, "\n")
+	vmPID, _ := strconv.Atoi(process)
 
-	wg.Add(1)
-	go func() {
-		_, errStdout = copyAndCapture(os.Stdout, stdoutIn)
-		wg.Done()
-	}()
+	fmt.Println(vmPID)
 
-	_, errStderr = copyAndCapture(os.Stderr, stderrIn)
-
-	wg.Wait()
-
-	err = cmd.Wait()
+	err = syscall.Kill(vmPID, 15)
 	if err != nil {
-		return errors.New("cmd.Run() failed with " + err.Error())
-	}
-	if errStdout != nil || errStderr != nil {
-		return errors.New("failed to capture stdout or stderr")
+		return err
 	}
 
 	return nil
 }
 
-//Initialise macpine if this is a fresh install
-func (c *MachineConfig) Init() error {
+// Start starts up an Alpine VM
+func (c *MachineConfig) Start() error {
+
+	cmd := exec.Command("qemu-system-x86_64",
+		"-m", c.Memory,
+		"-smp", c.CPU,
+		"-hda", filepath.Join(c.Location, c.Image),
+		"-device", "e1000,netdev=net0",
+		"-netdev", "user,id=net0,hostfwd=tcp::"+c.Port+"-:22",
+		"-pidfile", filepath.Join(c.Location, "alpine.pid"),
+		"-chardev", "socket,id=char-serial,path="+filepath.Join(c.Location,
+			"alpine.sock")+",server=on,wait=off,logfile="+filepath.Join(c.Location, "alpine.log"),
+		"-serial", "chardev:char-serial",
+		"-chardev", "socket,id=char-qmp,path="+filepath.Join(c.Location, "alpine.qmp")+",server=on,wait=off",
+		"-qmp", "chardev:char-qmp",
+		"-parallel", "none",
+		"-name", "alpine",
+	)
+
+	cmd.Stdout = os.Stdout
+	err := cmd.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Just ran subprocess %d, exiting\n", cmd.Process.Pid)
+
+	return nil
+}
+
+//Launch macpine downloads a fresh image and creates a VM directory
+func (c *MachineConfig) Launch() error {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		return err
@@ -95,7 +95,6 @@ func (c *MachineConfig) Init() error {
 	imageName, alpineURL := utils.GetAlpineURL(c.Version, c.Arch)
 
 	if _, err := os.Stat(filepath.Join(cacheDir, imageName)); errors.Is(err, os.ErrNotExist) {
-		log.Println("Downloading " + imageName)
 		err = utils.DownloadFile(filepath.Join(cacheDir, imageName), alpineURL)
 		if err != nil {
 			return errors.New("unable to download Alpine " + c.Version + " for " + c.Arch + ": " + err.Error())
@@ -108,14 +107,20 @@ func (c *MachineConfig) Init() error {
 		return err
 	}
 
-	err = utils.DownloadFile(filepath.Join(targetDir, "QEMU_EFI.fd"),
-		"http://releases.linaro.org/components/kernel/uefi-linaro/16.02/release/qemu64/QEMU_EFI.fd")
-	if err != nil {
-		return errors.New("unable to download Alpine " + c.Version + " for " + c.Arch + ": " + err.Error())
-	}
-
 	_, err = utils.CopyFile(filepath.Join(cacheDir, imageName), filepath.Join(targetDir, imageName))
 	if err != nil {
+		return err
+	}
+
+	config, err := yaml.Marshal(&c)
+
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile(filepath.Join(c.Location, "config.yaml"), config, 0644)
+	if err != nil {
+
 		return err
 	}
 
@@ -141,28 +146,4 @@ func (c *MachineConfig) CreateQemuDiskImage(imageName string) error {
 	}
 
 	return nil
-}
-
-func copyAndCapture(w io.Writer, r io.Reader) ([]byte, error) {
-	var out []byte
-	buf := make([]byte, 1024)
-	for {
-		n, err := r.Read(buf[:])
-		if n > 0 {
-			d := buf[:n]
-			out = append(out, d...)
-
-			_, err := w.Write(d)
-			if err != nil {
-				return out, err
-			}
-		}
-		if err != nil {
-			// Read returns io.EOF at the end of file, which is not an error for us
-			if err == io.EOF {
-				err = nil
-			}
-			return out, err
-		}
-	}
 }

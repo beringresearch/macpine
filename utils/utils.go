@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+//CopyFile copies file from src to dst
 func CopyFile(src, dst string) (int64, error) {
 	sourceFileStat, err := os.Stat(src)
 	if err != nil {
@@ -38,33 +39,53 @@ func CopyFile(src, dst string) (int64, error) {
 	return nBytes, err
 }
 
-func DownloadFile(filepath string, url string) error {
+type WriteCounter struct {
+	Total uint64
+}
 
-	// Get the data
+func (wc *WriteCounter) Write(p []byte) (int, error) {
+	n := len(p)
+	wc.Total += uint64(n)
+	wc.PrintProgress()
+	return n, nil
+}
+
+func (wc WriteCounter) PrintProgress() {
+	fmt.Printf("\r%s", strings.Repeat(" ", 35))
+	fmt.Printf("\rDownloading... %3dMB complete", wc.Total/1000000)
+}
+
+func DownloadFile(filepath string, url string) error {
+	out, err := os.Create(filepath + ".tmp")
+	if err != nil {
+		return err
+	}
+
 	resp, err := http.Get(url)
 	if err != nil {
+		out.Close()
 		return err
 	}
 	defer resp.Body.Close()
 
-	// Create the file
-	out, err := os.Create(filepath)
-	if err != nil {
+	counter := &WriteCounter{}
+	if _, err = io.Copy(out, io.TeeReader(resp.Body, counter)); err != nil {
+		out.Close()
 		return err
 	}
-	defer out.Close()
 
-	// Write the body to file
-	_, err = io.Copy(out, resp.Body)
-	return err
+	fmt.Print("\n")
+	out.Close()
+
+	if err = os.Rename(filepath+".tmp", filepath); err != nil {
+		return err
+	}
+	return nil
 }
 
 func GetAlpineURL(version string, arch string) (string, string) {
-	imageFile := "alpine-standard-" + version + "-" + arch + ".iso"
-
-	shortVersion := strings.Split(version, ".")
-
-	url := "https://dl-cdn.alpinelinux.org/alpine/v" + strings.Join(shortVersion[0:2], ".") + "/releases/" + arch + "/" + imageFile
+	imageFile := "alpine_" + version + "-" + arch + ".qcow2"
+	url := "https://github.com/beringresearch/macpine/releases/download/v.01/" + imageFile
 	return imageFile, url
 }
 
