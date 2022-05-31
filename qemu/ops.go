@@ -28,26 +28,46 @@ type MachineConfig struct {
 	Location string `yaml:"location"`
 }
 
-//Stop stops an Alpine VM
-func (c *MachineConfig) Stop() error {
-	pidFile := filepath.Join(c.Location, "alpine.pid")
-	if _, err := os.Stat(pidFile); err == nil {
+//Status returns VM status
 
-		pid, err := ioutil.ReadFile(pidFile)
+func (c *MachineConfig) Status() (string, int) {
+	status := ""
+	var pid int
+
+	pidFile := filepath.Join(c.Location, "alpine.pid")
+
+	if _, err := os.Stat(pidFile); err == nil {
+		status = "Running"
+		vmPID, err := ioutil.ReadFile(pidFile)
 
 		if err != nil {
 			log.Fatalf("unable to read file: %v", err)
 		}
 
-		process := string(pid)
+		process := string(vmPID)
 		process = strings.TrimSuffix(process, "\n")
-		vmPID, _ := strconv.Atoi(process)
+		pid, _ = strconv.Atoi(process)
+	} else {
+		status = "Stopped"
+	}
+	return status, pid
+}
 
-		fmt.Println(vmPID)
+//Stop stops an Alpine VM
+func (c *MachineConfig) Stop() error {
+	pidFile := filepath.Join(c.Location, "alpine.pid")
+	if _, err := os.Stat(pidFile); err == nil {
 
-		err = syscall.Kill(vmPID, 15)
-		if err != nil {
-			return err
+		_, pid := c.Status()
+
+		if pid > 0 {
+
+			err = syscall.Kill(pid, 15)
+			if err != nil {
+				return err
+			}
+		} else {
+			return errors.New("unable to SIGTERM 15: incorrect PID")
 		}
 	}
 
@@ -78,7 +98,6 @@ func (c *MachineConfig) Start() error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Just ran subprocess %d, exiting\n", cmd.Process.Pid)
 
 	return nil
 }
@@ -127,6 +146,8 @@ func (c *MachineConfig) Launch() error {
 
 		return err
 	}
+
+	fmt.Println(string(config))
 
 	return nil
 }
