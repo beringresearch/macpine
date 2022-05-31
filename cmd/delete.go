@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -12,14 +13,13 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// startCmd starts an Alpine instance
-var startCmd = &cobra.Command{
-	Use:   "start NAME",
-	Short: "Start an Alpine VM by NAME.",
-	Run:   start,
+var deleteCmd = &cobra.Command{
+	Use:   "delete NAME",
+	Short: "Delete an Alpine VM by NAME.",
+	Run:   delete,
 }
 
-func start(cmd *cobra.Command, args []string) {
+func delete(cmd *cobra.Command, args []string) {
 
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -43,9 +43,11 @@ func start(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	err = host.Start(machineConfig)
+	err = host.Stop(machineConfig)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal(errors.New("unable to stop VM: " + err.Error()))
 	}
+
+	os.RemoveAll(machineConfig.Location)
 
 }

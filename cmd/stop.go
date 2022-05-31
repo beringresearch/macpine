@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// launchCmd launches an Alpine instance
+// stopCmd stops an Alpine instance
 var stopCmd = &cobra.Command{
 	Use:   "stop NAME",
 	Short: "Stop an Alpine VM by NAME.",

@@ -10,7 +10,7 @@ var completionOptions = cobra.CompletionOptions{DisableDefaultCmd: true}
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:               "macpine",
+	Use:               "alpine",
 	Short:             "Create, control and connect to Alpine instances.",
 	Long:              ``,
 	CompletionOptions: completionOptions,
@@ -29,4 +29,5 @@ func init() {
 	rootCmd.AddCommand(launchCmd)
 	rootCmd.AddCommand(stopCmd)
 	rootCmd.AddCommand(startCmd)
+	rootCmd.AddCommand(deleteCmd)
 }

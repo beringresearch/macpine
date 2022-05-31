@@ -30,21 +30,25 @@ type MachineConfig struct {
 
 //Stop stops an Alpine VM
 func (c *MachineConfig) Stop() error {
-	pid, err := ioutil.ReadFile(filepath.Join(c.Location, "alpine.pid"))
+	pidFile := filepath.Join(c.Location, "alpine.pid")
+	if _, err := os.Stat(pidFile); err == nil {
 
-	if err != nil {
-		log.Fatalf("unable to read file: %v", err)
-	}
+		pid, err := ioutil.ReadFile(pidFile)
 
-	process := string(pid)
-	process = strings.TrimSuffix(process, "\n")
-	vmPID, _ := strconv.Atoi(process)
+		if err != nil {
+			log.Fatalf("unable to read file: %v", err)
+		}
 
-	fmt.Println(vmPID)
+		process := string(pid)
+		process = strings.TrimSuffix(process, "\n")
+		vmPID, _ := strconv.Atoi(process)
 
-	err = syscall.Kill(vmPID, 15)
-	if err != nil {
-		return err
+		fmt.Println(vmPID)
+
+		err = syscall.Kill(vmPID, 15)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
