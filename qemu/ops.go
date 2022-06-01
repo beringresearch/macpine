@@ -80,12 +80,9 @@ func (c *MachineConfig) Start() error {
 	exposedPorts := "user,id=net0"
 
 	s := strings.Split(c.Port, ",")
-	fmt.Println(s)
-
 	for _, p := range s {
 		exposedPorts += ",hostfwd=tcp::" + p + "-:" + p
 	}
-	fmt.Println(exposedPorts)
 
 	cmd := exec.Command("qemu-system-x86_64",
 		"-m", c.Memory,

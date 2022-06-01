@@ -59,7 +59,7 @@ func list(cmd *cobra.Command, args []string) {
 	}
 
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 1, ' ', 0)
-	fmt.Fprintln(w, "NAME\tSTATUS\tPORT\tPID\t")
+	fmt.Fprintln(w, "NAME\tSTATUS\tPORTS\tPID\t")
 	for i, machine := range config {
 		fmt.Fprintln(w, machine.Alias+"    \t"+status[i]+"    \t"+machine.Port+"    \t"+fmt.Sprint(pid[i])+"    \t")
 	}
