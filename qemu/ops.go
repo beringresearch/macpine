@@ -76,7 +76,6 @@ func (c *MachineConfig) Stop() error {
 
 // Start starts up an Alpine VM
 func (c *MachineConfig) Start() error {
-
 	cmd := exec.Command("qemu-system-x86_64",
 		"-m", c.Memory,
 		"-smp", c.CPU,
@@ -96,7 +95,7 @@ func (c *MachineConfig) Start() error {
 	cmd.Stdout = os.Stdout
 	err := cmd.Start()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	return nil
