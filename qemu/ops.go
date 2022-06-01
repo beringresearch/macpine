@@ -87,8 +87,6 @@ func (c *MachineConfig) Start() error {
 		}
 	}
 
-	fmt.Println(exposedPorts)
-
 	cmd := exec.Command("qemu-system-x86_64",
 		"-m", c.Memory,
 		// use tcg accelerator with multi threading with 512MB translation block size
