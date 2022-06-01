@@ -18,6 +18,47 @@ import (
 //go:embed *.txt
 var f embed.FS
 
+//Uncompress uncompresses gzip
+func Uncompress(source string, destination string) error {
+	file, err := os.Open(source)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	gzRead, err := gzip.NewReader(file)
+	if err != nil {
+		return err
+	}
+	defer gzRead.Close()
+
+	tarRead := tar.NewReader(gzRead)
+	for {
+		cur, err := tarRead.Next()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return err
+		}
+
+		os.MkdirAll(destination, 0777)
+
+		switch cur.Typeflag {
+
+		case tar.TypeReg:
+			create, err := os.Create(filepath.Join(destination, cur.Name))
+			if err != nil {
+				return err
+			}
+			defer create.Close()
+			create.ReadFrom(tarRead)
+		case tar.TypeLink:
+			os.Link(cur.Linkname, cur.Name)
+		}
+	}
+	return nil
+}
+
 // Compress creates a tar.gz of a Direcotry
 func Compress(files []string, buf io.Writer) error {
 	gw := gzip.NewWriter(buf)

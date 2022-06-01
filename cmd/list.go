@@ -14,7 +14,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// listCmd starts an Alpine instance
+// listCmd lists Alpine instances
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all available Alpine VM instances.",
