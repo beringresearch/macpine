@@ -76,12 +76,30 @@ func (c *MachineConfig) Stop() error {
 
 // Start starts up an Alpine VM
 func (c *MachineConfig) Start() error {
+
+	exposedPorts := "user,id=net0"
+
+	s := strings.Split(c.Port, ",")
+	fmt.Println(s)
+
+	for _, p := range s {
+		exposedPorts += ",hostfwd=tcp::" + p + "-:" + p
+	}
+	fmt.Println(exposedPorts)
+
 	cmd := exec.Command("qemu-system-x86_64",
 		"-m", c.Memory,
-		"-smp", c.CPU,
+		// use tcg accelerator with multi threading with 512MB translation block size
+		// https://qemu-project.gitlab.io/qemu/devel/multi-thread-tcg.html?highlight=tcg
+		// https://qemu-project.gitlab.io/qemu/system/invocation.html?highlight=tcg%20opts
+		// this will make sure each vCPU will be backed by 1 host user thread.
+		"-accel", "tcg,thread=multi,tb-size=512",
+		//disable CPU S3 state.
+		"-global", "ICH9-LPC.disable_s3=1",
+		"-smp", c.CPU+",sockets=1,cores="+c.CPU+",threads=1",
 		"-hda", filepath.Join(c.Location, c.Image),
 		"-device", "e1000,netdev=net0",
-		"-netdev", "user,id=net0,hostfwd=tcp::"+c.Port+"-:22",
+		"-netdev", exposedPorts,
 		"-pidfile", filepath.Join(c.Location, "alpine.pid"),
 		"-chardev", "socket,id=char-serial,path="+filepath.Join(c.Location,
 			"alpine.sock")+",server=on,wait=off,logfile="+filepath.Join(c.Location, "alpine.log"),
