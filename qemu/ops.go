@@ -135,6 +135,11 @@ func (c *MachineConfig) Launch() error {
 		return err
 	}
 
+	err = c.ResizeQemuDiskImage()
+	if err != nil {
+		return err
+	}
+
 	config, err := yaml.Marshal(&c)
 
 	if err != nil {
@@ -148,6 +153,26 @@ func (c *MachineConfig) Launch() error {
 	}
 
 	fmt.Println(string(config))
+
+	return nil
+}
+
+//ResizeQemuDiskImage resizes a qcow2 disk image
+func (c *MachineConfig) ResizeQemuDiskImage() error {
+	if !utils.CommandExists("qemu-img") {
+		return errors.New("qemu-img is not available on $PATH. ensure qemu is installed")
+	}
+
+	cmd := exec.Command("qemu-img",
+		"resize",
+		filepath.Join(c.Location, c.Image),
+		"+"+c.Disk)
+
+	err := cmd.Run()
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
