@@ -1,20 +1,72 @@
 package utils
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"embed"
-	_ "embed"
 	"fmt"
 	"io"
 	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 )
 
 //go:embed *.txt
 var f embed.FS
+
+// Compress creates a tar.gz of a Direcotry
+func Compress(files []string, buf io.Writer) error {
+	gw := gzip.NewWriter(buf)
+	defer gw.Close()
+	tw := tar.NewWriter(gw)
+	defer tw.Close()
+
+	for _, file := range files {
+		err := addToArchive(tw, file)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func addToArchive(tw *tar.Writer, filename string) error {
+
+	file, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	info, err := file.Stat()
+	if err != nil {
+		return err
+	}
+
+	header, err := tar.FileInfoHeader(info, info.Name())
+	if err != nil {
+		return err
+	}
+
+	header.Name = filepath.Base(filename)
+
+	err = tw.WriteHeader(header)
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(tw, file)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
 
 //CopyFile copies file from src to dst
 func CopyFile(src, dst string) (int64, error) {
