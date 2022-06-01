@@ -87,7 +87,9 @@ func (c *MachineConfig) Start() error {
 		}
 	}
 
-	cmd := exec.Command("qemu-system-x86_64",
+	qemuCmd := "qemu-system-" + c.Arch
+
+	cmd := exec.Command(qemuCmd,
 		"-m", c.Memory,
 		// use tcg accelerator with multi threading with 512MB translation block size
 		// https://qemu-project.gitlab.io/qemu/devel/multi-thread-tcg.html?highlight=tcg
@@ -98,6 +100,7 @@ func (c *MachineConfig) Start() error {
 		"-global", "ICH9-LPC.disable_s3=1",
 		"-smp", c.CPU+",sockets=1,cores="+c.CPU+",threads=1",
 		"-hda", filepath.Join(c.Location, c.Image),
+		"-nographic",
 		"-device", "e1000,netdev=net0",
 		"-netdev", exposedPorts,
 		"-pidfile", filepath.Join(c.Location, "alpine.pid"),
