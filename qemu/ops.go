@@ -25,6 +25,7 @@ type MachineConfig struct {
 	Memory   string `yaml:"memory"`
 	Disk     string `yaml:"disk"`
 	Port     string `yaml:"port"`
+	SSHPort  string `yaml:"sshport"`
 	Location string `yaml:"location"`
 }
 
@@ -77,12 +78,16 @@ func (c *MachineConfig) Stop() error {
 // Start starts up an Alpine VM
 func (c *MachineConfig) Start() error {
 
-	exposedPorts := "user,id=net0"
+	exposedPorts := "user,id=net0,hostfwd=tcp::" + c.SSHPort + "-:22"
 
-	s := strings.Split(c.Port, ",")
-	for _, p := range s {
-		exposedPorts += ",hostfwd=tcp::" + p + "-:" + p
+	if c.Port != "" {
+		s := strings.Split(c.Port, ",")
+		for _, p := range s {
+			exposedPorts += ",hostfwd=tcp::" + p + "-:" + p
+		}
 	}
+
+	fmt.Println(exposedPorts)
 
 	cmd := exec.Command("qemu-system-x86_64",
 		"-m", c.Memory,
