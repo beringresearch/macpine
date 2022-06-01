@@ -15,7 +15,7 @@ import (
 // startCmd starts an Alpine instance
 var startCmd = &cobra.Command{
 	Use:   "start NAME",
-	Short: "Start an Alpine VM by NAME.",
+	Short: "Start an Alpine VM.",
 	Run:   start,
 }
 

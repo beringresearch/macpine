@@ -16,7 +16,7 @@ import (
 // publishCmd stops an Alpine instance
 var publishCmd = &cobra.Command{
 	Use:   "publish NAME",
-	Short: "Publish an Alpine VM by NAME.",
+	Short: "Publish an Alpine VM.",
 	Run:   publish,
 }
 
