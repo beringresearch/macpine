@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/beringresearch/macpine/utils"
 	"golang.org/x/crypto/ssh"
@@ -237,6 +238,13 @@ func (c *MachineConfig) Start() error {
 		return err
 	}
 
+	time.Sleep(1 * time.Second)
+	status, _ := c.Status()
+
+	if status == "Stopped" {
+		return errors.New("unable to start vm")
+	}
+
 	return nil
 }
 
@@ -280,30 +288,34 @@ func (c *MachineConfig) Launch() error {
 
 	_, err = utils.CopyFile(filepath.Join(cacheDir, imageName), filepath.Join(targetDir, imageName))
 	if err != nil {
+		os.RemoveAll(targetDir)
 		return err
 	}
 
 	if c.Arch == "aarch64" {
 		_, err = utils.CopyFile(filepath.Join(cacheDir, "qemu_efi.fd"), filepath.Join(targetDir, "qemu_efi.fd"))
 		if err != nil {
+			os.RemoveAll(targetDir)
 			return err
 		}
 	}
 
 	err = c.ResizeQemuDiskImage()
 	if err != nil {
-		return err
+		os.RemoveAll(targetDir)
+		return errors.New("unable to resize disk: " + err.Error())
 	}
 
 	config, err := yaml.Marshal(&c)
 
 	if err != nil {
+		os.RemoveAll(targetDir)
 		return err
 	}
 
 	err = ioutil.WriteFile(filepath.Join(c.Location, "config.yaml"), config, 0644)
 	if err != nil {
-
+		os.RemoveAll(targetDir)
 		return err
 	}
 
