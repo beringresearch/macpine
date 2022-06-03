@@ -33,14 +33,14 @@ To launch a brand new VM:
 ```bash
 alpine launch #launches with default parameters
 alpine launch -a aarch64 #create an aarch64 instance
-alpine launch -d 10GB -c 4 -m 2048 #create a machine with a 10GB disk, 4 cpus and 2GB of RAM
+alpine launch -d 10G -c 4 -m 2048 #create a machine with a 10GB disk, 4 cpus and 2GB of RAM
 
 ```
 
 Access VM via ssh:
 
 ```bash
-alpine launch -s 22 #launch VM and expose SSH port 22 to host port 22
+alpine launch -s 22 #launch VM and expose SSH port to host port 22
 ssh root@localhost -p 22 #password: root
 ```
 
