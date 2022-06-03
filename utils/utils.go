@@ -69,7 +69,7 @@ func Uncompress(source string, destination string) error {
 	return nil
 }
 
-// Compress creates a tar.gz of a Direcotry
+// Compress creates a tar.gz of a Directory
 func Compress(files []string, buf io.Writer) error {
 	gw := gzip.NewWriter(buf)
 	defer gw.Close()
