@@ -40,14 +40,14 @@ alpine launch -d 10G -c 4 -m 2048 #create a machine with a 10GB disk, 4 cpus and
 Access VM via ssh:
 
 ```bash
-alpine launch -s 22 #launch VM and expose SSH port to host port 22
+alpine launch -s 22 #launch a VM and expose SSH port to host port 22
 ssh root@localhost -p 22 #password: root
 ```
 
 Expose additional VM ports to host:
 
 ```bash
-alpine launch -s 23 -p 8888,5432 #launch VM, exposes SSH to host port 23 and forwards VM ports 8888 and 5432 to host ports 8888 and 5432
+alpine launch -s 23 -p 8888,5432 #launch a VM, expose SSH to host port 23 and forward VM ports 8888 and 5432 to host ports 8888 and 5432
 ```
 
 VMs can be easily packaged for export and re-use as tar.gz files:
