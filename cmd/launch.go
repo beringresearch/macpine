@@ -123,6 +123,8 @@ func launch(cmd *cobra.Command, args []string) {
 
 	err = host.Launch(machineConfig)
 	if err != nil {
+
+		os.RemoveAll(machineConfig.Location)
 		log.Fatal(err)
 	}
 

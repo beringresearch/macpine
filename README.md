@@ -12,6 +12,12 @@ The goal of this project is to enable MacOS users to:
 
 # Installation
 
+Ensure that QEMU is available to your system:
+
+```bash
+brew install qemu
+```
+
 ## Install from source
 
 ```bash
@@ -19,3 +25,33 @@ git clone https://github.com/beringresearch/macpine
 cd macpine
 make all
 ```
+
+# Getting Started
+
+To launch a brand new VM:
+
+```bash
+alpine launch #launches with default parameters
+alpine launch -a aarch64 #create an aarch64 instance
+alpine launch -d 10GB -c 4 -m 2048 #create a machine with a 10GB disk, 4 cpus and 2GB of RAM
+
+```
+
+Access VM via ssh:
+
+```bash
+alpine launch -s 22 #launch VM and expose SSH port 22 to host port 22
+ssh root@localhost -p 22 #password: root
+```
+
+Expose additional VM ports to host:
+
+```bash
+alpine launch -s 23 -p 8888,5432 #launch VM, exposes SSH to host port 23 and forwards VM ports 8888 and 5432 to host ports 8888 and 5432
+```
+
+VMs can be easily packaged for export and re-use as tar.gz files:
+
+
+```bash
+alpine publish
