@@ -1,4 +1,4 @@
-# Lightweight Alpine VMs on a Mac
+# Lightweight Alpine VMs on MacOS
 
 
 ## Motivation
