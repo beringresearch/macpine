@@ -17,6 +17,7 @@ import (
 
 	"github.com/beringresearch/macpine/utils"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/terminal"
 	"gopkg.in/yaml.v2"
 )
 
@@ -87,7 +88,12 @@ func (c *MachineConfig) ExecShell() error {
 		ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
 	}
 
-	if err := session.RequestPty("xterm", 80, 40, modes); err != nil {
+	width, height, err := terminal.GetSize(0)
+	if err != nil {
+		return err
+	}
+
+	if err := session.RequestPty("xterm", height, width, modes); err != nil {
 		return err
 	}
 
