@@ -34,4 +34,5 @@ func init() {
 	rootCmd.AddCommand(publishCmd)
 	rootCmd.AddCommand(importCmd)
 	rootCmd.AddCommand(execCmd)
+	rootCmd.AddCommand(editCmd)
 }
