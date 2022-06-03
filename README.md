@@ -20,7 +20,7 @@ brew install qemu
 
 ## Install the latest binary
 
-Download the [latest binary release](https://github.com/beringresearch/macpine/releases) for your system, rename it to `alpine` and add to your path by placing to e.g. e.g. `/usr/local/bin/`
+Download the [latest binary release](https://github.com/beringresearch/macpine/releases) for your system and add it to your path by placing to e.g. `/usr/local/bin/`
 
 ## Install from source
 
