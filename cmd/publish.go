@@ -11,6 +11,7 @@ import (
 	qemu "github.com/beringresearch/macpine/qemu"
 	"github.com/beringresearch/macpine/utils"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 )
 
 // publishCmd stops an Alpine instance
@@ -41,10 +42,17 @@ func publish(cmd *cobra.Command, args []string) {
 		log.Fatal("unknown machine " + args[0])
 	}
 
-	machineConfig := qemu.MachineConfig{
-		Alias: args[0],
+	machineConfig := qemu.MachineConfig{}
+
+	config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", args[0], "config.yaml"))
+	if err != nil {
+		log.Fatal(err)
 	}
-	machineConfig.Location = filepath.Join(userHomeDir, ".macpine", machineConfig.Alias)
+
+	err = yaml.Unmarshal(config, &machineConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	err = host.Stop(machineConfig)
 	if err != nil {
