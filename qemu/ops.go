@@ -197,29 +197,38 @@ func (c *MachineConfig) Start() error {
 
 	qemuCmd := "qemu-system-" + c.Arch
 
-	cmd := exec.Command(qemuCmd,
-		"-m", c.Memory,
-		// use tcg accelerator with multi threading with 512MB translation block size
-		// https://qemu-project.gitlab.io/qemu/devel/multi-thread-tcg.html?highlight=tcg
-		// https://qemu-project.gitlab.io/qemu/system/invocation.html?highlight=tcg%20opts
-		// this will make sure each vCPU will be backed by 1 host user thread.
-		"-accel", "tcg,thread=multi,tb-size=512",
-		//disable CPU S3 state.
-		"-global", "ICH9-LPC.disable_s3=1",
-		"-smp", c.CPU+",sockets=1,cores="+c.CPU+",threads=1",
+	var qemuArgs []string
+	aarch64Args := []string{"-cpu", "host",
+		"-cpu", "cortex-a72",
+		"-accel", "hvf",
+		"-M", "virt,highmem=off",
+		"-bios", filepath.Join(c.Location, "qemu_efi.fd")}
+	x86Args := []string{"-accel", "tcg,thread=multi,tb-size=512"}
+
+	commonArgs := []string{"-m", c.Memory, "-global", "ICH9-LPC.disable_s3=1",
+		"-smp", c.CPU + ",sockets=1,cores=" + c.CPU + ",threads=1",
 		"-hda", filepath.Join(c.Location, c.Image),
 		"-nographic",
 		"-device", "e1000,netdev=net0",
 		"-netdev", exposedPorts,
 		"-pidfile", filepath.Join(c.Location, "alpine.pid"),
-		"-chardev", "socket,id=char-serial,path="+filepath.Join(c.Location,
-			"alpine.sock")+",server=on,wait=off,logfile="+filepath.Join(c.Location, "alpine.log"),
+		"-chardev", "socket,id=char-serial,path=" + filepath.Join(c.Location,
+			"alpine.sock") + ",server=on,wait=off,logfile=" + filepath.Join(c.Location, "alpine.log"),
 		"-serial", "chardev:char-serial",
-		"-chardev", "socket,id=char-qmp,path="+filepath.Join(c.Location, "alpine.qmp")+",server=on,wait=off",
+		"-chardev", "socket,id=char-qmp,path=" + filepath.Join(c.Location, "alpine.qmp") + ",server=on,wait=off",
 		"-qmp", "chardev:char-qmp",
 		"-nographic",
 		"-parallel", "none",
-		"-name", "alpine",
+		"-name", "alpine"}
+
+	if c.Arch == "aarch64" {
+		qemuArgs = append(aarch64Args, commonArgs...)
+	}
+	if c.Arch == "x86_64" {
+		qemuArgs = append(x86Args, commonArgs...)
+	}
+
+	cmd := exec.Command(qemuCmd, qemuArgs...,
 	)
 
 	cmd.Stdout = os.Stdout
@@ -253,6 +262,16 @@ func (c *MachineConfig) Launch() error {
 		}
 	}
 
+	if c.Arch == "aarch64" {
+		if _, err := os.Stat(filepath.Join(cacheDir, "qemu_efi.fd")); errors.Is(err, os.ErrNotExist) {
+			err = utils.DownloadFile(filepath.Join(cacheDir, "qemu_efi.fd"),
+				"https://github.com/beringresearch/macpine/releases/download/v.01/qemu_efi.fd")
+			if err != nil {
+				return errors.New("unable to download bios :" + err.Error())
+			}
+		}
+	}
+
 	targetDir := filepath.Join(userHomeDir, ".macpine", c.Alias)
 	err = os.MkdirAll(targetDir, os.ModePerm)
 	if err != nil {
@@ -262,6 +281,13 @@ func (c *MachineConfig) Launch() error {
 	_, err = utils.CopyFile(filepath.Join(cacheDir, imageName), filepath.Join(targetDir, imageName))
 	if err != nil {
 		return err
+	}
+
+	if c.Arch == "aarch64" {
+		_, err = utils.CopyFile(filepath.Join(cacheDir, "qemu_efi.fd"), filepath.Join(targetDir, "qemu_efi.fd"))
+		if err != nil {
+			return err
+		}
 	}
 
 	err = c.ResizeQemuDiskImage()
