@@ -18,7 +18,7 @@ Ensure that QEMU is available to your system:
 brew install qemu
 ```
 
-## Install latest binary
+## Install the latest binary
 
 Download the [latest binary release](https://github.com/beringresearch/macpine/releases) for your system, rename it to `alpine` and add to your path by placing to e.g. e.g. `/usr/local/bin/`
 
@@ -72,4 +72,31 @@ This will create a file hot-cow.tar.gz which can be imported as:
 
 ```bash
 alpine import hot-cow.tar.gz
+```
+
+## Command Reference
+
+```bash
+alpine --help
+Create, control and connect to Alpine instances.
+
+Usage:
+  alpine [command]
+
+Available Commands:
+  delete      Delete an Alpine VM.
+  edit        Edit VM configuration using Vim.
+  exec        execute COMMAND on an Alpine VM.
+  help        Help about any command
+  import      Imports Alpine VM instances.
+  launch      Launch an Alpine VM.
+  list        List all available Alpine VM instances.
+  publish     Publish an Alpine VM.
+  start       Start an Alpine VM.
+  stop        Stop an Alpine VM.
+
+Flags:
+  -h, --help   help for alpine
+
+Use "alpine [command] --help" for more information about a command.
 ```
