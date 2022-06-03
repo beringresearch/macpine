@@ -18,6 +18,16 @@ import (
 //go:embed *.txt
 var f embed.FS
 
+//StringSliceContains check if string value is in []string
+func StringSliceContains(s []string, e string) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}
+
 //Uncompress uncompresses gzip
 func Uncompress(source string, destination string) error {
 	file, err := os.Open(source)

@@ -28,34 +28,33 @@ func list(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	dirList, err := ioutil.ReadDir(filepath.Join(userHomeDir, ".macpine"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	status := []string{}
 	config := []qemu.MachineConfig{}
 	pid := []int{}
 
-	for _, f := range dirList {
-		if f.Name() != "cache" {
-			machineConfig := qemu.MachineConfig{}
-			c, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", f.Name(), "config.yaml"))
-			if err != nil {
-				log.Fatal(err)
-			}
+	vmNames, err := host.ListVMNames()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-			err = yaml.Unmarshal(c, &machineConfig)
-			if err != nil {
-				log.Fatal(err)
-			}
+	for _, f := range vmNames {
 
-			config = append(config, machineConfig)
-
-			s, p := host.Status(machineConfig)
-			status = append(status, s)
-			pid = append(pid, p)
+		machineConfig := qemu.MachineConfig{}
+		c, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", f, "config.yaml"))
+		if err != nil {
+			log.Fatal(err)
 		}
+
+		err = yaml.Unmarshal(c, &machineConfig)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		config = append(config, machineConfig)
+
+		s, p := host.Status(machineConfig)
+		status = append(status, s)
+		pid = append(pid, p)
 	}
 
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 1, ' ', 0)
