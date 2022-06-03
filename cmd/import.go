@@ -34,15 +34,22 @@ func importMachine(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	err = utils.Uncompress(filepath.Join(userHomeDir, ".macpine", args[0]),
-		filepath.Join(userHomeDir, ".macpine", strings.Split(args[0], ".tar.gz")[0]))
+	targetDir := filepath.Join(userHomeDir, ".macpine", strings.Split(args[0], ".tar.gz")[0])
+	err = utils.Uncompress(filepath.Join(userHomeDir, ".macpine", args[0]), targetDir)
 
 	if err != nil {
-		log.Println(err)
+		err = os.Remove(filepath.Join(userHomeDir, ".macpine", args[0]))
+		if err != nil {
+			log.Fatal("unable to import: " + err.Error())
+		}
+
+		os.RemoveAll(targetDir)
+		log.Fatal("unable to import: " + err.Error())
 	}
 
 	err = os.Remove(filepath.Join(userHomeDir, ".macpine", args[0]))
 	if err != nil {
-		log.Fatal(err)
+		os.RemoveAll(targetDir)
+		log.Fatal("unable to import: " + err.Error())
 	}
 }
