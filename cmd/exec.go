@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/beringresearch/macpine/host"
 	qemu "github.com/beringresearch/macpine/qemu"
@@ -12,28 +13,30 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// startCmd starts an Alpine instance
-var startCmd = &cobra.Command{
-	Use:   "start NAME",
-	Short: "Start an Alpine VM.",
-	Run:   start,
+// execCmd executes command on alpine vm
+var execCmd = &cobra.Command{
+	Use:   "exec NAME COMMAND",
+	Short: "execute COMMAND on an Alpine VM.",
+	Run:   exec,
 }
 
-func start(cmd *cobra.Command, args []string) {
+func exec(cmd *cobra.Command, args []string) {
+	if len(args) == 0 {
+		log.Fatal("missing VM name")
+		return
+	}
+
+	instName := args[0]
+	cmdArgs := strings.Join(args[1:], " ")
 
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if len(args) == 0 {
-		log.Fatal("missing name - please provide VM name")
-		return
-	}
-
 	machineConfig := qemu.MachineConfig{}
 
-	config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", args[0], "config.yaml"))
+	config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", instName, "config.yaml"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -43,9 +46,8 @@ func start(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	err = host.Start(machineConfig)
+	err = host.Exec(machineConfig, cmdArgs)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }

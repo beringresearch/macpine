@@ -1,10 +1,13 @@
 package qemu
 
 import (
+	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,6 +16,8 @@ import (
 	"syscall"
 
 	"github.com/beringresearch/macpine/utils"
+	"golang.org/x/crypto/ssh"
+	"golang.org/x/term"
 	"gopkg.in/yaml.v2"
 )
 
@@ -29,8 +34,111 @@ type MachineConfig struct {
 	Location string `yaml:"location"`
 }
 
-//Status returns VM status
+//ExecShell starts an interactive shell terminal in VM
+func (c *MachineConfig) ExecShell() error {
 
+	host := "localhost:" + c.SSHPort
+	user := "root"
+	pwd := "root"
+
+	var err error
+
+	conf := &ssh.ClientConfig{
+		User:            user,
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Auth: []ssh.AuthMethod{
+			ssh.Password(pwd),
+		},
+	}
+
+	var conn *ssh.Client
+
+	conn, err = ssh.Dial("tcp", host, conf)
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	session, err := conn.NewSession()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	session.Stdout = os.Stdout
+	session.Stderr = os.Stderr
+	in, _ := session.StdinPipe()
+
+	modes := ssh.TerminalModes{
+		ssh.ECHO:          0,     // disable echoing
+		ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
+		ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
+	}
+
+	width, height, err := term.GetSize(0)
+	if err != nil {
+		return err
+	}
+
+	if err := session.RequestPty("xterm", height, width, modes); err != nil {
+		return err
+	}
+
+	if err := session.Shell(); err != nil {
+		return err
+	}
+
+	for {
+		reader := bufio.NewReader(os.Stdin)
+		str, _ := reader.ReadString('\n')
+		fmt.Fprint(in, str)
+	}
+}
+
+//Exec executes command inside VM
+func (c *MachineConfig) Exec(cmd string) error {
+
+	config := &ssh.ClientConfig{
+		User:            "root",
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Auth: []ssh.AuthMethod{
+			ssh.Password("root"),
+		},
+	}
+
+	client, err := ssh.Dial("tcp", net.JoinHostPort("localhost", c.SSHPort), config)
+	if err != nil {
+		return err
+	}
+
+	session, err := client.NewSession()
+	if err != nil {
+		return err
+	}
+	defer session.Close()
+
+	stdout := new(bytes.Buffer)
+	stderr := new(bytes.Buffer)
+	stdin := new(bytes.Buffer)
+
+	session.Stdout = stdout
+	session.Stderr = stderr
+	session.Stdin = stdin
+
+	if err := session.Run(cmd); err != nil {
+		return err
+	}
+
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(stdout.String())
+
+	return nil
+}
+
+//Status returns VM status
 func (c *MachineConfig) Status() (string, int) {
 	status := ""
 	var pid int
@@ -109,6 +217,7 @@ func (c *MachineConfig) Start() error {
 		"-serial", "chardev:char-serial",
 		"-chardev", "socket,id=char-qmp,path="+filepath.Join(c.Location, "alpine.qmp")+",server=on,wait=off",
 		"-qmp", "chardev:char-qmp",
+		"-nographic",
 		"-parallel", "none",
 		"-name", "alpine",
 	)
