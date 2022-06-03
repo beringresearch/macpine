@@ -20,7 +20,7 @@ var importCmd = &cobra.Command{
 func importMachine(cmd *cobra.Command, args []string) {
 
 	if len(args) == 0 {
-		log.Fatal("missing name - please provide VM name")
+		log.Fatal("missing VN name")
 		return
 	}
 
