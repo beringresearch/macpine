@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/beringresearch/macpine/utils"
 	"golang.org/x/crypto/ssh"
@@ -235,6 +236,13 @@ func (c *MachineConfig) Start() error {
 	err := cmd.Start()
 	if err != nil {
 		return err
+	}
+
+	time.Sleep(1 * time.Second)
+	status, _ := c.Status()
+
+	if status == "Stopped" {
+		return errors.New("unable to start vm")
 	}
 
 	return nil
