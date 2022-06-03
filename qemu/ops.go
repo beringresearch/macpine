@@ -17,7 +17,7 @@ import (
 
 	"github.com/beringresearch/macpine/utils"
 	"golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 	"gopkg.in/yaml.v2"
 )
 
@@ -40,21 +40,8 @@ func (c *MachineConfig) ExecShell() error {
 	host := "localhost:" + c.SSHPort
 	user := "root"
 	pwd := "root"
-	//pKey := []byte("<privateKey>")
 
 	var err error
-	//var signer ssh.Signer
-
-	// signer, err = ssh.ParsePrivateKey(pKey)
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// }
-
-	// var hostkeyCallback ssh.HostKeyCallback
-	// hostkeyCallback, err = knownhosts.New("~/.ssh/known_hosts")
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// }
 
 	conf := &ssh.ClientConfig{
 		User:            user,
@@ -88,7 +75,7 @@ func (c *MachineConfig) ExecShell() error {
 		ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
 	}
 
-	width, height, err := terminal.GetSize(0)
+	width, height, err := term.GetSize(0)
 	if err != nil {
 		return err
 	}

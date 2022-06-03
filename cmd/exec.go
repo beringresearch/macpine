@@ -13,7 +13,7 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// stopCmd stops an Alpine instance
+// execCmd executes command on alpine vm
 var execCmd = &cobra.Command{
 	Use:   "exec NAME COMMAND",
 	Short: "execute COMMAND on an Alpine VM.",
