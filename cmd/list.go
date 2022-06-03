@@ -11,6 +11,7 @@ import (
 	"github.com/beringresearch/macpine/host"
 	"github.com/beringresearch/macpine/qemu"
 	"github.com/spf13/cobra"
+	"golang.org/x/sys/unix"
 	"gopkg.in/yaml.v2"
 )
 
@@ -22,6 +23,8 @@ var listCmd = &cobra.Command{
 }
 
 func list(cmd *cobra.Command, args []string) {
+
+	fmt.Println(unix.Sysctl("machdep.cpu.brand_string"))
 
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
