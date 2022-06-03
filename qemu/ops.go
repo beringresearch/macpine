@@ -199,9 +199,10 @@ func (c *MachineConfig) Start() error {
 	qemuCmd := "qemu-system-" + c.Arch
 
 	var qemuArgs []string
-	aarch64Args := []string{"-cpu", "host",
-		"-cpu", "cortex-a72",
+	aarch64Args := []string{
+		//"-cpu", "host",
 		"-accel", "hvf",
+		"-cpu", "cortex-a72",
 		"-M", "virt,highmem=off",
 		"-bios", filepath.Join(c.Location, "qemu_efi.fd")}
 	x86Args := []string{"-accel", "tcg,thread=multi,tb-size=512"}
