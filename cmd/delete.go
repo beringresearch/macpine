@@ -27,7 +27,7 @@ func delete(cmd *cobra.Command, args []string) {
 	}
 
 	if len(args) == 0 {
-		log.Fatal("missing name - please provide VM name")
+		log.Fatal("missing VM name")
 		return
 	}
 
