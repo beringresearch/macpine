@@ -52,6 +52,20 @@ alpine launch -s 23 -p 8888,5432 #launch VM, exposes SSH to host port 23 and for
 
 VMs can be easily packaged for export and re-use as tar.gz files:
 
+```bash
+alpine list
+
+NAME                STATUS      SSH    PORTS ARCH        PID 
+forthright-hook     Running     23           aarch64     91598
+hot-cow             Running     22           x86_64      82361
+```
 
 ```bash
-alpine publish
+alpine publish hot-cow
+```
+
+This will create a file hot-cow.tar.gz which can be imported as:
+
+```bash
+alpine import hot-cow.tar.gz
+```
