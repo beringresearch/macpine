@@ -219,7 +219,6 @@ func (c *MachineConfig) Start() error {
 		"-serial", "chardev:char-serial",
 		"-chardev", "socket,id=char-qmp,path=" + filepath.Join(c.Location, "alpine.qmp") + ",server=on,wait=off",
 		"-qmp", "chardev:char-qmp",
-		"-nographic",
 		"-parallel", "none",
 		"-name", "alpine"}
 
@@ -319,8 +318,6 @@ func (c *MachineConfig) Launch() error {
 		os.RemoveAll(targetDir)
 		return err
 	}
-
-	fmt.Println(string(config))
 
 	return nil
 }

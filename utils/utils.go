@@ -158,7 +158,7 @@ func (wc *WriteCounter) Write(p []byte) (int, error) {
 
 func (wc WriteCounter) PrintProgress() {
 	fmt.Printf("\r%s", strings.Repeat(" ", 35))
-	fmt.Printf("\rDownloading... %3dMB complete", wc.Total/1000000)
+	fmt.Printf("\rRetrieving image... %3dMB complete", wc.Total/1000000)
 }
 
 func DownloadFile(filepath string, url string) error {
