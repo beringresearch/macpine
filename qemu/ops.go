@@ -212,12 +212,20 @@ func (c *MachineConfig) Start() error {
 	var qemuArgs []string
 
 	accelAarch64 := "hvf"
+
+	_, err = syscall.Sysctl("sysctl.proc_translated")
+	appleSilicon := true
+	if err != nil && err.Error() == "no such file or directory" {
+		accelAarch64 = "tcg"
+	}
+
 	cpuAarch64 := "cortex-a72"
 
 	if runtime.GOOS == "linux" {
 		accelAarch64 = "tcg"
 		cpuAarch64 = "cortex-a57"
 	}
+
 	aarch64Args := []string{
 		//"-cpu", "host",
 		"-accel", accelAarch64,
@@ -226,9 +234,11 @@ func (c *MachineConfig) Start() error {
 		"-bios", filepath.Join(c.Location, "qemu_efi.fd")}
 
 	accelx86 := "tcg"
-	if runtime.GOOS == "darwin" {
+
+	if (runtime.GOOS == "darwin") && !appleSilicon {
 		accelx86 += ",thread=multi,tb-size=512"
 	}
+
 	x86Args := []string{"-accel", accelx86}
 
 	commonArgs := []string{"-m", c.Memory, "-global", "ICH9-LPC.disable_s3=1",
