@@ -22,9 +22,11 @@ The goal of this project is to enable MacOS users to:
 
 # Installation
 
-Ensure that QEMU is available to your system:
+Macpine depends on QEMU >= 6.2.0_1:
 
 ```bash
+#brew update
+#brew upgrade
 brew install qemu
 ```
 
