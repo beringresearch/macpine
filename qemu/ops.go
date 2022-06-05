@@ -188,6 +188,11 @@ func (c *MachineConfig) Stop() error {
 // Start starts up an Alpine VM
 func (c *MachineConfig) Start() error {
 
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	exposedPorts := "user,id=net0,hostfwd=tcp::" + c.SSHPort + "-:22"
 
 	if c.Port != "" {
@@ -234,6 +239,7 @@ func (c *MachineConfig) Start() error {
 		"-chardev", "socket,id=char-qmp,path=" + filepath.Join(c.Location, "alpine.qmp") + ",server=on,wait=off",
 		"-qmp", "chardev:char-qmp",
 		"-parallel", "none",
+		"-virtfs", "local,path=" + userHomeDir + ",security_model=none,mount_tag=Home",
 		"-name", "alpine"}
 
 	if c.Arch == "aarch64" {
@@ -251,12 +257,28 @@ func (c *MachineConfig) Start() error {
 	// Uncomment to debug qemu messages
 	//cmd.Stderr = os.Stderr
 
-	err := cmd.Start()
+	log.Printf("Booting...")
+	err = cmd.Start()
 	if err != nil {
 		return err
 	}
 
 	time.Sleep(1 * time.Second)
+
+	err = utils.Retry(10, 2*time.Second, func() error {
+		err := c.Exec("mkdir -p /root/mnt/; mount -t 9p -o trans=virtio Home /root/mnt/ -oversion=9p2000.L")
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		return errors.New("unable to mount: " + err.Error())
+	}
+
+	log.Printf("Mounted file system on: /root/mnt/")
+
 	status, _ := c.Status()
 
 	if status == "Stopped" {
