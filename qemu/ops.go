@@ -199,14 +199,12 @@ func (c *MachineConfig) Start() error {
 
 	qemuCmd := "qemu-system-" + c.Arch
 
-	
-
 	var qemuArgs []string
 
 	accelAarch64 := "hvf"
 	cpuAarch64 := "cortex-a72"
-	
-	if runtime.GOOS=="linux"{
+
+	if runtime.GOOS == "linux" {
 		accelAarch64 = "tcg"
 		cpuAarch64 = "cortex-a57"
 	}
@@ -217,9 +215,8 @@ func (c *MachineConfig) Start() error {
 		"-M", "virt,highmem=off",
 		"-bios", filepath.Join(c.Location, "qemu_efi.fd")}
 
-	
 	accelx86 := "tcg"
-	if runtime.GOOS=="darwin"{
+	if runtime.GOOS == "darwin" {
 		accelx86 += ",thread=multi,tb-size=512"
 	}
 	x86Args := []string{"-accel", accelx86}
@@ -250,6 +247,10 @@ func (c *MachineConfig) Start() error {
 	)
 
 	cmd.Stdout = os.Stdout
+
+	// Uncomment to debug qemu messages
+	//cmd.Stderr = os.Stderr
+
 	err := cmd.Start()
 	if err != nil {
 		return err
@@ -267,6 +268,7 @@ func (c *MachineConfig) Start() error {
 
 //Launch macpine downloads a fresh image and creates a VM directory
 func (c *MachineConfig) Launch() error {
+
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		return err
