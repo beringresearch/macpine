@@ -255,7 +255,7 @@ func (c *MachineConfig) Start() error {
 		"-qmp", "chardev:char-qmp",
 		"-parallel", "none",
 		//"-virtfs", "local,path=" + c.Mount + ",security_model=none,mount_tag=Home",
-		"-fsdev", "local,path=" + c.Mount + ",security_model=passthrough,id=host0",
+		"-fsdev", "local,path=" + c.Mount + ",security_model=none,id=host0",
 		"-device", "virtio-9p-pci,fsdev=host0,mount_tag=host0",
 		"-name", "alpine"}
 
