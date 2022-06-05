@@ -36,7 +36,7 @@ func includeLaunchFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&machineDisk, "disk", "d", "10G", "Disk space to allocate. Positive integers, in bytes, or with K, M, G suffix.")
 	cmd.Flags().StringVarP(&machineMount, "mount", "", "", "Path to host directory to be exposed on guest. (default $HOME)")
 	cmd.Flags().StringVarP(&sshPort, "ssh", "s", "22", "Forward VM SSH port to host.")
-	cmd.Flags().StringVarP(&machinePort, "port", "p", "", "Forward VM ports to host. Multiple ports can be separate by `,`.")
+	cmd.Flags().StringVarP(&machinePort, "port", "p", "", "Forward VM ports to host. Multiple ports can be separated by `,`.")
 	cmd.Flags().StringVarP(&machineName, "name", "n", "", "Name for the instance")
 }
 
