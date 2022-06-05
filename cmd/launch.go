@@ -22,7 +22,7 @@ var launchCmd = &cobra.Command{
 	Run:   launch,
 }
 
-var machineArch, machineVersion, machineCPU, machineMemory, machineDisk, machinePort, sshPort, machineName string
+var machineArch, machineVersion, machineCPU, machineMemory, machineDisk, machinePort, sshPort, machineName, machineMount string
 
 func init() {
 	includeLaunchFlags(launchCmd)
@@ -34,6 +34,7 @@ func includeLaunchFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&machineCPU, "cpu", "c", "4", "Number of CPUs to allocate.")
 	cmd.Flags().StringVarP(&machineMemory, "memory", "m", "2048", "Amount of memory to allocate. Positive integers, in kilobytes.")
 	cmd.Flags().StringVarP(&machineDisk, "disk", "d", "10G", "Disk space to allocate. Positive integers, in bytes, or with K, M, G suffix.")
+	cmd.Flags().StringVarP(&machineMount, "mount", "", "", "Path to host directory to be exposed on gues. default: $HOME")
 	cmd.Flags().StringVarP(&sshPort, "ssh", "s", "22", "Forward VM SSH port to host.")
 	cmd.Flags().StringVarP(&machinePort, "port", "p", "", "Forward VM ports to host. Multiple ports can be separate by `,`.")
 	cmd.Flags().StringVarP(&machineName, "name", "n", "", "Name for the instance")
@@ -95,6 +96,12 @@ func correctArguments(machineVersion string, machineArch string, machineCPU stri
 		}
 	}
 
+	if machineMount != "" {
+		if _, err := os.Stat(machineMount); os.IsNotExist(err) {
+			return errors.New("mount directory " + machineMount + " does not exist")
+		}
+	}
+
 	return nil
 }
 
@@ -124,6 +131,10 @@ func launch(cmd *cobra.Command, args []string) {
 		log.Fatal("machine " + machineName + " exists")
 	}
 
+	if machineMount == "" {
+		machineMount = userHomeDir
+	}
+
 	machineConfig := qemu.MachineConfig{
 		Alias:   machineName,
 		Image:   "alpine_" + machineVersion + "-" + machineArch + ".qcow2",
@@ -132,6 +143,7 @@ func launch(cmd *cobra.Command, args []string) {
 		CPU:     machineCPU,
 		Memory:  machineMemory,
 		Disk:    machineDisk,
+		Mount:   machineMount,
 		Port:    machinePort,
 		SSHPort: sshPort,
 	}

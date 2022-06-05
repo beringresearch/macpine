@@ -31,6 +31,7 @@ type MachineConfig struct {
 	CPU      string `yaml:"cpu"`
 	Memory   string `yaml:"memory"`
 	Disk     string `yaml:"disk"`
+	Mount    string `yaml:"mount"`
 	Port     string `yaml:"port"`
 	SSHPort  string `yaml:"sshport"`
 	Location string `yaml:"location"`
@@ -193,6 +194,10 @@ func (c *MachineConfig) Start() error {
 		log.Fatal(err)
 	}
 
+	if c.Mount == "" {
+		c.Mount = userHomeDir
+	}
+
 	exposedPorts := "user,id=net0,hostfwd=tcp::" + c.SSHPort + "-:22"
 
 	if c.Port != "" {
@@ -239,7 +244,7 @@ func (c *MachineConfig) Start() error {
 		"-chardev", "socket,id=char-qmp,path=" + filepath.Join(c.Location, "alpine.qmp") + ",server=on,wait=off",
 		"-qmp", "chardev:char-qmp",
 		"-parallel", "none",
-		"-virtfs", "local,path=" + userHomeDir + ",security_model=none,mount_tag=Home",
+		"-virtfs", "local,path=" + c.Mount + ",security_model=none,mount_tag=Home",
 		"-name", "alpine"}
 
 	if c.Arch == "aarch64" {
@@ -277,7 +282,7 @@ func (c *MachineConfig) Start() error {
 		return errors.New("unable to mount: " + err.Error())
 	}
 
-	log.Printf("Mounted file system on: /root/mnt/")
+	log.Printf("Mounted " + c.Mount + ": /root/mnt/")
 
 	status, _ := c.Status()
 
