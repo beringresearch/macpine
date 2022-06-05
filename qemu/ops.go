@@ -254,7 +254,9 @@ func (c *MachineConfig) Start() error {
 		"-chardev", "socket,id=char-qmp,path=" + filepath.Join(c.Location, "alpine.qmp") + ",server=on,wait=off",
 		"-qmp", "chardev:char-qmp",
 		"-parallel", "none",
-		"-virtfs", "local,path=" + c.Mount + ",security_model=none,mount_tag=Home",
+		//"-virtfs", "local,path=" + c.Mount + ",security_model=none,mount_tag=Home",
+		"-fsdev", "local,path=" + c.Mount + ",security_model=none,id=mount1",
+		"-device", "virtio-9p-pci,fsdev=mount1,mount_tag=Home",
 		"-name", "alpine"}
 
 	if c.Arch == "aarch64" {
@@ -280,19 +282,24 @@ func (c *MachineConfig) Start() error {
 
 	time.Sleep(1 * time.Second)
 
-	err = utils.Retry(10, 2*time.Second, func() error {
-		err := c.Exec("mkdir -p /root/mnt/; mount -t 9p -o trans=virtio Home /root/mnt/ -oversion=9p2000.L")
+	if c.Arch == "aarch64" {
+		log.Println("mounting via 9p filesystem protocol is not yet supported on aarch64 machines")
+	} else {
+
+		err = utils.Retry(10, 2*time.Second, func() error {
+			err := c.Exec("mkdir -p /root/mnt/; mount -t 9p -o trans=virtio Home /root/mnt/ -oversion=9p2000.L")
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+
 		if err != nil {
-			return err
+			return errors.New("unable to mount: " + err.Error())
 		}
-		return nil
-	})
 
-	if err != nil {
-		return errors.New("unable to mount: " + err.Error())
+		log.Printf("Mounted " + c.Mount + ": /root/mnt/")
 	}
-
-	log.Printf("Mounted " + c.Mount + ": /root/mnt/")
 
 	status, _ := c.Status()
 
