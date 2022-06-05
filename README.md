@@ -2,7 +2,7 @@
 
 # Lightweight Alpine VMs on MacOS
 
-Create and manage lightweight Alpine VMs on Mac OS with:
+Create and manage lightweight Alpine VMs on MacOS with:
 
 
 :repeat: Seamless port forwarding
