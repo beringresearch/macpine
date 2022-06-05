@@ -20,6 +20,22 @@ import (
 //go:embed *.txt
 var f embed.FS
 
+//Retry retries a function
+func Retry(attempts int, sleep time.Duration, f func() error) (err error) {
+	for i := 0; i < attempts; i++ {
+		if i > 0 {
+			fmt.Printf("\r%s", strings.Repeat(".", i))
+			time.Sleep(sleep)
+			sleep *= 2
+		}
+		err = f()
+		if err == nil {
+			return nil
+		}
+	}
+	return fmt.Errorf("after %d attempts, last error: %s", attempts, err)
+}
+
 //Ping checks if connection is reachable
 func Ping(ip string, port string) error {
 	address, err := net.ResolveTCPAddr("tcp", ip+":"+port)
