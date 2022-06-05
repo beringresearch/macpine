@@ -4,10 +4,13 @@
 
 Create and manage lightweight Alpine VMs on Mac OS with:
 
-* Seamless port forwarding
-* Automatic file sharing
-* Bridged networking
-* aarch64 and x86_64 emulation
+:repeat: Seamless port forwarding
+
+:card_index_dividers: Automatic file sharing
+
+:roller_coaster: Bridged networking
+
+:rocket: aarch64 and x86_64 emulation
 
 ## Motivation
 The goal of this project is to enable MacOS users to:
