@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -21,7 +22,7 @@ var launchCmd = &cobra.Command{
 	Run:   launch,
 }
 
-var machineArch, machineVersion, machineCPU, machineMemory, machineDisk, machinePort, sshPort string
+var machineArch, machineVersion, machineCPU, machineMemory, machineDisk, machinePort, sshPort, machineName string
 
 func init() {
 	includeLaunchFlags(launchCmd)
@@ -35,6 +36,7 @@ func includeLaunchFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&machineDisk, "disk", "d", "10G", "Disk space to allocate. Positive integers, in bytes, or with K, M, G suffix.")
 	cmd.Flags().StringVarP(&sshPort, "ssh", "s", "22", "Forward VM SSH port to host.")
 	cmd.Flags().StringVarP(&machinePort, "port", "p", "", "Forward VM ports to host. Multiple ports can be separate by `,`.")
+	cmd.Flags().StringVarP(&machineName, "name", "n", "", "Name for the instance")
 }
 
 func correctArguments(machineVersion string, machineArch string, machineCPU string,
@@ -108,8 +110,22 @@ func launch(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
+	if machineName == "" {
+		machineName = utils.GenerateRandomAlias()
+	}
+
+	vmList, err := host.ListVMNames()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	exists := utils.StringSliceContains(vmList, machineName)
+	if exists {
+		log.Fatal("machine " + machineName + " exists")
+	}
+
 	machineConfig := qemu.MachineConfig{
-		Alias:   utils.GenerateRandomAlias(),
+		Alias:   machineName,
 		Image:   "alpine_" + machineVersion + "-" + machineArch + ".qcow2",
 		Arch:    machineArch,
 		Version: machineVersion,
@@ -127,5 +143,7 @@ func launch(cmd *cobra.Command, args []string) {
 		os.RemoveAll(machineConfig.Location)
 		log.Fatal(err)
 	}
+
+	fmt.Println("Launched:", machineName)
 
 }

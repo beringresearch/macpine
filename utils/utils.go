@@ -4,9 +4,11 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"embed"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -17,6 +19,26 @@ import (
 
 //go:embed *.txt
 var f embed.FS
+
+//Ping checks if connection is reachable
+func Ping(ip string, port string) error {
+	address, err := net.ResolveTCPAddr("tcp", ip+":"+port)
+	if err != nil {
+		return err
+	}
+
+	conn, err := net.DialTCP("tcp", nil, address)
+	if err != nil {
+		return nil
+	}
+
+	if conn != nil {
+		defer conn.Close()
+		return errors.New("port " + port + " already assigned on host")
+	}
+
+	return err
+}
 
 //StringSliceContains check if string value is in []string
 func StringSliceContains(s []string, e string) bool {
@@ -158,7 +180,7 @@ func (wc *WriteCounter) Write(p []byte) (int, error) {
 
 func (wc WriteCounter) PrintProgress() {
 	fmt.Printf("\r%s", strings.Repeat(" ", 35))
-	fmt.Printf("\rDownloading... %3dMB complete", wc.Total/1000000)
+	fmt.Printf("\rRetrieving image... %3dMB complete", wc.Total/1000000)
 }
 
 func DownloadFile(filepath string, url string) error {
