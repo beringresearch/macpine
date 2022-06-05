@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
@@ -198,14 +199,30 @@ func (c *MachineConfig) Start() error {
 
 	qemuCmd := "qemu-system-" + c.Arch
 
+	
+
 	var qemuArgs []string
+
+	accelAarch64 := "hvf"
+	cpuAarch64 := "cortex-a72"
+	
+	if runtime.GOOS=="linux"{
+		accelAarch64 = "tcg"
+		cpuAarch64 = "cortex-a57"
+	}
 	aarch64Args := []string{
 		//"-cpu", "host",
-		"-accel", "hvf",
-		"-cpu", "cortex-a72",
+		"-accel", accelAarch64,
+		"-cpu", cpuAarch64,
 		"-M", "virt,highmem=off",
 		"-bios", filepath.Join(c.Location, "qemu_efi.fd")}
-	x86Args := []string{"-accel", "tcg,thread=multi,tb-size=512"}
+
+	
+	accelx86 := "tcg"
+	if runtime.GOOS=="darwin"{
+		accelx86 += ",thread=multi,tb-size=512"
+	}
+	x86Args := []string{"-accel", accelx86}
 
 	commonArgs := []string{"-m", c.Memory, "-global", "ICH9-LPC.disable_s3=1",
 		"-smp", c.CPU + ",sockets=1,cores=" + c.CPU + ",threads=1",
