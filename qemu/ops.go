@@ -24,25 +24,26 @@ import (
 )
 
 type MachineConfig struct {
-	Alias    string `yaml:"alias"`
-	Image    string `yaml:"image"`
-	Arch     string `yaml:"arch"`
-	Version  string `yaml:"version"`
-	CPU      string `yaml:"cpu"`
-	Memory   string `yaml:"memory"`
-	Disk     string `yaml:"disk"`
-	Mount    string `yaml:"mount"`
-	Port     string `yaml:"port"`
-	SSHPort  string `yaml:"sshport"`
-	Location string `yaml:"location"`
+	Alias       string `yaml:"alias"`
+	Image       string `yaml:"image"`
+	Arch        string `yaml:"arch"`
+	CPU         string `yaml:"cpu"`
+	Memory      string `yaml:"memory"`
+	Disk        string `yaml:"disk"`
+	Mount       string `yaml:"mount"`
+	Port        string `yaml:"port"`
+	SSHPort     string `yaml:"sshport"`
+	SSHUser     string `yaml:"sshuser"`
+	SSHPassword string `yaml:"sshpassword"`
+	Location    string `yaml:"location"`
 }
 
 //ExecShell starts an interactive shell terminal in VM
 func (c *MachineConfig) ExecShell() error {
 
 	host := "localhost:" + c.SSHPort
-	user := "root"
-	pwd := "root"
+	user := c.SSHUser
+	pwd := c.SSHPassword
 
 	var err error
 
@@ -102,10 +103,10 @@ func (c *MachineConfig) ExecShell() error {
 func (c *MachineConfig) Exec(cmd string) error {
 
 	config := &ssh.ClientConfig{
-		User:            "root",
+		User:            c.SSHUser,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 		Auth: []ssh.AuthMethod{
-			ssh.Password("root"),
+			ssh.Password(c.SSHPassword),
 		},
 	}
 
@@ -189,15 +190,6 @@ func (c *MachineConfig) Stop() error {
 // Start starts up an Alpine VM
 func (c *MachineConfig) Start() error {
 
-	userHomeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if c.Mount == "" {
-		c.Mount = userHomeDir
-	}
-
 	exposedPorts := "user,id=net0,hostfwd=tcp::" + c.SSHPort + "-:22"
 
 	if c.Port != "" {
@@ -213,7 +205,7 @@ func (c *MachineConfig) Start() error {
 
 	accelAarch64 := "hvf"
 
-	_, err = syscall.Sysctl("sysctl.proc_translated")
+	_, err := syscall.Sysctl("sysctl.proc_translated")
 	appleSilicon := true
 	if err != nil && err.Error() == "no such file or directory" {
 		accelAarch64 = "tcg"
@@ -241,7 +233,10 @@ func (c *MachineConfig) Start() error {
 
 	x86Args := []string{"-accel", accelx86}
 
-	commonArgs := []string{"-m", c.Memory, "-global", "ICH9-LPC.disable_s3=1",
+	mountArgs := []string{"-fsdev", "local,path=" + c.Mount + ",security_model=none,id=host0",
+		"-device", "virtio-9p-pci,fsdev=host0,mount_tag=host0"}
+
+	commonArgs := []string{"-m", c.Memory,
 		"-smp", c.CPU + ",sockets=1,cores=" + c.CPU + ",threads=1",
 		"-hda", filepath.Join(c.Location, c.Image),
 		"-nographic",
@@ -255,15 +250,17 @@ func (c *MachineConfig) Start() error {
 		"-qmp", "chardev:char-qmp",
 		"-parallel", "none",
 		//"-virtfs", "local,path=" + c.Mount + ",security_model=none,mount_tag=Home",
-		"-fsdev", "local,path=" + c.Mount + ",security_model=none,id=host0",
-		"-device", "virtio-9p-pci,fsdev=host0,mount_tag=host0",
-		"-name", "alpine"}
+		"-name", c.Alias}
 
 	if c.Arch == "aarch64" {
 		qemuArgs = append(aarch64Args, commonArgs...)
 	}
 	if c.Arch == "x86_64" {
 		qemuArgs = append(x86Args, commonArgs...)
+	}
+
+	if c.Mount != "" {
+		qemuArgs = append(qemuArgs, mountArgs...)
 	}
 
 	cmd := exec.Command(qemuCmd, qemuArgs...,
@@ -282,19 +279,21 @@ func (c *MachineConfig) Start() error {
 
 	time.Sleep(1 * time.Second)
 
-	err = utils.Retry(10, 2*time.Second, func() error {
-		err := c.Exec("mkdir -p /root/mnt/; mount -t 9p -o trans=virtio host0 /root/mnt/")
+	if c.Mount != "" {
+		err = utils.Retry(10, 2*time.Second, func() error {
+			err := c.Exec("mkdir -p /root/mnt/; mount -t 9p -o trans=virtio host0 /root/mnt/")
+			if err != nil {
+				return err
+			}
+			return nil
+		})
+
 		if err != nil {
-			return err
+			return errors.New("unable to mount: " + err.Error())
 		}
-		return nil
-	})
 
-	if err != nil {
-		return errors.New("unable to mount: " + err.Error())
+		log.Printf("Mounted " + c.Mount + ": /root/mnt/")
 	}
-
-	log.Printf("Mounted " + c.Mount + ": /root/mnt/")
 
 	status, _ := c.Status()
 
@@ -319,12 +318,12 @@ func (c *MachineConfig) Launch() error {
 		return err
 	}
 
-	imageName, alpineURL := utils.GetAlpineURL(c.Version, c.Arch)
+	imageURL := utils.GetImageURL(c.Image)
 
-	if _, err := os.Stat(filepath.Join(cacheDir, imageName)); errors.Is(err, os.ErrNotExist) {
-		err = utils.DownloadFile(filepath.Join(cacheDir, imageName), alpineURL)
+	if _, err := os.Stat(filepath.Join(cacheDir, c.Image)); errors.Is(err, os.ErrNotExist) {
+		err = utils.DownloadFile(filepath.Join(cacheDir, c.Image), imageURL)
 		if err != nil {
-			return errors.New("unable to download Alpine " + c.Version + " for " + c.Arch + ": " + err.Error())
+			return errors.New("unable to download " + c.Image + " for " + c.Arch + ": " + err.Error())
 		}
 	}
 
@@ -344,7 +343,7 @@ func (c *MachineConfig) Launch() error {
 		return err
 	}
 
-	_, err = utils.CopyFile(filepath.Join(cacheDir, imageName), filepath.Join(targetDir, imageName))
+	_, err = utils.CopyFile(filepath.Join(cacheDir, c.Image), filepath.Join(targetDir, c.Image))
 	if err != nil {
 		os.RemoveAll(targetDir)
 		return err

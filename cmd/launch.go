@@ -22,29 +22,29 @@ var launchCmd = &cobra.Command{
 	Run:   launch,
 }
 
-var machineArch, machineVersion, machineCPU, machineMemory, machineDisk, machinePort, sshPort, machineName, machineMount string
+var machineArch, imageVersion, machineCPU, machineMemory, machineDisk, machinePort, sshPort, machineName, machineMount string
 
 func init() {
 	includeLaunchFlags(launchCmd)
 }
 
 func includeLaunchFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&machineVersion, "version", "v", "3.16.0", "Alpine image version.")
+	cmd.Flags().StringVarP(&imageVersion, "image", "i", "alpine_3.16.0", "Image to be launched.")
 	cmd.Flags().StringVarP(&machineArch, "arch", "a", "x86_64", "Machine architecture.")
 	cmd.Flags().StringVarP(&machineCPU, "cpu", "c", "4", "Number of CPUs to allocate.")
 	cmd.Flags().StringVarP(&machineMemory, "memory", "m", "2048", "Amount of memory to allocate. Positive integers, in kilobytes.")
 	cmd.Flags().StringVarP(&machineDisk, "disk", "d", "10G", "Disk space to allocate. Positive integers, in bytes, or with K, M, G suffix.")
-	cmd.Flags().StringVarP(&machineMount, "mount", "", "", "Path to host directory to be exposed on guest. (default $HOME)")
+	cmd.Flags().StringVarP(&machineMount, "mount", "", "", "Path to host directory to be exposed on guest.")
 	cmd.Flags().StringVarP(&sshPort, "ssh", "s", "22", "Forward VM SSH port to host.")
 	cmd.Flags().StringVarP(&machinePort, "port", "p", "", "Forward VM ports to host. Multiple ports can be separated by `,`.")
 	cmd.Flags().StringVarP(&machineName, "name", "n", "", "Name for the instance")
 }
 
-func correctArguments(machineVersion string, machineArch string, machineCPU string,
+func correctArguments(imageVersion string, machineArch string, machineCPU string,
 	machineMemory string, machineDisk string, sshPort string, machinePort string) error {
 
-	if machineVersion != "3.16.0" {
-		return errors.New("unsupported version. only -v 3.16.0 is currently available")
+	if !utils.StringSliceContains([]string{"alpine_3.16.0", "debian_11.3.0"}, imageVersion) {
+		return errors.New("unsupported image. only -i alpine_3.16.0 | debian_11.3.0 are currently available")
 	}
 
 	if machineArch != "aarch64" && machineArch != "x86_64" {
@@ -107,7 +107,7 @@ func correctArguments(machineVersion string, machineArch string, machineCPU stri
 
 func launch(cmd *cobra.Command, args []string) {
 
-	err := correctArguments(machineVersion, machineArch, machineCPU, machineMemory, machineDisk, sshPort, machinePort)
+	err := correctArguments(imageVersion, machineArch, machineCPU, machineMemory, machineDisk, sshPort, machinePort)
 	if err != nil {
 		log.Fatal("parameter format: " + err.Error())
 	}
@@ -131,21 +131,18 @@ func launch(cmd *cobra.Command, args []string) {
 		log.Fatal("machine " + machineName + " exists")
 	}
 
-	if machineMount == "" {
-		machineMount = userHomeDir
-	}
-
 	machineConfig := qemu.MachineConfig{
-		Alias:   machineName,
-		Image:   "alpine_" + machineVersion + "-" + machineArch + ".qcow2",
-		Arch:    machineArch,
-		Version: machineVersion,
-		CPU:     machineCPU,
-		Memory:  machineMemory,
-		Disk:    machineDisk,
-		Mount:   machineMount,
-		Port:    machinePort,
-		SSHPort: sshPort,
+		Alias:       machineName,
+		Image:       imageVersion + "-" + machineArch + ".qcow2",
+		Arch:        machineArch,
+		CPU:         machineCPU,
+		Memory:      machineMemory,
+		Disk:        machineDisk,
+		Mount:       machineMount,
+		Port:        machinePort,
+		SSHPort:     sshPort,
+		SSHUser:     "root",
+		SSHPassword: "root",
 	}
 	machineConfig.Location = filepath.Join(userHomeDir, ".macpine", machineConfig.Alias)
 

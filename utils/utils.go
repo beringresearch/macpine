@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -206,6 +207,9 @@ func DownloadFile(filepath string, url string) error {
 	}
 
 	resp, err := http.Get(url)
+	if resp.StatusCode != 200 {
+		return errors.New("requested image download is not supported: StatusCode " + strconv.Itoa(resp.StatusCode))
+	}
 	if err != nil {
 		out.Close()
 		return err
@@ -227,10 +231,9 @@ func DownloadFile(filepath string, url string) error {
 	return nil
 }
 
-func GetAlpineURL(version string, arch string) (string, string) {
-	imageFile := "alpine_" + version + "-" + arch + ".qcow2"
-	url := "https://github.com/beringresearch/macpine/releases/download/v.01/" + imageFile
-	return imageFile, url
+func GetImageURL(version string) string {
+	url := "https://github.com/beringresearch/macpine/releases/download/v.01/" + version
+	return url
 }
 
 func DirExists(path string) (bool, error) {

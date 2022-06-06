@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/tabwriter"
 
 	"github.com/beringresearch/macpine/host"
@@ -58,9 +59,9 @@ func list(cmd *cobra.Command, args []string) {
 	}
 
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 1, ' ', 0)
-	fmt.Fprintln(w, "NAME\tSTATUS\tSSH\tPORTS\tARCH\tPID\t")
+	fmt.Fprintln(w, "NAME\tOS\tSTATUS\tSSH\tPORTS\tARCH\tPID\t")
 	for i, machine := range config {
-		fmt.Fprintln(w, machine.Alias+"    \t"+status[i]+"    \t"+machine.SSHPort+"    \t"+machine.Port+"    \t"+machine.Arch+"    \t"+fmt.Sprint(pid[i])+"    \t")
+		fmt.Fprintln(w, machine.Alias+"    \t"+strings.Split(machine.Image, "_")[0]+"    \t"+status[i]+"    \t"+machine.SSHPort+"    \t"+machine.Port+"    \t"+machine.Arch+"    \t"+fmt.Sprint(pid[i])+"    \t")
 	}
 	w.Flush()
 
