@@ -270,7 +270,7 @@ func (c *MachineConfig) Start() error {
 	cmd.Stdout = os.Stdout
 
 	// Uncomment to debug qemu messages
-	cmd.Stderr = os.Stderr
+	//cmd.Stderr = os.Stderr
 
 	log.Printf("Booting...")
 	err = cmd.Start()
