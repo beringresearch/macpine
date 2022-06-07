@@ -211,17 +211,17 @@ func (c *MachineConfig) Start() error {
 		accelAarch64 = "tcg"
 	}
 
-	cpuAarch64 := "cortex-a72"
+	cpuType := map[string]string{
+		"aarch64": "cortex-a72",
+		"x86_64":  "max"}
 
 	if runtime.GOOS == "linux" {
 		accelAarch64 = "tcg"
-		cpuAarch64 = "cortex-a57"
+		//cpuAarch64 = "cortex-a57"
 	}
 
 	aarch64Args := []string{
-		//"-cpu", "host",
 		"-accel", accelAarch64,
-		"-cpu", cpuAarch64,
 		"-M", "virt,highmem=off",
 		"-bios", filepath.Join(c.Location, "qemu_efi.fd")}
 
@@ -237,8 +237,9 @@ func (c *MachineConfig) Start() error {
 		"-device", "virtio-9p-pci,fsdev=host0,mount_tag=host0"}
 
 	commonArgs := []string{"-m", c.Memory,
+		"-cpu", cpuType[c.Arch],
 		"-smp", c.CPU + ",sockets=1,cores=" + c.CPU + ",threads=1",
-		"-drive", "file=" + filepath.Join(c.Location, c.Image) + ",if=virtio",
+		"-drive", "if=virtio,file=" + filepath.Join(c.Location, c.Image),
 		//"-hda", filepath.Join(c.Location, c.Image),
 		"-nographic",
 		"-device", "e1000,netdev=net0",
@@ -270,7 +271,7 @@ func (c *MachineConfig) Start() error {
 	cmd.Stdout = os.Stdout
 
 	// Uncomment to debug qemu messages
-	//cmd.Stderr = os.Stderr
+	cmd.Stderr = os.Stderr
 
 	log.Printf("Booting...")
 	err = cmd.Start()
@@ -293,7 +294,7 @@ func (c *MachineConfig) Start() error {
 			return errors.New("unable to mount: " + err.Error())
 		}
 
-		log.Printf("Mounted " + c.Mount + ": /root/mnt/")
+		log.Printf("Mounted " + c.Mount + "--> /root/mnt/")
 	}
 
 	status, _ := c.Status()
