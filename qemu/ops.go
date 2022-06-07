@@ -238,7 +238,8 @@ func (c *MachineConfig) Start() error {
 
 	commonArgs := []string{"-m", c.Memory,
 		"-smp", c.CPU + ",sockets=1,cores=" + c.CPU + ",threads=1",
-		"-hda", filepath.Join(c.Location, c.Image),
+		"-drive", "file=" + filepath.Join(c.Location, c.Image) + ",if=virtio",
+		//"-hda", filepath.Join(c.Location, c.Image),
 		"-nographic",
 		"-device", "e1000,netdev=net0",
 		"-netdev", exposedPorts,
@@ -249,7 +250,7 @@ func (c *MachineConfig) Start() error {
 		"-chardev", "socket,id=char-qmp,path=" + filepath.Join(c.Location, "alpine.qmp") + ",server=on,wait=off",
 		"-qmp", "chardev:char-qmp",
 		"-parallel", "none",
-		//"-virtfs", "local,path=" + c.Mount + ",security_model=none,mount_tag=Home",
+		"-device", "virtio-rng-pci",
 		"-name", c.Alias}
 
 	if c.Arch == "aarch64" {
@@ -269,7 +270,7 @@ func (c *MachineConfig) Start() error {
 	cmd.Stdout = os.Stdout
 
 	// Uncomment to debug qemu messages
-	//cmd.Stderr = os.Stderr
+	cmd.Stderr = os.Stderr
 
 	log.Printf("Booting...")
 	err = cmd.Start()
