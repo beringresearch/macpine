@@ -187,6 +187,36 @@ func (c *MachineConfig) Stop() error {
 	return nil
 }
 
+func getHostArchitecture() (string, error) {
+	out, err := exec.Command("uname", "-m").Output()
+	return strings.TrimSpace(string(out)), err
+}
+
+//IsNativeArch tests if VM architecture is the same as host
+func (c *MachineConfig) IsNativeArch() bool {
+	hostArch, err := getHostArchitecture()
+	if err != nil {
+		return false
+	}
+
+	return (hostArch == "arm64" && c.Arch == "aarch64") || (hostArch == "x86_64" && c.Arch == "x86_64")
+}
+
+//GetAccel Returns platform-appropriate accelerator
+func (c *MachineConfig) GetAccel() string {
+	if c.IsNativeArch() {
+		switch runtime.GOOS {
+		case "darwin":
+			return "hvf"
+		case "linux":
+			return "kvm"
+		case "windows":
+			return "whpx" // untested
+		}
+	}
+	return "tcg"
+}
+
 // Start starts up an Alpine VM
 func (c *MachineConfig) Start() error {
 
@@ -203,44 +233,24 @@ func (c *MachineConfig) Start() error {
 
 	var qemuArgs []string
 
-	accelAarch64 := "hvf"
-
-	_, err := syscall.Sysctl("sysctl.proc_translated")
-	appleSilicon := true
-	if err != nil && err.Error() == "no such file or directory" {
-		accelAarch64 = "tcg"
-	}
-
 	cpuType := map[string]string{
 		"aarch64": "cortex-a72",
 		"x86_64":  "max"}
-
-	if runtime.GOOS == "linux" {
-		accelAarch64 = "tcg"
-		//cpuAarch64 = "cortex-a57"
-	}
+	cpu := cpuType[c.Arch]
 
 	aarch64Args := []string{
-		"-accel", accelAarch64,
 		"-M", "virt,highmem=off",
 		"-bios", filepath.Join(c.Location, "qemu_efi.fd")}
-
-	accelx86 := "tcg"
-
-	if (runtime.GOOS == "darwin") && !appleSilicon {
-		accelx86 += ",thread=multi,tb-size=512"
-	}
-
-	x86Args := []string{"-accel", accelx86}
 
 	mountArgs := []string{"-fsdev", "local,path=" + c.Mount + ",security_model=none,id=host0",
 		"-device", "virtio-9p-pci,fsdev=host0,mount_tag=host0"}
 
 	commonArgs := []string{"-m", c.Memory,
-		"-cpu", cpuType[c.Arch],
-		"-smp", c.CPU + ",sockets=1,cores=" + c.CPU + ",threads=1",
+		"-cpu", cpu,
+		"-accel", c.GetAccel(),
+		//"-smp", c.CPU + ",sockets=1,cores=" + c.CPU + ",threads=1",
+		"-smp", c.CPU,
 		"-drive", "if=virtio,file=" + filepath.Join(c.Location, c.Image),
-		//"-hda", filepath.Join(c.Location, c.Image),
 		"-nographic",
 		"-device", "e1000,netdev=net0",
 		"-netdev", exposedPorts,
@@ -258,7 +268,8 @@ func (c *MachineConfig) Start() error {
 		qemuArgs = append(aarch64Args, commonArgs...)
 	}
 	if c.Arch == "x86_64" {
-		qemuArgs = append(x86Args, commonArgs...)
+		//qemuArgs = append(x86Args, commonArgs...)
+		qemuArgs = commonArgs
 	}
 
 	if c.Mount != "" {
@@ -274,7 +285,7 @@ func (c *MachineConfig) Start() error {
 	cmd.Stderr = os.Stderr
 
 	log.Printf("Booting...")
-	err = cmd.Start()
+	err := cmd.Start()
 	if err != nil {
 		return err
 	}
@@ -294,7 +305,7 @@ func (c *MachineConfig) Start() error {
 			return errors.New("unable to mount: " + err.Error())
 		}
 
-		log.Printf("Mounted " + c.Mount + "--> /root/mnt/")
+		log.Printf("Mounted " + c.Mount + " --> /root/mnt/")
 	}
 
 	status, _ := c.Status()
