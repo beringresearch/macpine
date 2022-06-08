@@ -1,6 +1,7 @@
 package host
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/beringresearch/macpine/qemu"
@@ -9,6 +10,12 @@ import (
 
 // Start launches a new VM using user-defined configuration
 func Start(config qemu.MachineConfig) error {
+
+	status, _ := config.Status()
+	if status == "Running" {
+		return errors.New(config.Alias + " is already running")
+	}
+
 	ports := strings.Split(config.Port, ",")
 	allPorts := append([]string{config.SSHPort}, ports...)
 
