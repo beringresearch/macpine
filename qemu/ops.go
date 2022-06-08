@@ -214,7 +214,7 @@ func (c *MachineConfig) GetAccel() string {
 			return "whpx" // untested
 		}
 	}
-	return "tcg"
+	return "tcg,tb-size=1024"
 }
 
 // Start starts up an Alpine VM
@@ -245,11 +245,13 @@ func (c *MachineConfig) Start() error {
 	mountArgs := []string{"-fsdev", "local,path=" + c.Mount + ",security_model=none,id=host0",
 		"-device", "virtio-9p-pci,fsdev=host0,mount_tag=host0"}
 
-	commonArgs := []string{"-m", c.Memory,
+	commonArgs := []string{
+		"-global", "PIIX4_PM.disable_s3=1",
+		"-global", "ICH9-LPC.disable_s3=1",
+		"-m", c.Memory,
 		"-cpu", cpu,
 		"-accel", c.GetAccel(),
-		//"-smp", c.CPU + ",sockets=1,cores=" + c.CPU + ",threads=1",
-		"-smp", c.CPU,
+		"-smp", "cpus=" + c.CPU + ",sockets=1,cores=" + c.CPU + ",threads=1",
 		"-drive", "if=virtio,file=" + filepath.Join(c.Location, c.Image),
 		"-nographic",
 		"-device", "e1000,netdev=net0",
@@ -262,6 +264,7 @@ func (c *MachineConfig) Start() error {
 		"-qmp", "chardev:char-qmp",
 		"-parallel", "none",
 		"-device", "virtio-rng-pci",
+		"-rtc", "base=localtime",
 		"-name", c.Alias}
 
 	if c.Arch == "aarch64" {
