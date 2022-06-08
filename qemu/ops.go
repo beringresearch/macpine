@@ -294,7 +294,7 @@ func (c *MachineConfig) Start() error {
 
 	if c.Mount != "" {
 		err = utils.Retry(10, 2*time.Second, func() error {
-			err := c.Exec("mkdir -p /root/mnt/; mount -t 9p -o trans=virtio host0 /root/mnt/")
+			err := c.Exec("mkdir -p /root/mnt/; mount -t 9p -o trans=virtio host0 /root/mnt/ -oversion=9p2000.L,msize=104857600")
 			if err != nil {
 				return err
 			}
