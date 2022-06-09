@@ -18,7 +18,13 @@ echo "root:100000:65536" >> /etc/subgid
 
 # If you plan to run systemd based Linux distributions (Debian, Ubuntu, etc.)
 echo "systemd_container=yes" >>  /etc/conf.d/lxc
+
+# Make sure LXD group is created
 echo "LXD_OPTIONS=\" --group lxd\"" >> /etc/conf.d/lxd
+
+# Sort out UID mappings
+chmod -x /usr/bin/newuidmap
+chmod -x /usr/bin/newgidmap
 
 rc-update add lxc
 rc-update add lxd
