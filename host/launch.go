@@ -1,7 +1,6 @@
 package host
 
 import (
-	"errors"
 	"strings"
 
 	"github.com/beringresearch/macpine/qemu"
@@ -24,11 +23,6 @@ func Launch(config qemu.MachineConfig) error {
 	err := config.Launch()
 	if err != nil {
 		return err
-	}
-
-	err = config.Start()
-	if err != nil {
-		return errors.New("unable launch a new machine. " + err.Error())
 	}
 
 	return nil

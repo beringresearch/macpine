@@ -392,6 +392,57 @@ func (c *MachineConfig) Launch() error {
 		return err
 	}
 
+	err = c.Start()
+	if err != nil {
+		return errors.New("unable launch a new machine. " + err.Error())
+	}
+
+	//Resize disk on an alpine guest
+	if strings.Split(c.Image, "_")[0] == "alpine" {
+		err = utils.Retry(10, 1*time.Second, func() error {
+
+			log.Println("Waiting for guest")
+			err := c.Exec("apk add --no-cache e2fsprogs-extra sfdisk partx")
+			if err != nil {
+				return err
+			}
+
+			return nil
+		})
+		if err != nil {
+			return errors.New("unable install dependencies: " + err.Error())
+		}
+
+		err = utils.Retry(3, 1*time.Second, func() error {
+			err = c.Exec(`echo ", +" | sfdisk --no-reread -N 3 /dev/vda; partx -u /dev/vda`)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		})
+		if err != nil {
+			return errors.New("error expanding disk: " + err.Error())
+		}
+
+		err = utils.Retry(3, 1*time.Second, func() error {
+			err = c.Exec("resize2fs /dev/vda3")
+			if err != nil {
+				return err
+			}
+
+			return nil
+		})
+		if err != nil {
+			return errors.New("error expanding disk: " + err.Error())
+		}
+
+		err = c.Exec("df -h")
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
