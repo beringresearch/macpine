@@ -297,7 +297,7 @@ func (c *MachineConfig) Start() error {
 
 	if c.Mount != "" {
 		err = utils.Retry(10, 2*time.Second, func() error {
-			err := c.Exec("mkdir -p /root/mnt/; mount -t 9p -o trans=virtio host0 /root/mnt/ -oversion=9p2000.L,msize=104857600")
+			err := c.Exec("DIR=$(eval echo \"~$USER\");mkdir -p $DIR/mnt/; mount -t 9p -o trans=virtio host0 $DIR/mnt/ -oversion=9p2000.L,msize=104857600")
 			if err != nil {
 				return err
 			}
@@ -308,7 +308,7 @@ func (c *MachineConfig) Start() error {
 			return errors.New("unable to mount: " + err.Error())
 		}
 
-		log.Printf("Mounted " + c.Mount + " --> /root/mnt/")
+		log.Printf("Mounted " + c.Mount + " --> $HOME/mnt/")
 	}
 
 	status, _ := c.Status()
