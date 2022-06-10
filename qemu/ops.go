@@ -1,13 +1,11 @@
 package qemu
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -38,8 +36,8 @@ type MachineConfig struct {
 	Location    string `yaml:"location"`
 }
 
-//ExecShell starts an interactive shell terminal in VM
-func (c *MachineConfig) ExecShell() error {
+//Exec starts an interactive shell terminal in VM
+func (c *MachineConfig) Exec(cmd string) error {
 
 	host := "localhost:" + c.SSHPort
 	user := c.SSHUser
@@ -69,75 +67,80 @@ func (c *MachineConfig) ExecShell() error {
 	}
 	defer session.Close()
 
+	if (cmd == "ash") || cmd == ("bash") {
+		err := attachShell(session)
+		if err != nil {
+			return err
+		}
+	} else {
+
+		stdout := new(bytes.Buffer)
+		stderr := new(bytes.Buffer)
+		stdin := new(bytes.Buffer)
+
+		session.Stdout = stdout
+		session.Stderr = stderr
+		session.Stdin = stdin
+
+		if err := session.Run(cmd); err != nil {
+			return err
+		}
+
+		fmt.Println(stdout.String())
+	}
+
+	return nil
+
+}
+
+func attachShell(session *ssh.Session) error {
 	session.Stdout = os.Stdout
 	session.Stderr = os.Stderr
-	in, _ := session.StdinPipe()
 
 	modes := ssh.TerminalModes{
-		ssh.ECHO:          0,     // disable echoing
-		ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
-		ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
+		ssh.ECHO:          1,
+		ssh.TTY_OP_ISPEED: 14400,
+		ssh.TTY_OP_OSPEED: 14400,
 	}
+
+	fd := int(os.Stdin.Fd())
+	state, err := term.MakeRaw(fd)
+	if err != nil {
+		return fmt.Errorf("terminal make raw: %s", err)
+	}
+	defer term.Restore(fd, state)
 
 	width, height, err := term.GetSize(0)
 	if err != nil {
 		return err
 	}
 
-	if err := session.RequestPty("xterm", height, width, modes); err != nil {
+	terminal := os.Getenv("TERM")
+	if terminal == "" {
+		terminal = "xterm-256color"
+	}
+
+	if err := session.RequestPty(terminal, height, width, modes); err != nil {
 		return err
 	}
+
+	session.Stdout = os.Stdout
+	session.Stderr = os.Stderr
+	session.Stdin = os.Stdin
 
 	if err := session.Shell(); err != nil {
 		return err
 	}
 
-	for {
-		reader := bufio.NewReader(os.Stdin)
-		str, _ := reader.ReadString('\n')
-		fmt.Fprint(in, str)
+	if err := session.Wait(); err != nil {
+		if e, ok := err.(*ssh.ExitError); ok {
+			switch e.ExitStatus() {
+			case 130:
+				return nil
+			}
+		}
+		return fmt.Errorf("ssh: %s", err)
 	}
-}
-
-//Exec executes command inside VM
-func (c *MachineConfig) Exec(cmd string) error {
-
-	config := &ssh.ClientConfig{
-		User:            c.SSHUser,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Auth: []ssh.AuthMethod{
-			ssh.Password(c.SSHPassword),
-		},
-	}
-
-	client, err := ssh.Dial("tcp", net.JoinHostPort("localhost", c.SSHPort), config)
-	if err != nil {
-		return err
-	}
-
-	session, err := client.NewSession()
-	if err != nil {
-		return err
-	}
-	defer session.Close()
-
-	stdout := new(bytes.Buffer)
-	stderr := new(bytes.Buffer)
-	stdin := new(bytes.Buffer)
-
-	session.Stdout = stdout
-	session.Stderr = stderr
-	session.Stdin = stdin
-
-	if err := session.Run(cmd); err != nil {
-		return err
-	}
-
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(stdout.String())
 
 	return nil
 }
