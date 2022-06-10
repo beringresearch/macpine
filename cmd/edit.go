@@ -14,7 +14,7 @@ import (
 // editCmd lists Alpine instances
 var editCmd = &cobra.Command{
 	Use:   "edit NAME",
-	Short: "Edit VM configuration using Vim.",
+	Short: "Edit instance configuration using Vim.",
 	Run:   edit,
 }
 

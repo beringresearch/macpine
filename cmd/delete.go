@@ -16,7 +16,7 @@ import (
 
 var deleteCmd = &cobra.Command{
 	Use:   "delete NAME",
-	Short: "Delete an Alpine VM.",
+	Short: "Delete an instance.",
 	Run:   delete,
 }
 

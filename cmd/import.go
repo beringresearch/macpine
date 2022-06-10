@@ -16,7 +16,7 @@ import (
 // importCmd iports an Alpine VM from file
 var importCmd = &cobra.Command{
 	Use:   "import NAME",
-	Short: "Imports Alpine VM instances.",
+	Short: "Imports an instance.",
 	Run:   importMachine,
 }
 

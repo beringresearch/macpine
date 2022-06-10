@@ -18,7 +18,7 @@ import (
 // launchCmd launches an Alpine instance
 var launchCmd = &cobra.Command{
 	Use:   "launch FLAGS",
-	Short: "Launch an Alpine VM.",
+	Short: "Launch an Alpine instance.",
 	Run:   launch,
 }
 

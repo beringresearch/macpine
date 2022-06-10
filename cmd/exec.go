@@ -17,7 +17,7 @@ import (
 // execCmd executes command on alpine vm
 var execCmd = &cobra.Command{
 	Use:   "exec NAME COMMAND",
-	Short: "execute COMMAND on an Alpine VM.",
+	Short: "execute COMMAND over ssh.",
 	Run:   exec,
 }
 

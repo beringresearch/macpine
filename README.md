@@ -112,17 +112,17 @@ Usage:
   alpine [command]
 
 Available Commands:
-  delete      Delete an Alpine VM.
-  edit        Edit VM configuration using Vim.
-  exec        execute COMMAND on an Alpine VM.
+  delete      Delete an instance.
+  edit        Edit instance configuration using Vim.
+  exec        execute COMMAND over ssh.
   help        Help about any command
-  import      Imports Alpine VM instances.
-  launch      Launch an Alpine VM.
-  list        List all available Alpine VM instances.
-  publish     Publish an Alpine VM.
+  import      Imports an instance.
+  launch      Launch an Alpine instance.
+  list        List all available instances.
+  publish     Publish an instance.
   ssh         Attach an interactive shell to an instance.
-  start       Start an Alpine VM.
-  stop        Stop an Alpine VM.
+  start       Start an instance.
+  stop        Stop an instance.
 
 Flags:
   -h, --help   help for alpine
