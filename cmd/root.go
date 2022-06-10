@@ -35,4 +35,5 @@ func init() {
 	rootCmd.AddCommand(importCmd)
 	rootCmd.AddCommand(execCmd)
 	rootCmd.AddCommand(editCmd)
+	rootCmd.AddCommand(shellCmd)
 }
