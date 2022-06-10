@@ -31,6 +31,7 @@ rc-update add lxd
 rc-update add lxcfs
 rc-update add dbus
 
+deluser guest
 adduser guest
 
 reboot
