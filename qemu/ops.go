@@ -1,7 +1,6 @@
 package qemu
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -97,32 +96,60 @@ func (c *MachineConfig) Exec(cmd string) error {
 func attachShell(session *ssh.Session) error {
 	session.Stdout = os.Stdout
 	session.Stderr = os.Stderr
-	in, _ := session.StdinPipe()
+	//in, _ := session.StdinPipe()
 
 	modes := ssh.TerminalModes{
-		ssh.ECHO:          0,     // disable echoing
+		ssh.ECHO:          1,     // disable echoing
 		ssh.TTY_OP_ISPEED: 14400, // input speed = 14.4kbaud
 		ssh.TTY_OP_OSPEED: 14400, // output speed = 14.4kbaud
 	}
+
+	fd := int(os.Stdin.Fd())
+	state, err := term.MakeRaw(fd)
+	if err != nil {
+		return fmt.Errorf("terminal make raw: %s", err)
+	}
+	defer term.Restore(fd, state)
 
 	width, height, err := term.GetSize(0)
 	if err != nil {
 		return err
 	}
 
-	if err := session.RequestPty("xterm", height, width, modes); err != nil {
+	terminal := os.Getenv("TERM")
+	if terminal == "" {
+		terminal = "xterm-256color"
+	}
+
+	if err := session.RequestPty(terminal, height, width, modes); err != nil {
 		return err
 	}
+
+	session.Stdout = os.Stdout
+	session.Stderr = os.Stderr
+	session.Stdin = os.Stdin
 
 	if err := session.Shell(); err != nil {
 		return err
 	}
 
-	for {
-		reader := bufio.NewReader(os.Stdin)
-		str, _ := reader.ReadString('\n')
-		fmt.Fprint(in, str)
+	if err := session.Wait(); err != nil {
+		if e, ok := err.(*ssh.ExitError); ok {
+			switch e.ExitStatus() {
+			case 130:
+				return nil
+			}
+		}
+		return fmt.Errorf("ssh: %s", err)
 	}
+
+	// for {
+	// 	reader := bufio.NewReader(os.Stdin)
+	// 	str, _ := reader.ReadString('\n')
+	// 	fmt.Fprint(in, str)
+	// }
+
+	return nil
 }
 
 //Status returns VM status
