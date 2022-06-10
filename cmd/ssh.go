@@ -16,7 +16,7 @@ import (
 // shellCmd starts an Alpine instance
 var shellCmd = &cobra.Command{
 	Use:   "ssh NAME",
-	Short: "Attach an interactive shell to ann instance.",
+	Short: "Attach an interactive shell to an instance.",
 	Run:   shell,
 }
 

@@ -120,6 +120,7 @@ Available Commands:
   launch      Launch an Alpine VM.
   list        List all available Alpine VM instances.
   publish     Publish an Alpine VM.
+  ssh         Attach an interactive shell to an instance.
   start       Start an Alpine VM.
   stop        Stop an Alpine VM.
 
