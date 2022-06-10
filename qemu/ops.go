@@ -217,7 +217,7 @@ func (c *MachineConfig) GetAccel() string {
 			return "whpx" // untested
 		}
 	}
-	return "tcg,tb-size=1024"
+	return "tcg,tb-size=1024,thread=multi"
 }
 
 // Start starts up an Alpine VM
@@ -270,7 +270,7 @@ func (c *MachineConfig) Start() error {
 		"-qmp", "chardev:char-qmp",
 		"-parallel", "none",
 		"-device", "virtio-rng-pci",
-		"-rtc", "base=localtime",
+		"-rtc", "base=utc,clock=host",
 		"-name", c.Alias}
 
 	if c.Arch == "aarch64" {
@@ -297,7 +297,16 @@ func (c *MachineConfig) Start() error {
 		return err
 	}
 
-	time.Sleep(1 * time.Second)
+	err = utils.Retry(10, 2*time.Second, func() error {
+		err := c.Exec("hwclock -s")
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return errors.New("unable to sync clocks: " + err.Error())
+	}
 
 	if c.Mount != "" {
 		err = utils.Retry(10, 2*time.Second, func() error {
