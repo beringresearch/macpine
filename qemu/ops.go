@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -38,8 +37,8 @@ type MachineConfig struct {
 	Location    string `yaml:"location"`
 }
 
-//ExecShell starts an interactive shell terminal in VM
-func (c *MachineConfig) ExecShell() error {
+//Exec starts an interactive shell terminal in VM
+func (c *MachineConfig) Exec(cmd string) error {
 
 	host := "localhost:" + c.SSHPort
 	user := c.SSHUser
@@ -69,6 +68,33 @@ func (c *MachineConfig) ExecShell() error {
 	}
 	defer session.Close()
 
+	if (cmd == "ash") || cmd == ("bash") {
+		err := attachShell(session)
+		if err != nil {
+			return err
+		}
+	} else {
+
+		stdout := new(bytes.Buffer)
+		stderr := new(bytes.Buffer)
+		stdin := new(bytes.Buffer)
+
+		session.Stdout = stdout
+		session.Stderr = stderr
+		session.Stdin = stdin
+
+		if err := session.Run(cmd); err != nil {
+			return err
+		}
+
+		fmt.Println(stdout.String())
+	}
+
+	return nil
+
+}
+
+func attachShell(session *ssh.Session) error {
 	session.Stdout = os.Stdout
 	session.Stderr = os.Stderr
 	in, _ := session.StdinPipe()
@@ -97,49 +123,6 @@ func (c *MachineConfig) ExecShell() error {
 		str, _ := reader.ReadString('\n')
 		fmt.Fprint(in, str)
 	}
-}
-
-//Exec executes command inside VM
-func (c *MachineConfig) Exec(cmd string) error {
-
-	config := &ssh.ClientConfig{
-		User:            c.SSHUser,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Auth: []ssh.AuthMethod{
-			ssh.Password(c.SSHPassword),
-		},
-	}
-
-	client, err := ssh.Dial("tcp", net.JoinHostPort("localhost", c.SSHPort), config)
-	if err != nil {
-		return err
-	}
-
-	session, err := client.NewSession()
-	if err != nil {
-		return err
-	}
-	defer session.Close()
-
-	stdout := new(bytes.Buffer)
-	stderr := new(bytes.Buffer)
-	stdin := new(bytes.Buffer)
-
-	session.Stdout = stdout
-	session.Stderr = stderr
-	session.Stdin = stdin
-
-	if err := session.Run(cmd); err != nil {
-		return err
-	}
-
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(stdout.String())
-
-	return nil
 }
 
 //Status returns VM status
