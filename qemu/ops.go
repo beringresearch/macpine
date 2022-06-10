@@ -242,12 +242,15 @@ func (c *MachineConfig) Start() error {
 		"-M", "virt,highmem=off",
 		"-bios", filepath.Join(c.Location, "qemu_efi.fd")}
 
+	x86Args := []string{
+		"-global", "PIIX4_PM.disable_s3=1",
+		"-global", "ICH9-LPC.disable_s3=1",
+	}
+
 	mountArgs := []string{"-fsdev", "local,path=" + c.Mount + ",security_model=none,id=host0",
 		"-device", "virtio-9p-pci,fsdev=host0,mount_tag=host0"}
 
 	commonArgs := []string{
-		"-global", "PIIX4_PM.disable_s3=1",
-		"-global", "ICH9-LPC.disable_s3=1",
 		"-m", c.Memory,
 		"-cpu", cpu,
 		"-accel", c.GetAccel(),
@@ -271,16 +274,14 @@ func (c *MachineConfig) Start() error {
 		qemuArgs = append(aarch64Args, commonArgs...)
 	}
 	if c.Arch == "x86_64" {
-		//qemuArgs = append(x86Args, commonArgs...)
-		qemuArgs = commonArgs
+		qemuArgs = append(x86Args, commonArgs...)
 	}
 
 	if c.Mount != "" {
 		qemuArgs = append(qemuArgs, mountArgs...)
 	}
 
-	cmd := exec.Command(qemuCmd, qemuArgs...,
-	)
+	cmd := exec.Command(qemuCmd, qemuArgs...)
 
 	cmd.Stdout = os.Stdout
 
@@ -400,8 +401,6 @@ func (c *MachineConfig) Launch() error {
 	//Resize disk on an alpine guest
 	if strings.Split(c.Image, "_")[0] == "alpine" {
 		err = utils.Retry(10, 1*time.Second, func() error {
-
-			log.Println("Waiting for guest")
 			err := c.Exec("apk add --no-cache e2fsprogs-extra sfdisk partx")
 			if err != nil {
 				return err
