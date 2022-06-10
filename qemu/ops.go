@@ -217,7 +217,7 @@ func (c *MachineConfig) GetAccel() string {
 			return "whpx" // untested
 		}
 	}
-	return "tcg,tb-size=1024"
+	return "tcg,tb-size=1024,thread=multi"
 }
 
 // Start starts up an Alpine VM
