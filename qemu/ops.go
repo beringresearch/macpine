@@ -1,7 +1,6 @@
 package qemu
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -73,20 +72,12 @@ func (c *MachineConfig) Exec(cmd string) error {
 			return err
 		}
 	} else {
-
-		stdout := new(bytes.Buffer)
-		stderr := new(bytes.Buffer)
-		stdin := new(bytes.Buffer)
-
-		session.Stdout = stdout
-		session.Stderr = stderr
-		session.Stdin = stdin
+		session.Stdout = os.Stdout
+		session.Stderr = os.Stdout
 
 		if err := session.Run(cmd); err != nil {
 			return err
 		}
-
-		fmt.Println(stdout.String())
 	}
 
 	return nil
