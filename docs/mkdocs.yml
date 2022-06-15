@@ -9,7 +9,7 @@
     - Manage Instance:
       - Create an Instance: create_instance.md
       - Modify an instance: modify_instance.md
-      - Create an LXD cintainer in Macpine: lxd_macpine.md
+      - Create an LXD container in Macpine: lxd_macpine.md
     
  #theme: material
 
