@@ -1,0 +1,43 @@
+# Quickstart
+
+To launch a brand new VM:
+
+```bash
+alpine launch #launches with default parameters
+alpine launch -a aarch64 #create an aarch64 instance
+alpine launch -d 10G -c 4 -m 2048 #create a machine with a 10GB disk, 4 cpus and 2GB of RAM
+
+```
+
+Access VM via ssh:
+
+```bash
+alpine launch -s 22 #launch a VM and expose SSH port to host port 22
+ssh root@localhost -p 22 #password: root
+```
+
+Expose additional VM ports to host:
+
+```bash
+alpine launch -s 23 -p 8888,5432 #launch a VM, expose SSH to host port 23 and forward VM ports 8888 and 5432 to host ports 8888 and 5432
+```
+
+VMs can be easily packaged for export and re-use as tar.gz files:
+
+```bash
+alpine list
+
+NAME                STATUS      SSH    PORTS ARCH        PID 
+forthright-hook     Running     23           aarch64     91598
+hot-cow             Running     22           x86_64      82361
+```
+
+```bash
+alpine publish hot-cow
+```
+
+This will create a file hot-cow.tar.gz which can be imported as:
+
+```bash
+alpine import hot-cow.tar.gz
+```

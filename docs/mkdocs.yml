@@ -1,0 +1,29 @@
+ site_name: Macpine
+ site_url: https://beringresearch.github.com/alpine
+ 
+ nav:
+  - Home: index.md
+  - Documentation:
+    - Installation Instructions: install.md
+    - Quickstart: quickstart.md
+    - Command Line Interface: cli.md
+ #theme: material
+
+ theme:
+  name: material
+  palette: 
+
+    # Palette toggle for light mode
+    - scheme: default
+      toggle:
+        icon: material/brightness-7 
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+
+ repo_url: https://github.com/beringresearch/macpine
