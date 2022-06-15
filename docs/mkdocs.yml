@@ -3,10 +3,14 @@
  
  nav:
   - Home: index.md
-  - Documentation:
-    - Installation Instructions: install.md
+  - Docs:
+    - Installation: install.md
     - Quickstart: quickstart.md
-    - Command Line Interface: cli.md
+    - Manage Instance:
+      - Create an Instance: create_instance.md
+      - Modify an instance: modify_instance.md
+      - Create an LXD cintainer in Macpine: lxd_macpine.md
+    
  #theme: material
 
  theme:

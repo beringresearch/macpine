@@ -74,6 +74,7 @@ func (c *MachineConfig) Exec(cmd string) error {
 	} else {
 		session.Stdout = os.Stdout
 		session.Stderr = os.Stdout
+		session.Stdin = os.Stdin
 
 		if err := session.Run(cmd); err != nil {
 			return err
