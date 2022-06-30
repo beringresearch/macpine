@@ -21,6 +21,20 @@ import (
 //go:embed *.txt
 var f embed.FS
 
+//GenerateMACAddress
+func GenerateMACAddress() (string, error) {
+	buf := make([]byte, 6)
+	_, err := rand.Read(buf)
+	if err != nil {
+		return "", err
+	}
+	// Set the local bit
+	buf[0] |= 2
+	mac := fmt.Sprintf("56:%02x:%02x:%02x:%02x:%02x", buf[1], buf[2], buf[3], buf[4], buf[5])
+
+	return mac, nil
+}
+
 //Retry retries a function
 func Retry(attempts int, sleep time.Duration, f func() error) (err error) {
 	for i := 0; i < attempts; i++ {
