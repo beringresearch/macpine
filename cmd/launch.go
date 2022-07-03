@@ -131,6 +131,11 @@ func launch(cmd *cobra.Command, args []string) {
 		log.Fatal("machine " + machineName + " exists")
 	}
 
+	macAddress, err := utils.GenerateMACAddress()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	machineConfig := qemu.MachineConfig{
 		Alias:       machineName,
 		Image:       imageVersion + "-" + machineArch + ".qcow2",
@@ -141,6 +146,7 @@ func launch(cmd *cobra.Command, args []string) {
 		Mount:       machineMount,
 		Port:        machinePort,
 		SSHPort:     sshPort,
+		MACAddress:  macAddress,
 		SSHUser:     "root",
 		SSHPassword: "root",
 	}

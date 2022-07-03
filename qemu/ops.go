@@ -32,6 +32,7 @@ type MachineConfig struct {
 	SSHPort     string `yaml:"sshport"`
 	SSHUser     string `yaml:"sshuser"`
 	SSHPassword string `yaml:"sshpassword"`
+	MACAddress  string `yaml:"macaddress"`
 	Location    string `yaml:"location"`
 }
 
@@ -252,8 +253,8 @@ func (c *MachineConfig) Start() error {
 		"-smp", "cpus=" + c.CPU + ",sockets=1,cores=" + c.CPU + ",threads=1",
 		"-drive", "if=virtio,file=" + filepath.Join(c.Location, c.Image),
 		"-nographic",
-		"-device", "e1000,netdev=net0",
 		"-netdev", exposedPorts,
+		"-device", "e1000,netdev=net0,mac=" + c.MACAddress,
 		"-pidfile", filepath.Join(c.Location, "alpine.pid"),
 		"-chardev", "socket,id=char-serial,path=" + filepath.Join(c.Location,
 			"alpine.sock") + ",server=on,wait=off,logfile=" + filepath.Join(c.Location, "alpine.log"),
