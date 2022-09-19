@@ -96,6 +96,13 @@ alpine import hot-cow.tar.gz
 The easiest way to resize a VM disk is:
 
 1. Stop the target VM: `alpine stop $VMNAME`
+2. Back up VM disk with `cp ~/.macpine/$VMNAME/$VMIMAGENAME backup.qcow2`
+3. Modify disk size with `alpine edit $VNAME`
+4. Start the target VM:  `alpine start $VMNAME`
+
+To manually resize a VM disk is:
+
+1. Stop the target VM: `alpine stop $VMNAME`
 2. Back up VM disk with  `cp ~/.macpine/$VMNAME/$VMIMAGENAME backup.qcow2`
 3. Adjust disk size with `qemu-img resize ~/.macpine/$VMNAME/$VMIMAGENAME +20G`
 4. Start the target VM:  `alpine start $VMNAME`
