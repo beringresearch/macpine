@@ -36,6 +36,7 @@ Download the [latest binary release](https://github.com/beringresearch/macpine/r
 
 ```bash
 wget https://github.com/beringresearch/macpine/releases/download/v.05/alpine
+sudo chmod +x alpine
 sudo mv alpine /usr/local/bin/
 ```
 
