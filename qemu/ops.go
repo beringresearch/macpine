@@ -36,7 +36,7 @@ type MachineConfig struct {
 	Location    string `yaml:"location"`
 }
 
-//Exec starts an interactive shell terminal in VM
+// Exec starts an interactive shell terminal in VM
 func (c *MachineConfig) Exec(cmd string) error {
 
 	host := "localhost:" + c.SSHPort
@@ -138,7 +138,7 @@ func attachShell(session *ssh.Session) error {
 	return nil
 }
 
-//Status returns VM status
+// Status returns VM status
 func (c *MachineConfig) Status() (string, int) {
 	status := ""
 	var pid int
@@ -162,7 +162,7 @@ func (c *MachineConfig) Status() (string, int) {
 	return status, pid
 }
 
-//Stop stops an Alpine VM
+// Stop stops an Alpine VM
 func (c *MachineConfig) Stop() error {
 	pidFile := filepath.Join(c.Location, "alpine.pid")
 	if _, err := os.Stat(pidFile); err == nil {
@@ -188,7 +188,7 @@ func getHostArchitecture() (string, error) {
 	return strings.TrimSpace(string(out)), err
 }
 
-//IsNativeArch tests if VM architecture is the same as host
+// IsNativeArch tests if VM architecture is the same as host
 func (c *MachineConfig) IsNativeArch() bool {
 	hostArch, err := getHostArchitecture()
 	if err != nil {
@@ -198,7 +198,7 @@ func (c *MachineConfig) IsNativeArch() bool {
 	return (hostArch == "arm64" && c.Arch == "aarch64") || (hostArch == "x86_64" && c.Arch == "x86_64")
 }
 
-//GetAccel Returns platform-appropriate accelerator
+// GetAccel Returns platform-appropriate accelerator
 func (c *MachineConfig) GetAccel() string {
 	if c.IsNativeArch() {
 		switch runtime.GOOS {
@@ -231,7 +231,7 @@ func (c *MachineConfig) Start() error {
 
 	cpuType := map[string]string{
 		"aarch64": "cortex-a72",
-		"x86_64":  "max"}
+		"x86_64":  "qemu64"}
 	cpu := cpuType[c.Arch]
 
 	aarch64Args := []string{
@@ -326,7 +326,7 @@ func (c *MachineConfig) Start() error {
 	return nil
 }
 
-//Launch macpine downloads a fresh image and creates a VM directory
+// Launch macpine downloads a fresh image and creates a VM directory
 func (c *MachineConfig) Launch() error {
 
 	userHomeDir, err := os.UserHomeDir()
@@ -450,7 +450,7 @@ func (c *MachineConfig) Launch() error {
 	return nil
 }
 
-//ResizeQemuDiskImage resizes a qcow2 disk image
+// ResizeQemuDiskImage resizes a qcow2 disk image
 func (c *MachineConfig) ResizeQemuDiskImage() error {
 	if !utils.CommandExists("qemu-img") {
 		return errors.New("qemu-img is not available on $PATH. ensure qemu is installed")
@@ -470,7 +470,7 @@ func (c *MachineConfig) ResizeQemuDiskImage() error {
 	return nil
 }
 
-//CreateQemuDiskImage creates a qcow2 disk image
+// CreateQemuDiskImage creates a qcow2 disk image
 func (c *MachineConfig) CreateQemuDiskImage(imageName string) error {
 
 	if !utils.CommandExists("qemu-img") {
