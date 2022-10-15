@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -30,7 +31,7 @@ func init() {
 
 func includeLaunchFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&imageVersion, "image", "i", "alpine_3.16.0", "Image to be launched.")
-	cmd.Flags().StringVarP(&machineArch, "arch", "a", "x86_64", "Machine architecture.")
+	cmd.Flags().StringVarP(&machineArch, "arch", "a", "", "Machine architecture. Defaults to host cpu architecture.")
 	cmd.Flags().StringVarP(&machineCPU, "cpu", "c", "4", "Number of CPUs to allocate.")
 	cmd.Flags().StringVarP(&machineMemory, "memory", "m", "2048", "Amount of memory to allocate. Positive integers, in kilobytes.")
 	cmd.Flags().StringVarP(&machineDisk, "disk", "d", "10G", "Disk space to allocate. Positive integers, in bytes, or with K, M, G suffix.")
@@ -47,8 +48,10 @@ func correctArguments(imageVersion string, machineArch string, machineCPU string
 		return errors.New("unsupported image. only -i alpine_3.16.0 | debian_11.3.0 are currently available")
 	}
 
-	if machineArch != "aarch64" && machineArch != "x86_64" {
-		return errors.New("unsupported machine architecture. use x86_64 or aarch64")
+	if machineArch != "" {
+		if machineArch != "aarch64" && machineArch != "x86_64" {
+			return errors.New("unsupported machine architecture. use x86_64 or aarch64")
+		}
 	}
 
 	int, err := strconv.Atoi(machineCPU)
@@ -115,6 +118,19 @@ func launch(cmd *cobra.Command, args []string) {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if machineArch == "" {
+		arch := runtime.GOARCH
+
+		switch arch {
+		case "arm64":
+			machineArch = "aarch64"
+		case "amd64":
+			machineArch = "x86_64"
+		default:
+			log.Fatal("unsupported host architecture: " + arch)
+		}
 	}
 
 	if machineName == "" {
