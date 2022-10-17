@@ -23,7 +23,7 @@ var importCmd = &cobra.Command{
 func importMachine(cmd *cobra.Command, args []string) {
 
 	if len(args) == 0 {
-		log.Fatal("missing VN name")
+		log.Fatal("missing VM name")
 	}
 
 	userHomeDir, err := os.UserHomeDir()
