@@ -93,28 +93,9 @@ This will create a file hot-cow.tar.gz which can be imported as:
 alpine import hot-cow.tar.gz
 ```
 
-## Resizing disk partitions
-
-The easiest way to resize a VM disk is:
-
-1. Stop the target VM: `alpine stop $VMNAME`
-2. Back up VM disk with `cp ~/.macpine/$VMNAME/$VMIMAGENAME backup.qcow2`
-3. Modify disk size with `alpine edit $VNAME`
-4. Start the target VM:  `alpine start $VMNAME`
-
-To manually resize a VM disk is:
-
-1. Stop the target VM: `alpine stop $VMNAME`
-2. Back up VM disk with  `cp ~/.macpine/$VMNAME/$VMIMAGENAME backup.qcow2`
-3. Adjust disk size with `qemu-img resize ~/.macpine/$VMNAME/$VMIMAGENAME +20G`
-4. Start the target VM:  `alpine start $VMNAME`
-5. Adjust guest disk partition size: `cfdisk`
-6. Tell the OS that disk has been expanded: `resize2fs /dev/vda*`
-
 ## Command Reference
 
 ```bash
-alpine --help
 Create, control and connect to Alpine instances.
 
 Usage:
@@ -126,6 +107,7 @@ Available Commands:
   exec        execute COMMAND over ssh.
   help        Help about any command
   import      Imports an instance.
+  info        Display information about instances.
   launch      Launch an Alpine instance.
   list        List all available instances.
   publish     Publish an instance.
