@@ -1,4 +1,6 @@
 BINARY_NAME := alpine
+PREFIX := /usr/local
+bindir = $(DESTDIR)$(PREFIX)/bin
 
 linux:
 	@echo "Building ..."
@@ -6,10 +8,10 @@ linux:
 	go get
 	@GOOS=linux go build -ldflags=$(GO_LDFLAGS) -o bin/$(BINARY_NAME) *.go
 	@echo "Installing ..."
-ifneq ("$(wildcard $(/usr/local/bin/alpine))","")
-	sudo rm /usr/local/bin/alpine
+ifneq ("$(wildcard $($(bindir)/alpine))","")
+	sudo rm $(bindir)/alpine
 endif
-	sudo cp -f bin/alpine /usr/local/bin/
+	sudo cp -f bin/alpine $(bindir)
 	@echo "macpine installed"
 
 darwin: 
@@ -18,8 +20,8 @@ darwin:
 	go get
 	@GOOS=darwin go build -ldflags=$(GO_LDFLAGS) -o bin/$(BINARY_NAME) *.go
 	@echo "Installing ..."
-ifneq ("$(wildcard $(/usr/local/bin/alpine))","")
-	sudo rm /usr/local/bin/alpine
+ifneq ("$(wildcard $($(bindir)/alpine))","")
+	sudo rm $(bindir)/alpine
 endif
-	sudo cp -f bin/alpine /usr/local/bin/
+	sudo cp -f bin/alpine $(destdir)
 	@echo "macpine installed"
