@@ -46,7 +46,7 @@ sudo mv alpine /usr/local/bin/
 ```bash
 git clone https://github.com/beringresearch/macpine
 cd macpine
-make darwin
+make
 ```
 
 # Getting Started
