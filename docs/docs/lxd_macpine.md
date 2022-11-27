@@ -32,16 +32,16 @@ Now that that the system is ready, we can create a lightweight Macpine VM, which
 alpine launch --image alpine_3.16.0_lxd --name lxd --port 8443 --ssh 2222 --mount $(pwd)
 ```
 
-This will create a new VM called `lxd` and forward port `8443` (the default port that LXD client uses to communicate with the LXD server) of the VM to host. Macpine will attempt to match the native CPU architecture of your host to the correct VM image. However, if you can explicitly specify the architecture by adding either `--arch aarch64` or `--arch x86_64` to the above command.
+This will create a new VM called `lxd` and forward port `8443` (the default port that LXD client uses to communicate with the LXD server) of the VM to host. Macpine will attempt to match the native CPU architecture of your host to the correct VM image. However, if you can explicitly specify the architecture by adding either `--arch aarch64` or `--arch x86_64` to the above command. This will mount your current working directory to `/root/mnt` inside of the `lxd` VM.
 
 ## Configure LXD
 
 Before you can create an instance, you need to configure LXD.
 
-Run the following command to start the interactive configuration process:
+Run the following command to accept all automatic defaults:
 
 ```bash
-alpine exec lxd "lxd init"
+alpine exec lxd "lxd init --auto"
 ```
 
 For the purposes of this tutorial, it is recommended to accept default settings.
@@ -88,4 +88,3 @@ lxc launch images:debian/bullseye debian
 ```bash
 lxc exec debian -- bash
 ```
-
