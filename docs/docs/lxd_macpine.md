@@ -16,9 +16,9 @@ Macpine makes it possible to run LXD/LXC containers on MacOS with support for bo
 brew install qemu
 ```
 
-2. Install [the latestMacpine binary](https://github.com/beringresearch/macpine#install-the-latest-binary)
+2. Install [the latest Macpine binary](https://github.com/beringresearch/macpine#install-the-latest-binary)
 
-3. Install LXD client
+3. Install the LXD client
 
 ```bash
 brew install lxd
@@ -59,7 +59,7 @@ alpine exec lxd "lxc config set core.trust_password root"
 
 >> NOTE: for the purposes of this demonstration, the remote password is configured as `root`.
 
-## Add remote to your LXD host:
+## Add the remote to your LXD host:
 
 ```bash
 lxc remote add macpine 127.0.0.1
@@ -73,7 +73,7 @@ Finally, set this remote as the default:
 lxc remote switch macpine
 ```
 
-That's it - you can now run LXD containers through Macpine!
+That's it - you can now run LXD containers through Macpine at nearly-native speeds!
 
 ## Launching your first LXD container
 
