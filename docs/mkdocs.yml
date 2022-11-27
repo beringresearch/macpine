@@ -3,7 +3,19 @@
  
  nav:
   - Home: index.md
-  - CLI: cli/index.md
+  - CLI:
+    - delete: cli/alpine_delete.md
+    - edit: cli/alpine_edit.md
+    - exec: cli/alpine_exec.md
+    - import: cli/alpine_import.md
+    - info: cli/alpine_info.md
+    - launch: cli/alpine_launch.md
+    - list: cli/alpine_list.md
+    - publish: cli/alpine_publish.md
+    - ssh: cli/alpine_ssh.md
+    - start: cli/alpine_start.md
+    - stop: cli/alpine_stop.md
+
   - Docs:
     - Installation: install.md
     - Quickstart: quickstart.md
