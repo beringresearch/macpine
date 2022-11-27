@@ -57,15 +57,13 @@ alpine exec lxd "lxc config set core.https_address 0.0.0.0"
 alpine exec lxd "lxc config set core.trust_password root"
 ```
 
->> NOTE: for the purposes of this demonstration, the remote password is configured as `root`.
+>> NOTE: for the purposes of this demonstration, the remote password is configured as `root`. This password can be configured with `lxc config set core.trust_password` above
 
 ## Add the remote to your LXD host:
 
 ```bash
 lxc remote add macpine 127.0.0.1 --accept-certificate --password root
 ```
-
-Accept the certificate and type `root` for Admin password (this password can be configured with `lxc config set core.trust_password` above).
 
 >> NOTE: if you create an alpine lxd VM, then destroy it, then try to reconfigure another on later on your host, you may need to delete `macpine` remote from `~/.config/lxc/config.yml` due to new certificates each time?
 
