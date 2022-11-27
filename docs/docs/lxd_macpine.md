@@ -29,7 +29,7 @@ brew install lxc
 Now that that the system is ready, we can create a lightweight Macpine VM, which has been preconfigured to run LXD. In your terminal run:
 
 ```bash
-alpine launch --image alpine_3.16.0_lxd --name lxd --port 8443  --ssh 2222
+alpine launch --image alpine_3.16.0_lxd --name lxd --port 8443 --ssh 2222 --mount $(pwd)
 ```
 
 This will create a new VM called `lxd` and forward port `8443` (the default port that LXD client uses to communicate with the LXD server) of the VM to host. Macpine will attempt to match the native CPU architecture of your host to the correct VM image. However, if you can explicitly specify the architecture by adding either `--arch aarch64` or `--arch x86_64` to the above command.
@@ -80,5 +80,12 @@ That's it - you can now run LXD containers through Macpine at nearly-native spee
 LXD containers can now be launched and manipulated through the `lxc` client:
 
 ```bash
-lxc launch ubuntu:
+lxc launch images:debian/bullseye debian
 ```
+
+## Connecting to your first LXD container
+
+```bash
+lxc exec debian -- bash
+```
+
