@@ -21,7 +21,7 @@ brew install qemu
 3. Install the LXD client
 
 ```bash
-brew install lxd
+brew install lxc
 ```
 
 ## Launch an LXD VM
