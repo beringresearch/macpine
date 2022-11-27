@@ -13,6 +13,7 @@ Available Commands:
   exec        execute COMMAND over ssh.
   help        Help about any command
   import      Imports an instance.
+  info        Display information about instances.
   launch      Launch an Alpine instance.
   list        List all available instances.
   publish     Publish an instance.

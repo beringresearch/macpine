@@ -1,8 +1,9 @@
  site_name: Macpine
- site_url: https://beringresearch.github.com/alpine
+ site_url: https://beringresearch.github.io/macpine/
  
  nav:
   - Home: index.md
+  - CLI: cli/index.md
   - Docs:
     - Installation: install.md
     - Quickstart: quickstart.md
