@@ -1,27 +1,16 @@
 BINARY_NAME := alpine
-PREFIX := /usr/local
+PREFIX = /usr/local
 bindir = $(DESTDIR)$(PREFIX)/bin
 
-linux:
+bin/$(BINARY_NAME):
 	@echo "Building ..."
 	go clean
 	go get
-	@GOOS=linux go build -ldflags=$(GO_LDFLAGS) -o bin/$(BINARY_NAME) *.go
-	@echo "Installing ..."
-ifneq ("$(wildcard $($(bindir)/alpine))","")
-	sudo rm $(bindir)/alpine
-endif
-	sudo cp -f bin/alpine $(bindir)
-	@echo "macpine installed"
+	go build -ldflags=$(GO_LDFLAGS) -o $@ *.go
 
-darwin: 
-	@echo "Building ..."
-	go clean
-	go get
-	@GOOS=darwin go build -ldflags=$(GO_LDFLAGS) -o bin/$(BINARY_NAME) *.go
+.PHONY: install
+install: bin/$(BINARY_NAME)
 	@echo "Installing ..."
-ifneq ("$(wildcard $($(bindir)/alpine))","")
-	sudo rm $(bindir)/alpine
-endif
-	sudo cp -f bin/alpine $(destdir)
+	install -d $(bindir)
+	install -m 0755 $^ $(bindir)
 	@echo "macpine installed"
