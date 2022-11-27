@@ -83,6 +83,12 @@ LXD containers can now be launched and manipulated through the `lxc` client:
 lxc launch images:debian/bullseye debian
 ```
 
+## Mounting host directory -> lxd Macpine VM -> lxd container
+
+```bash
+lxc config device add debian share disk source=/root/mnt path=/root/mnt
+```
+
 ## Connecting to your first LXD container
 
 ```bash
