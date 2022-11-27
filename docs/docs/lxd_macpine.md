@@ -94,3 +94,12 @@ lxc config device add debian share disk source=/root/mnt path=/root/mnt
 ```bash
 lxc exec debian -- bash
 ```
+
+## Cleanup
+
+```bash
+lxc stop debian
+lxc delete debian
+alpine stop lxd
+alpine delete lxd
+```
