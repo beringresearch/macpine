@@ -80,5 +80,5 @@ That's it - you can now run LXD containers through Macpine at nearly-native spee
 LXD containers can now be launched and manipulated through the `lxc` client:
 
 ```bash
-lxc launch ubuntu
+lxc launch ubuntu:
 ```
