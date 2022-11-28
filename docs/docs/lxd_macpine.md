@@ -32,16 +32,16 @@ Now that that the system is ready, we can create a lightweight Macpine VM, which
 alpine launch --image alpine_3.16.0_lxd --name lxd --port 8443 --ssh 2222 --mount $(pwd)
 ```
 
-This will create a new VM called `lxd` and forward port `8443` (the default port that LXD client uses to communicate with the LXD server) of the VM to host. Macpine will attempt to match the native CPU architecture of your host to the correct VM image. However, if you can explicitly specify the architecture by adding either `--arch aarch64` or `--arch x86_64` to the above command.
+This will create a new VM called `lxd` and forward port `8443` (the default port that LXD client uses to communicate with the LXD server) of the VM to host. Macpine will attempt to match the native CPU architecture of your host to the correct VM image. However, if you can explicitly specify the architecture by adding either `--arch aarch64` or `--arch x86_64` to the above command. This will mount your current working directory to `/root/mnt` inside of the `lxd` VM.
 
 ## Configure LXD
 
 Before you can create an instance, you need to configure LXD.
 
-Run the following command to start the interactive configuration process:
+Run the following command to accept all automatic defaults:
 
 ```bash
-alpine exec lxd "lxd init"
+alpine exec lxd "lxd init --auto"
 ```
 
 For the purposes of this tutorial, it is recommended to accept default settings.
@@ -57,15 +57,15 @@ alpine exec lxd "lxc config set core.https_address 0.0.0.0"
 alpine exec lxd "lxc config set core.trust_password root"
 ```
 
->> NOTE: for the purposes of this demonstration, the remote password is configured as `root`.
+>> NOTE: for the purposes of this demonstration, the remote password is configured as `root`. This password can be configured with `lxc config set core.trust_password` above
 
 ## Add the remote to your LXD host:
 
 ```bash
-lxc remote add macpine 127.0.0.1
+lxc remote add macpine 127.0.0.1 --accept-certificate --password root
 ```
 
-Accept the certificate and type `root` for Admin password (this password can be configured with `lxc config set core.trust_password` above).
+>> NOTE: if you create an alpine lxd VM, then destroy it, then try to reconfigure another on later on your host, you may need to delete `macpine` remote from `~/.config/lxc/config.yml` due to new certificates each time?
 
 Finally, set this remote as the default:
 
@@ -83,9 +83,23 @@ LXD containers can now be launched and manipulated through the `lxc` client:
 lxc launch images:debian/bullseye debian
 ```
 
+## Mounting host directory -> lxd Macpine VM -> lxd container
+
+```bash
+lxc config device add debian share disk source=/root/mnt path=/root/mnt
+```
+
 ## Connecting to your first LXD container
 
 ```bash
 lxc exec debian -- bash
 ```
 
+## Cleanup
+
+```bash
+lxc stop debian
+lxc delete debian
+alpine stop lxd
+alpine delete lxd
+```
