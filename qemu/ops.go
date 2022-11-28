@@ -243,7 +243,7 @@ func (c *MachineConfig) Start() error {
 		"-global", "ICH9-LPC.disable_s3=1",
 	}
 
-	mountArgs := []string{"-fsdev", "local,path=" + c.Mount + ",security_model=none,id=host0",
+	mountArgs := []string{"-fsdev", "local,path=" + c.Mount + ",security_model=mapped-xattr,id=host0",
 		"-device", "virtio-9p-pci,fsdev=host0,mount_tag=host0"}
 
 	commonArgs := []string{
@@ -303,7 +303,7 @@ func (c *MachineConfig) Start() error {
 
 	if c.Mount != "" {
 		err = utils.Retry(10, 2*time.Second, func() error {
-			err := c.Exec("DIR=$(eval echo \"~$USER\");mkdir -p $DIR/mnt/; mount -t 9p -o trans=virtio host0 $DIR/mnt/ -oversion=9p2000.L,msize=104857600")
+			err := c.Exec("DIR=$(eval echo \"~$USER\");mkdir -p $DIR/mnt/; chmod 777 $DIR/mnt; mount -t 9p -o trans=virtio host0 $DIR/mnt/ -oversion=9p2000.L,msize=104857600")
 			if err != nil {
 				return err
 			}
