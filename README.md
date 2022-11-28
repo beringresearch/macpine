@@ -16,7 +16,7 @@ Create and manage lightweight Alpine VMs on MacOS with:
 ## Motivation
 The goal of this project is to enable MacOS users to:
 
-1. Easily spin up and manage lightweight Alpine Linux environments.
+1. Easily spin up and manage lightweight Alpine Linux / Debian environments.
 2. Use tiny VMs to take advantage of containerisation technologies, including [LXD](https://linuxcontainers.org/lxd/introduction/) and Docker.
 3. Build and test software on x86_64 and aarch64 systems.
 
@@ -56,8 +56,8 @@ To launch a brand new VM:
 ```bash
 alpine launch #launches with default parameters
 alpine launch -a aarch64 #create an aarch64 instance
+alpine launch -i debian_11.3.0 #create a Debian instance
 alpine launch -d 10G -c 4 -m 2048 #create a machine with a 10GB disk, 4 cpus and 2GB of RAM
-
 ```
 
 Access VM via ssh:
