@@ -49,6 +49,16 @@ cd macpine
 make
 ```
 
+## Install from MacPorts
+
+On macOS, you can install via [MacPorts](https://www.macports.org):
+
+```bash
+sudo port install macpine
+```
+
+See more information [here](https://ports.macports.org/port/macpine/).
+
 # Getting Started
 
 To launch a brand new VM:
