@@ -57,6 +57,12 @@ On macOS, you can install via [MacPorts](https://www.macports.org):
 sudo port install macpine
 ```
 
+## Install from Homebrew
+
+```bash
+brew install macpine
+```
+
 See more information [here](https://ports.macports.org/port/macpine/).
 
 # Getting Started
