@@ -41,12 +41,10 @@ sudo chmod +x alpine
 sudo mv alpine /usr/local/bin/
 ```
 
-## Install from source
+## Install from Homebrew
 
 ```bash
-git clone https://github.com/beringresearch/macpine
-cd macpine
-make
+brew install macpine
 ```
 
 ## Install from MacPorts
@@ -57,13 +55,16 @@ On macOS, you can install via [MacPorts](https://www.macports.org):
 sudo port install macpine
 ```
 
-## Install from Homebrew
+See more information [here](https://ports.macports.org/port/macpine/).
+
+## Install from source
 
 ```bash
-brew install macpine
+git clone https://github.com/beringresearch/macpine
+cd macpine
+make
 ```
 
-See more information [here](https://ports.macports.org/port/macpine/).
 
 # Getting Started
 
