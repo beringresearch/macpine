@@ -82,6 +82,7 @@ Access VM via ssh:
 ```bash
 alpine launch -s 22 #launch a VM and expose SSH port to host port 22
 ssh root@localhost -p 22 #password: root
+alpine ssh $VMNAME #attach to the VM shell
 ```
 
 Expose additional VM ports to host:
