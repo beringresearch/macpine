@@ -35,7 +35,7 @@ brew install qemu
 Download the [latest binary release](https://github.com/beringresearch/macpine/releases) for your system and add it to your path by placing to e.g. `/usr/local/bin/`:
 
 ```bash
-wget https://github.com/beringresearch/macpine/releases/download/v.07/alpine_darwin_arm64
+wget https://github.com/beringresearch/macpine/releases/download/v0.7/alpine_darwin_arm64
 mv alpine_darwin_arm64 alpine
 sudo chmod +x alpine
 sudo mv alpine /usr/local/bin/
