@@ -21,7 +21,7 @@ import (
 //go:embed *.txt
 var f embed.FS
 
-//GenerateMACAddress
+// GenerateMACAddress
 func GenerateMACAddress() (string, error) {
 	buf := make([]byte, 6)
 	_, err := rand.Read(buf)
@@ -35,7 +35,7 @@ func GenerateMACAddress() (string, error) {
 	return mac, nil
 }
 
-//Retry retries a function
+// Retry retries a function
 func Retry(attempts int, sleep time.Duration, f func() error) (err error) {
 	for i := 0; i < attempts; i++ {
 		if i > 0 {
@@ -51,7 +51,7 @@ func Retry(attempts int, sleep time.Duration, f func() error) (err error) {
 	return fmt.Errorf("after %d attempts, last error: %s", attempts, err)
 }
 
-//Ping checks if connection is reachable
+// Ping checks if connection is reachable
 func Ping(ip string, port string) error {
 	address, err := net.ResolveTCPAddr("tcp", ip+":"+port)
 	if err != nil {
@@ -71,7 +71,7 @@ func Ping(ip string, port string) error {
 	return err
 }
 
-//StringSliceContains check if string value is in []string
+// StringSliceContains check if string value is in []string
 func StringSliceContains(s []string, e string) bool {
 	for _, a := range s {
 		if a == e {
@@ -81,7 +81,7 @@ func StringSliceContains(s []string, e string) bool {
 	return false
 }
 
-//Uncompress uncompresses gzip
+// Uncompress uncompresses gzip
 func Uncompress(source string, destination string) error {
 	file, err := os.Open(source)
 	if err != nil {
@@ -172,7 +172,7 @@ func addToArchive(tw *tar.Writer, filename string) error {
 	return nil
 }
 
-//CopyFile copies file from src to dst
+// CopyFile copies file from src to dst
 func CopyFile(src, dst string) (int64, error) {
 	sourceFileStat, err := os.Stat(src)
 	if err != nil {
@@ -221,13 +221,15 @@ func DownloadFile(filepath string, url string) error {
 	}
 
 	resp, err := http.Get(url)
-	if resp.StatusCode != 200 {
-		return errors.New("requested image download is not supported: StatusCode " + strconv.Itoa(resp.StatusCode))
-	}
 	if err != nil {
 		out.Close()
 		return err
 	}
+
+	if resp.StatusCode != 200 {
+		return errors.New("requested image download is not supported: StatusCode " + strconv.Itoa(resp.StatusCode))
+	}
+
 	defer resp.Body.Close()
 
 	counter := &WriteCounter{}
