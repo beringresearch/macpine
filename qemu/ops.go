@@ -230,9 +230,17 @@ func (c *MachineConfig) Start() error {
 	var qemuArgs []string
 
 	cpuType := map[string]string{
-		"aarch64": "cortex-a72",
-		"x86_64":  "qemu64"}
-	cpu := cpuType[c.Arch]
+		"aarch64":      "cortex-a72",
+		"x86_64":       "qemu64",
+		"aarch64_host": "host"}
+
+	hostCPU := ""
+	if utils.HasHostCPU() {
+		hostCPU = "_host"
+	}
+	cpu := cpuType[c.Arch+hostCPU]
+
+	fmt.Println(cpu)
 
 	aarch64Args := []string{
 		"-M", "virt,highmem=off",
