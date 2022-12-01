@@ -198,6 +198,17 @@ func (c *MachineConfig) IsNativeArch() bool {
 	return (hostArch == "arm64" && c.Arch == "aarch64") || (hostArch == "x86_64" && c.Arch == "x86_64")
 }
 
+func (c *MachineConfig) HasHostCPU() bool {
+	switch runtime.GOOS {
+	case "darwin", "linux":
+		return true
+	case "netbsd", "windows":
+		return false
+	}
+	// Not reached
+	return false
+}
+
 // GetAccel Returns platform-appropriate accelerator
 func (c *MachineConfig) GetAccel() string {
 	if c.IsNativeArch() {
@@ -232,15 +243,17 @@ func (c *MachineConfig) Start() error {
 	cpuType := map[string]string{
 		"aarch64":      "cortex-a72",
 		"x86_64":       "qemu64",
+		"x86_64_host":  "host",
 		"aarch64_host": "host"}
 
 	hostCPU := ""
-	if utils.HasHostCPU() {
-		hostCPU = "_host"
+
+	if c.IsNativeArch() {
+		if c.HasHostCPU() {
+			hostCPU = "_host"
+		}
 	}
 	cpu := cpuType[c.Arch+hostCPU]
-
-	fmt.Println(cpu)
 
 	aarch64Args := []string{
 		"-M", "virt,highmem=off",

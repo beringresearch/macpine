@@ -13,7 +13,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -213,17 +212,6 @@ func (wc *WriteCounter) Write(p []byte) (int, error) {
 func (wc WriteCounter) PrintProgress() {
 	fmt.Printf("\r%s", strings.Repeat(" ", 35))
 	fmt.Printf("\rRetrieving image... %3dMB complete", wc.Total/1000000)
-}
-
-func HasHostCPU() bool {
-	switch runtime.GOOS {
-	case "darwin", "linux":
-		return true
-	case "netbsd", "windows":
-		return false
-	}
-	// Not reached
-	return false
 }
 
 func DownloadFile(filepath string, url string) error {
