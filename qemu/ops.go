@@ -293,8 +293,7 @@ func (c *MachineConfig) Start() error {
 		"-qmp", "chardev:char-qmp",
 		"-parallel", "none",
 		"-device", "virtio-rng-pci",
-		"-rtc", "clock=vm",
-		//"-rtc", "base=utc,clock=host",
+		"-rtc", "base=utc,clock=host",
 		"-name", c.Alias}
 
 	if c.Arch == "aarch64" {
