@@ -265,7 +265,7 @@ func (c *MachineConfig) Start() error {
 	cpu := cpuType[c.Arch+hostCPU]
 
 	aarch64Args := []string{
-		"-M", "virt,highmem=off",
+		"-M", "virt,highmem=on",
 		"-bios", filepath.Join(c.Location, "qemu_efi.fd")}
 
 	x86Args := []string{
