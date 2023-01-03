@@ -264,8 +264,17 @@ func (c *MachineConfig) Start() error {
 	}
 	cpu := cpuType[c.Arch+hostCPU]
 
+	highmem := "off"
+	intMem, err := strconv.Atoi(c.Memory)
+	if err != nil {
+		return err
+	}
+	if intMem > 2000 {
+		highmem = "on"
+	}
+
 	aarch64Args := []string{
-		"-M", "virt,highmem=on",
+		"-M", "virt,highmem=" + highmem,
 		"-bios", filepath.Join(c.Location, "qemu_efi.fd")}
 
 	x86Args := []string{
@@ -315,7 +324,7 @@ func (c *MachineConfig) Start() error {
 	cmd.Stderr = os.Stderr
 
 	log.Printf("Booting...")
-	err := cmd.Start()
+	err = cmd.Start()
 	if err != nil {
 		return err
 	}
