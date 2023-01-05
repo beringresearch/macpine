@@ -16,6 +16,9 @@ var editCmd = &cobra.Command{
 	Use:   "edit NAME",
 	Short: "Edit instance configuration using Vim.",
 	Run:   edit,
+
+	ValidArgsFunction:     host.AutoCompleteVMNames,
+	DisableFlagsInUseLine: true,
 }
 
 func edit(cmd *cobra.Command, args []string) {

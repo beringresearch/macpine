@@ -14,6 +14,9 @@ var infoCmd = &cobra.Command{
 	Use:   "info NAME",
 	Short: "Display information about instances.",
 	Run:   macpineInfo,
+
+	ValidArgsFunction:     host.AutoCompleteVMNames,
+	DisableFlagsInUseLine: true,
 }
 
 func macpineInfo(cmd *cobra.Command, args []string) {

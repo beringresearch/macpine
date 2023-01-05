@@ -37,4 +37,5 @@ func init() {
 	MacpineCmd.AddCommand(execCmd)
 	MacpineCmd.AddCommand(editCmd)
 	MacpineCmd.AddCommand(shellCmd)
+	MacpineCmd.AddCommand(completionCmd)
 }

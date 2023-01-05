@@ -19,6 +19,9 @@ var execCmd = &cobra.Command{
 	Use:   "exec NAME COMMAND",
 	Short: "execute COMMAND over ssh.",
 	Run:   exec,
+
+	ValidArgsFunction:     host.AutoCompleteVMNames,
+	DisableFlagsInUseLine: true,
 }
 
 func exec(cmd *cobra.Command, args []string) {

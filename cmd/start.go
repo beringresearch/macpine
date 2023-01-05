@@ -18,6 +18,9 @@ var startCmd = &cobra.Command{
 	Use:   "start NAME",
 	Short: "Start an instance.",
 	Run:   start,
+
+	ValidArgsFunction:     host.AutoCompleteVMNames,
+	DisableFlagsInUseLine: true,
 }
 
 func start(cmd *cobra.Command, args []string) {
