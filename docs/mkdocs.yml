@@ -17,7 +17,9 @@
     - stop: cli/alpine_stop.md
 
   - Docs:
-    - Installation: install.md
+    - Installation:
+      - Install: install.md
+      - Autocompletion: completions.md
     - Quickstart: quickstart.md
     - Manage Instance:
       - Create an Instance: create_instance.md
