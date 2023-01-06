@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -21,6 +22,9 @@ var launchCmd = &cobra.Command{
 	Use:   "launch FLAGS",
 	Short: "Launch an Alpine instance.",
 	Run:   launch,
+
+	ValidArgsFunction:     flagsLaunch,
+	DisableFlagsInUseLine: true,
 }
 
 var machineArch, imageVersion, machineCPU, machineMemory, machineDisk, machinePort, sshPort, machineName, machineMount string
@@ -177,4 +181,26 @@ func launch(cmd *cobra.Command, args []string) {
 
 	fmt.Println("Launched:", machineName)
 
+}
+
+// (workaround) we parse Flags().FlagUsages() to get all flags previously annotated. Another way to get all flags??
+func getAllFlags(cmd *cobra.Command) []string {
+	var flags []string
+
+	usage := cmd.Flags().FlagUsages()
+	arrUsage := strings.Split(usage, "\n")
+
+	for _, f := range arrUsage {
+		regx := regexp.MustCompile(`^\s+(\-[\-]?[a-z]+),?\s+`)
+		if regx.MatchString(f) {
+			flag := regx.FindAllStringSubmatch(f, -1)
+			flags = append(flags, flag[0][1])
+		}
+	}
+
+	return flags
+}
+
+func flagsLaunch(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	return getAllFlags(cmd), cobra.ShellCompDirectiveNoFileComp
 }

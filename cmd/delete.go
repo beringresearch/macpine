@@ -18,6 +18,9 @@ var deleteCmd = &cobra.Command{
 	Use:   "delete NAME",
 	Short: "Delete an instance.",
 	Run:   delete,
+
+	ValidArgsFunction:     host.AutoCompleteVMNames,
+	DisableFlagsInUseLine: true,
 }
 
 func delete(cmd *cobra.Command, args []string) {

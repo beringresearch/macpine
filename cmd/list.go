@@ -20,6 +20,8 @@ var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all available instances.",
 	Run:   list,
+
+	DisableFlagsInUseLine: true,
 }
 
 func list(cmd *cobra.Command, args []string) {

@@ -18,6 +18,8 @@ var importCmd = &cobra.Command{
 	Use:   "import NAME",
 	Short: "Imports an instance.",
 	Run:   importMachine,
+
+	DisableFlagsInUseLine: true,
 }
 
 func importMachine(cmd *cobra.Command, args []string) {

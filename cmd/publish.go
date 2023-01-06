@@ -19,6 +19,9 @@ var publishCmd = &cobra.Command{
 	Use:   "publish NAME",
 	Short: "Publish an instance.",
 	Run:   publish,
+
+	ValidArgsFunction:     host.AutoCompleteVMNames,
+	DisableFlagsInUseLine: true,
 }
 
 func publish(cmd *cobra.Command, args []string) {

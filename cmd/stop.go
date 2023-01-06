@@ -16,6 +16,9 @@ var stopCmd = &cobra.Command{
 	Use:   "stop NAME",
 	Short: "Stop an instance.",
 	Run:   stop,
+
+	ValidArgsFunction:     host.AutoCompleteVMNames,
+	DisableFlagsInUseLine: true,
 }
 
 func stop(cmd *cobra.Command, args []string) {

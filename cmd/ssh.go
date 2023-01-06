@@ -18,6 +18,9 @@ var shellCmd = &cobra.Command{
 	Use:   "ssh NAME",
 	Short: "Attach an interactive shell to an instance.",
 	Run:   shell,
+
+	ValidArgsFunction:     host.AutoCompleteVMNames,
+	DisableFlagsInUseLine: true,
 }
 
 func shell(cmd *cobra.Command, args []string) {
