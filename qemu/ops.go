@@ -252,7 +252,7 @@ func (c *MachineConfig) Start() error {
 	cpuType := map[string]string{
 		"aarch64":      "cortex-a72",
 		"x86_64":       "qemu64",
-		"x86_64_host":  "host",
+		"x86_64_host":  "host,-pdpe1gb",
 		"aarch64_host": "host"}
 
 	hostCPU := ""
