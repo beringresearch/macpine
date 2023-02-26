@@ -96,7 +96,7 @@ VMs can be easily packaged for export and re-use as tar.gz files:
 ```bash
 alpine list
 
-NAME                STATUS      SSH    PORTS ARCH        PID 
+NAME                STATUS      SSH    PORTS ARCH        PID
 forthright-hook     Running     23           aarch64     91598
 hot-cow             Running     22           x86_64      82361
 ```
@@ -132,9 +132,13 @@ Available Commands:
   ssh         Attach an interactive shell to an instance.
   start       Start an instance.
   stop        Stop an instance.
+  completion  Generate shell command completion file.
 
 Flags:
   -h, --help   help for alpine
 
 Use "alpine [command] --help" for more information about a command.
 ```
+
+Shell command completion files can be generated with `alpine completion [bash|zsh|fish|powershell]`.
+See `alpine completion -h` or the [completion documentation](docs/docs/completions.md) for more information.
