@@ -171,11 +171,6 @@ func (c *MachineConfig) Stop() error {
 
 		if pid > 0 {
 
-			// err = syscall.Kill(pid, 15)
-			// if err != nil {
-			// 	return err
-			// }
-
 			p, procErr := os.FindProcess(pid)
 
 			if procErr != nil {

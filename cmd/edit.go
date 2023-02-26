@@ -47,18 +47,18 @@ func edit(cmd *cobra.Command, args []string) {
    editor, found := os.LookupEnv("EDITOR")
    if !found || !utils.CommandExists(editor) {
       if !found {
-         log.Print("edit: No $EDITOR set.")
+         log.Println("edit: No $EDITOR set.")
       } else {
-         log.Print("edit: $EDITOR set but not found in $PATH.")
+         log.Println("edit: $EDITOR set but not found in $PATH.")
       }
       if utils.CommandExists("vim") {
-         log.Print("Defaulting to \"vim\"")
+         log.Println("defaulting to \"vim\"")
          editor = "vim"
       } else if utils.CommandExists("nano") {
-         log.Print("Defaulting to \"nano\"")
+         log.Println("defaulting to \"nano\"")
          editor = "nano"
       } else {
-         log.Fatal("No basic editor found in $PATH (tried vim, nano). You can still edit the config manually at " + targetFile)
+         log.Fatal("no basic editor found in $PATH (tried vim, nano). You can still edit the config manually at " + targetFile)
       }
    }
 
