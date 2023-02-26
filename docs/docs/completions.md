@@ -6,10 +6,10 @@ You can use command `completion` command to create bash|fish|zsh|powershell comp
 alex@vosjod:~$ alpine completion
 2023/01/05 23:59:48 missing shell
 alex@vosjod:~$ alpine completion --help
-Generate shell autocompletions. Valid arguments are bash, zsh, and fish.
+Generate shell autocompletions. Valid arguments are bash, fish, zsh, and powershell.
 
 Usage:
-  alpine completion [bash|zsh|fish|powershell]
+  alpine completion [bash|fish|zsh|powershell]
 
 Flags:
   -h, --help   help for completion
@@ -37,13 +37,15 @@ __alpine_init_completion()
 
 ## Install
 
-Create completion file (bash, zsh, fish or powershell) and put on your path, for example using bash:
+Create completion file (bash, fish, zsh, or powershell) and put on your path, for example using bash:
 
 ```bash
 alex@vosjod:~$ alpine completion bash > /usr/local/etc/bash_completion.d/alpine
 alex@vosjod:~$ source /usr/local/etc/bash_completion.d/alpine
 alex@vosjod:~$
 ```
+
+For zsh, the completion file should be named `_alpine` and stored somewhere in the `$FPATH`.
 
 ## Examples
 
@@ -97,4 +99,3 @@ alex@vosjod:~$ alpine launch -a aarch64 --[tab] [tab]
 --port    (Forward VM ports to host. Multiple ports can be separated by `,`.)
 --ssh     (Forward VM SSH port to host.)
 ```
-

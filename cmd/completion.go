@@ -9,13 +9,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const longCompletion = `Generate shell autocompletions. Valid arguments are bash, zsh, and fish.`
+const longCompletion = `Generate shell autocompletions. Valid arguments are bash, fish, zsh, and powershell.`
 
 var (
 	// Todo --noDesc param?
 	noDesc = false
 
-	shells = []string{"bash", "zsh", "fish", "powershell"}
+	shells = []string{"bash", "fish", "zsh", "powershell"}
 
 	// completionCmd creates completion shell files
 	completionCmd = &cobra.Command{
@@ -26,7 +26,7 @@ var (
 		DisableFlagsInUseLine: true,
 		ValidArgs:             shells,
 		Run:                   completion,
-		Hidden:                true,
+		Hidden:                false,
 	}
 )
 
@@ -38,14 +38,14 @@ func completion(cmd *cobra.Command, args []string) {
 	switch args[0] {
 	case "bash":
 		cmd.Root().GenBashCompletionV2(os.Stdout, !noDesc)
+	case "fish":
+		cmd.Root().GenFishCompletion(os.Stdout, !noDesc)
 	case "zsh":
 		if noDesc {
 			cmd.Root().GenZshCompletionNoDesc(os.Stdout)
 		} else {
 			cmd.Root().GenZshCompletion(os.Stdout)
 		}
-	case "fish":
-		cmd.Root().GenFishCompletion(os.Stdout, !noDesc)
 	case "powershell":
 		if noDesc {
 			cmd.Root().GenPowerShellCompletion(os.Stdout)
