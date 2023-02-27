@@ -88,7 +88,9 @@ alpine ssh $VMNAME #attach to the VM shell
 Expose additional VM ports to host:
 
 ```bash
-alpine launch -s 23 -p 8888,5432 #launch a VM, expose SSH to host port 23 and forward VM ports 8888 and 5432 to host ports 8888 and 5432
+alpine launch -s 23 -p 8888,5432 #launch a VM, expose SSH to host port 23 and forward host ports 8888 and 5432 to VM ports 8888 and 5432
+alpine launch -s 8023 -p 8081:8082,8083 #launch a VM, expose SSH to host port 8023, forward host port 8081 to VM port 8082, and forward
+                                        #host port 8083 to VM port 8083
 ```
 
 VMs can be easily packaged for export and re-use as tar.gz files:
