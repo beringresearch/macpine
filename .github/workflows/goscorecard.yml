@@ -2,7 +2,7 @@ name: Go report card
 
 on:
   push:
-      branches: [ "main" ]
+      branches: [ "main", "go-fmt-edits" ]
   pull_request:
       branches: [ "main" ]
   workflow_dispatch:
