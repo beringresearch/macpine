@@ -95,15 +95,24 @@ func correctArguments(imageVersion string, machineArch string, machineCPU string
 	ports := strings.Split(machinePort, ",")
 
 	if machinePort != "" {
+      porterror := "port must either be positive integers (e.g. 1234) or pairs separated by ':' (e.g. 4444:5555), each separated by commas (e.g. 1234,4444:5555)"
 		for _, p := range ports {
-			int, err = strconv.Atoi(p)
-			if err != nil {
-            ports = strings.Split(p, ":")
-            host, herr = strconv.Atoi(ports[0])
-            guest, gerr = strconv.Atoi(ports[1])
-            if len(ports) != 2 || herr != nil || gerr != nil || int < 0 || host < 0 || guest < 0 {
-               return errors.New("port must either be positive integers (e.g. 1234) or pairs separated by ':' (e.g. 4444:5555), each separated by commas (e.g. 1234,4444:5555)")
-			}
+         if strings.Contains(p, ":") {
+            mapping := strings.Split(p, ":")
+            if len(mapping) != 2 {
+               return errors.New(porterror)
+            }
+            in, inerr := strconv.Atoi(mapping[0])
+            out, outerr := strconv.Atoi(mapping[1])
+            if inerr != nil || outerr != nil || in < 0 || out < 0 {
+               return errors.New(porterror)
+            }
+         } else {
+            port, perr := strconv.Atoi(p)
+            if perr != nil || port < 0 {
+               return errors.New(porterror)
+            }
+         }
 		}
 	}
 
