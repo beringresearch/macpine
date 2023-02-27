@@ -97,8 +97,12 @@ func correctArguments(imageVersion string, machineArch string, machineCPU string
 	if machinePort != "" {
 		for _, p := range ports {
 			int, err = strconv.Atoi(p)
-			if err != nil || int < 0 {
-				return errors.New("port must be positive integer separated by commas without spaces")
+			if err != nil {
+            ports = strings.Split(p, ":")
+            host, herr = strconv.Atoi(ports[0])
+            guest, gerr = strconv.Atoi(ports[1])
+            if len(ports) != 2 || herr != nil || gerr != nil || int < 0 || host < 0 || guest < 0 {
+               return errors.New("port must either be positive integers (e.g. 1234) or pairs separated by ':' (e.g. 4444:5555), each separated by commas (e.g. 1234,4444:5555)")
 			}
 		}
 	}
