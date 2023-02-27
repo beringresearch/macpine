@@ -325,7 +325,7 @@ func (c *MachineConfig) Start() error {
 	}
 
 	err = utils.Retry(10, 2*time.Second, func() error {
-		err := c.Exec("hwclock -s")
+		err := c.Exec("hwclock -w")
 		if err != nil {
 			return err
 		}
