@@ -1,11 +1,11 @@
 name: Go report card
 
 on:
-  - push:
+  push:
       branches: [ "main" ]
-  - pull_request:
+  pull_request:
       branches: [ "main" ]
-  - workflow_dispatch
+  workflow_dispatch
 
 jobs:
   refresh-scorecard:
