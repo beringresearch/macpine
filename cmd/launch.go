@@ -92,6 +92,7 @@ func correctArguments(imageVersion string, machineArch string, machineCPU string
 		return errors.New("ssh port (-s) must be a positive integer")
 	}
 
+   // TODO PortMap
 	ports := strings.Split(machinePort, ",")
 
 	if machinePort != "" {

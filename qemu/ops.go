@@ -233,6 +233,7 @@ func (c *MachineConfig) Start() error {
 
 	exposedPorts := "user,id=net0,hostfwd=tcp::" + c.SSHPort + "-:22"
 
+   // TODO PortMap
 	if c.Port != "" {
       var host, guest string
 		s := strings.Split(c.Port, ",")
