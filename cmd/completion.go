@@ -20,7 +20,7 @@ var (
 	// completionCmd creates completion shell files
 	completionCmd = &cobra.Command{
 		Use:                   fmt.Sprintf("completion [%s]", strings.Join(shells, "|")),
-		Short:                 "Generate shell autocompletions",
+		Short:                 "Generate shell autocompletions.",
 		Long:                  longCompletion,
 		DisableSuggestions:    false,
 		DisableFlagsInUseLine: true,

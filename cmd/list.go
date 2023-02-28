@@ -12,7 +12,7 @@ import (
 	"github.com/beringresearch/macpine/host"
 	"github.com/beringresearch/macpine/qemu"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // listCmd lists Alpine instances
