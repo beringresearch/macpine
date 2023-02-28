@@ -21,40 +21,35 @@ import (
 )
 
 type MachineConfig struct {
-	Alias        string `yaml:"alias"`
-	Image        string `yaml:"image"`
-	Arch         string `yaml:"arch"`
-	CPU          string `yaml:"cpu"`
-	Memory       string `yaml:"memory"`
-	Disk         string `yaml:"disk"`
-	Mount        string `yaml:"mount"`
-	Port         string `yaml:"port"`
-	SSHPort      string `yaml:"sshport"`
-	SSHUser      string `yaml:"sshuser"`
-	SSHPassword  string `yaml:"sshpassword"`
-   RootPassword *string `yaml:"rootpassword,omitempty"` // nil if not specified
-	MACAddress   string `yaml:"macaddress"`
-	Location     string `yaml:"location"`
+	Alias        string  `yaml:"alias"`
+	Image        string  `yaml:"image"`
+	Arch         string  `yaml:"arch"`
+	CPU          string  `yaml:"cpu"`
+	Memory       string  `yaml:"memory"`
+	Disk         string  `yaml:"disk"`
+	Mount        string  `yaml:"mount"`
+	Port         string  `yaml:"port"`
+	SSHPort      string  `yaml:"sshport"`
+	SSHUser      string  `yaml:"sshuser"`
+	SSHPassword  string  `yaml:"sshpassword"`
+	RootPassword *string `yaml:"rootpassword,omitempty"` // nil if not specified
+	MACAddress   string  `yaml:"macaddress"`
+	Location     string  `yaml:"location"`
 }
 
 // Exec starts an interactive shell terminal in VM
-func (c *MachineConfig) Exec(cmd string, root ...bool) error {
-   privileged := false
-   if len(root) > 0 { // if variadic bool argument provided...
-      privileged = root[0] // ...use it, as Go doesn't support default params
-   }
-
+func (c *MachineConfig) Exec(cmd string, root bool) error {
 	host := "localhost:" + c.SSHPort
-   user := c.SSHUser
-   pwd := c.SSHPassword
-   if privileged && user != "root" {
-      user = "root"
-      if c.RootPassword == nil {
-         pwd = "root"
-      } else {
-         pwd = *c.RootPassword
-      }
-   }
+	user := c.SSHUser
+	pwd := c.SSHPassword
+	if root && user != "root" {
+		user = "root"
+		if c.RootPassword == nil {
+			pwd = "root"
+		} else {
+			pwd = *c.RootPassword
+		}
+	}
 
 	var err error
 
@@ -178,8 +173,8 @@ func (c *MachineConfig) Status() (string, int) {
 // Stop stops an Alpine VM
 func (c *MachineConfig) Stop() error {
 	pidFile := filepath.Join(c.Location, "alpine.pid")
-   // qemu creates PID file with -pidfile flag, and deletes it on sigterm
-   // TODO check if removed on sigkill
+	// qemu creates PID file with -pidfile flag, and deletes it on sigterm
+	// TODO check if removed on sigkill
 	if _, err := os.Stat(pidFile); err == nil {
 
 		_, pid := c.Status()
@@ -352,7 +347,7 @@ func (c *MachineConfig) Start() error {
 		return nil
 	})
 	if err != nil {
-      c.CleanPIDFile()
+		c.CleanPIDFile()
 		return errors.New("unable to sync clocks: " + err.Error())
 	}
 
@@ -366,7 +361,7 @@ func (c *MachineConfig) Start() error {
 		})
 
 		if err != nil {
-         c.CleanPIDFile()
+			c.CleanPIDFile()
 			return errors.New("unable to mount: " + err.Error())
 		}
 
@@ -375,7 +370,7 @@ func (c *MachineConfig) Start() error {
 
 	status, _ := c.Status()
 	if status == "Stopped" {
-      c.CleanPIDFile()
+		c.CleanPIDFile()
 		return errors.New("unable to start vm")
 	}
 
@@ -497,7 +492,7 @@ func (c *MachineConfig) Launch() error {
 			return errors.New("error expanding disk: " + err.Error())
 		}
 
-		err = c.Exec("df -h")
+		err = c.Exec("df -h", false)
 		if err != nil {
 			return err
 		}
@@ -549,7 +544,7 @@ func (c *MachineConfig) CreateQemuDiskImage(imageName string) error {
 
 func (c *MachineConfig) CleanPIDFile() {
 	pidFile := filepath.Join(c.Location, "alpine.pid")
-   if err := os.Remove(pidFile); err != nil && !errors.Is(err, os.ErrNotExist) {
-      log.Fatalf("Error deleting pidfile at %s. Manually delete it before proceeding.", pidFile)
-   }
+	if err := os.Remove(pidFile); err != nil && !errors.Is(err, os.ErrNotExist) {
+		log.Fatalf("Error deleting pidfile at %s. Manually delete it before proceeding.", pidFile)
+	}
 }
