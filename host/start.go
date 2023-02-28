@@ -22,9 +22,9 @@ func Start(config qemu.MachineConfig) error {
 	allPorts := append([]string{config.SSHPort}, ports...)
 
 	for _, p := range allPorts {
-      if strings.Contains(p, ":") {
-         p = strings.Split(p, ":")[0]
-      }
+		if strings.Contains(p, ":") {
+			p = strings.Split(p, ":")[0]
+		}
 		err := utils.Ping("localhost", p)
 		if err != nil {
 			return err

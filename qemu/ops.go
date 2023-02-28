@@ -233,28 +233,28 @@ func (c *MachineConfig) Start() error {
 
 	exposedPorts := "user,id=net0,hostfwd=tcp::" + c.SSHPort + "-:22"
 
-   // TODO PortMap
+	// TODO PortMap
 	if c.Port != "" {
-      var host, guest string
+		var host, guest string
 		s := strings.Split(c.Port, ",")
 		for _, p := range s {
-         if strings.Contains(p, ":") {
-            ports := strings.Split(p, ":")
-            if len(ports) != 2 {
-               log.Fatal("Invalid port configuration in config.yaml")
-            }
-            host = ports[0]
-            guest = ports[1]
-         } else {
-            host = p
-            guest = p
-         }
-         if h, err := strconv.Atoi(host); err != nil || h < 0 || h >= 65536 {
-            log.Fatal("Invalid port configuration in config.yaml")
-         }
-         if g, err := strconv.Atoi(guest); err != nil || g < 0 || g >= 65536 {
-            log.Fatal("Invalid port configuration in config.yaml")
-         }
+			if strings.Contains(p, ":") {
+				ports := strings.Split(p, ":")
+				if len(ports) != 2 {
+					log.Fatal("Invalid port configuration in config.yaml")
+				}
+				host = ports[0]
+				guest = ports[1]
+			} else {
+				host = p
+				guest = p
+			}
+			if h, err := strconv.Atoi(host); err != nil || h < 0 || h >= 65536 {
+				log.Fatal("Invalid port configuration in config.yaml")
+			}
+			if g, err := strconv.Atoi(guest); err != nil || g < 0 || g >= 65536 {
+				log.Fatal("Invalid port configuration in config.yaml")
+			}
 			exposedPorts += ",hostfwd=tcp::" + host + "-:" + guest
 		}
 	}
