@@ -16,15 +16,20 @@ type Credential struct {
    CR string;
 }
 
+// TODO check for all uses of sshpassword and rootpassword to wrap with GetCredential
+
 /* credential backends: raw, env, ssh-agent
  * if you want to store credentials in the macOS keychain, configure your SSH agent to use the keychain
- * - raw:         "raw::password" (password is a string directly after "pw:" prefix)
+ * - raw:         "raw::password" (password is a string directly after "raw::" prefix)
  * - env:         "env::PASS_VAR" (password is stored in environment variable $PASS_VAR)
  * - ssh-agent:   "ssh::HOST"     (credential is stored in ssh-agent and configured for use with host HOST in the ssh config)
 
  * `ssh-agent` is the most secure by far, as it allows certificate-based authentication rather than using passwords.
- * If `ssh-agent` is configured and working, `PasswordAuthentication no` can be set in `/etc/ssh/sshd_config` to significantly
- * harden the VM.
+ * If `ssh-agent` is configured and working with certificate-based authentication, `PasswordAuthentication no` can be
+ * set in `/etc/ssh/sshd_config` to significantly harden the VM.
+ *
+ * `env` is more secure than `raw`, and may be useful for automation using macpine on systems where configuring `ssh-agent`
+ * is inconvenient.
 */
 func GetCredential(config string) (Credential, error) {
    var cred Credential
