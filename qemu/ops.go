@@ -181,11 +181,6 @@ func (c *MachineConfig) Stop() error {
 
 		if pid > 0 {
 
-			// err = syscall.Kill(pid, 15)
-			// if err != nil {
-			// 	return err
-			// }
-
 			p, procErr := os.FindProcess(pid)
 
 			if procErr != nil {
@@ -340,7 +335,7 @@ func (c *MachineConfig) Start() error {
 	}
 
 	err = utils.Retry(5, 3*time.Second, func() error {
-		err := c.Exec("hwclock -s", true) // root=true i.e. run as root
+		err := c.Exec("hwclock -w", true) // root=true i.e. run as root
 		if err != nil {
 			return err
 		}

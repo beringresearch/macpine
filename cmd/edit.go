@@ -14,7 +14,7 @@ import (
 // editCmd lists Alpine instances
 var editCmd = &cobra.Command{
 	Use:   "edit NAME",
-	Short: "Edit instance configuration using Vim.",
+	Short: "Edit instance configuration.",
 	Run:   edit,
 
 	ValidArgsFunction:     host.AutoCompleteVMNames,
@@ -44,11 +44,25 @@ func edit(cmd *cobra.Command, args []string) {
 
 	targetFile := filepath.Join(userHomeDir, ".macpine", args[0], "config.yaml")
 
-	if !utils.CommandExists("qemu-img") {
-		log.Fatal("vim is not available on $PATH. you can still edit config manually at " + targetFile)
+	editor, found := os.LookupEnv("EDITOR")
+	if !found || !utils.CommandExists(editor) {
+		if !found {
+			log.Println("edit: No $EDITOR set.")
+		} else {
+			log.Println("edit: $EDITOR set but not found in $PATH.")
+		}
+		if utils.CommandExists("vim") {
+			log.Println("defaulting to \"vim\"")
+			editor = "vim"
+		} else if utils.CommandExists("nano") {
+			log.Println("defaulting to \"nano\"")
+			editor = "nano"
+		} else {
+			log.Fatal("no basic editor found in $PATH (tried vim, nano). You can still edit the config manually at " + targetFile)
+		}
 	}
 
-	edit := run.Command("vim", targetFile)
+	edit := run.Command(editor, targetFile)
 
 	edit.Stdin = os.Stdin
 	edit.Stdout = os.Stdout
@@ -65,5 +79,4 @@ func edit(cmd *cobra.Command, args []string) {
 	} else {
 		log.Printf("configuration saved. restart " + args[0] + " for changes to take effect.")
 	}
-
 }
