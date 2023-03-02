@@ -51,22 +51,25 @@ func Retry(attempts int, sleep time.Duration, f func() error) (err error) {
 	return fmt.Errorf("after %d attempts, last error: %s", attempts, err)
 }
 
-type Proto int
+type Protocol int
 
 const (
-	Tcp Proto = iota
+	Tcp Protocol = iota
 	Udp
 )
 
 type PortMap struct {
-	host  int
-	guest int
-	proto Proto
+	Host  int
+	Guest int
+	Proto Protocol
 }
 
 // Parses port mapping configurations
 func ParsePort(ports string) ([]PortMap, error) {
 	var maps []PortMap = nil
+	if ports == "" {
+		return maps, nil
+	}
 	mapcount := strings.Count(ports, ",") + 1
 	if mapcount > 65535 {
 		return nil, errors.New("Too many port mappings specified, likely an error. Check config.yaml")
@@ -76,7 +79,7 @@ func ParsePort(ports string) ([]PortMap, error) {
 		newmap := PortMap{0, 0, Tcp}
 		var herr, gerr error = nil, nil
 		if strings.HasSuffix(p, "u") {
-			newmap.proto = Udp
+			newmap.Proto = Udp
 			p = strings.TrimSuffix(p, "u")
 		}
 		if strings.Contains(p, ":") {
@@ -84,16 +87,16 @@ func ParsePort(ports string) ([]PortMap, error) {
 			if len(pair) != 2 {
 				return nil, errors.New("Incorrect port mapping pair specified. Check config.yaml")
 			}
-			newmap.host, herr = strconv.Atoi(pair[0])
-			newmap.guest, gerr = strconv.Atoi(pair[1])
+			newmap.Host, herr = strconv.Atoi(pair[0])
+			newmap.Guest, gerr = strconv.Atoi(pair[1])
 		} else {
-			newmap.host, herr = strconv.Atoi(p)
-			newmap.guest = newmap.host
+			newmap.Host, herr = strconv.Atoi(p)
+			newmap.Guest = newmap.Host
 		}
 		if herr != nil || gerr != nil {
 			return nil, errors.New("Error parsing specified ports. Check config.yaml")
 		}
-		if newmap.host < 0 || newmap.host > 65535 || newmap.guest < 0 || newmap.guest > 65535 {
+		if newmap.Host < 0 || newmap.Host > 65535 || newmap.Guest < 0 || newmap.Guest > 65535 {
 			return nil, errors.New("Invalid specified ports (must be 0-65535). Check config.yaml")
 		}
 		maps[i] = newmap

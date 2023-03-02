@@ -225,6 +225,7 @@ func (c *MachineConfig) GetAccel() string {
 			return "whpx" // untested
 		}
 	}
+	log.Println("Note: defaulting to QEMU tiny codegen. Emulation overhead may be significant.")
 	return "tcg,tb-size=1024,thread=multi"
 }
 
@@ -233,29 +234,17 @@ func (c *MachineConfig) Start() error {
 
 	exposedPorts := "user,id=net0,hostfwd=tcp::" + c.SSHPort + "-:22"
 
-	// TODO PortMap
-	if c.Port != "" {
-		var host, guest string
-		s := strings.Split(c.Port, ",")
-		for _, p := range s {
-			if strings.Contains(p, ":") {
-				ports := strings.Split(p, ":")
-				if len(ports) != 2 {
-					log.Fatal("Invalid port configuration in config.yaml")
-				}
-				host = ports[0]
-				guest = ports[1]
-			} else {
-				host = p
-				guest = p
-			}
-			if h, err := strconv.Atoi(host); err != nil || h < 0 || h >= 65536 {
-				log.Fatal("Invalid port configuration in config.yaml")
-			}
-			if g, err := strconv.Atoi(guest); err != nil || g < 0 || g >= 65536 {
-				log.Fatal("Invalid port configuration in config.yaml")
-			}
-			exposedPorts += ",hostfwd=tcp::" + host + "-:" + guest
+	ports, err := utils.ParsePort(c.Port)
+	if err != nil {
+		log.Fatal("Error configuring ports: %v\n", err)
+	}
+	for _, p := range ports {
+		hostp := strconv.Itoa(p.Host)
+		guestp := strconv.Itoa(p.Guest)
+		if p.Proto == utils.Tcp {
+			exposedPorts += ",hostfwd=tcp::" + hostp + "-:" + guestp
+		} else { // Udp
+			exposedPorts += ",hostfwd=udp::" + hostp + "-:" + guestp
 		}
 	}
 
