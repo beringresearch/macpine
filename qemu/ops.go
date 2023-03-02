@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-   "net"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -17,7 +17,7 @@ import (
 
 	"github.com/beringresearch/macpine/utils"
 	"golang.org/x/crypto/ssh"
-   "golang.org/x/crypto/ssh/agent"
+	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/term"
 	"gopkg.in/yaml.v3"
 )
@@ -53,34 +53,34 @@ func (c *MachineConfig) Exec(cmd string, root bool) error {
 		}
 	}
 	cred, err := utils.GetCredential(pwd)
-   if err != nil {
-      return err
-   }
+	if err != nil {
+		return err
+	}
 
-   var conf *ssh.ClientConfig
-   if cred.CRType == utils.PwdCred {
-      conf = &ssh.ClientConfig{
-         User:            user,
-         HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-         Auth: []ssh.AuthMethod{
-            ssh.Password(cred.CR),
-         },
-      }
-   } else { // utils.HostCred
-      // Use SSH agent (https://pkg.go.dev/golang.org/x/crypto/ssh/agent#example-NewClient)
-      socket := os.Getenv("SSH_AUTH_SOCK")
-      conn, err := net.Dial("unix", socket)
-      if err != nil {
-         log.Fatalf("Failed to open SSH_AUTH_SOCK: %v", err)
-      }
-      agentClient := agent.NewClient(conn)
-      conf = &ssh.ClientConfig{
-         User: user,
-         Auth: []ssh.AuthMethod{
-            ssh.PublicKeysCallback(agentClient.Signers),
-         },
-         HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-      }
+	var conf *ssh.ClientConfig
+	if cred.CRType == utils.PwdCred {
+		conf = &ssh.ClientConfig{
+			User:            user,
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+			Auth: []ssh.AuthMethod{
+				ssh.Password(cred.CR),
+			},
+		}
+	} else { // utils.HostCred
+		// Use SSH agent (https://pkg.go.dev/golang.org/x/crypto/ssh/agent#example-NewClient)
+		socket := os.Getenv("SSH_AUTH_SOCK")
+		conn, err := net.Dial("unix", socket)
+		if err != nil {
+			log.Fatalf("Failed to open SSH_AUTH_SOCK: %v", err)
+		}
+		agentClient := agent.NewClient(conn)
+		conf = &ssh.ClientConfig{
+			User: user,
+			Auth: []ssh.AuthMethod{
+				ssh.PublicKeysCallback(agentClient.Signers),
+			},
+			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		}
 	}
 
 	var conn *ssh.Client
