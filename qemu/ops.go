@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+   "net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/beringresearch/macpine/utils"
 	"golang.org/x/crypto/ssh"
+   "golang.org/x/crypto/ssh/agent"
 	"golang.org/x/term"
 	"gopkg.in/yaml.v2"
 )
@@ -41,16 +43,36 @@ func (c *MachineConfig) Exec(cmd string) error {
 
 	host := "localhost:" + c.SSHPort
 	user := c.SSHUser
-	pwd := c.SSHPassword
+	cred, err := utils.GetCredential(c.SSHPassword)
+   if err != nil {
+      return err
+   }
+   log.Println("Using credential type %v (cred: %v)", cred.CRType, cred.CR)
 
-	var err error
-
-	conf := &ssh.ClientConfig{
-		User:            user,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Auth: []ssh.AuthMethod{
-			ssh.Password(pwd),
-		},
+   var conf *ssh.ClientConfig
+   if cred.CRType == utils.PwdCred {
+      conf = &ssh.ClientConfig{
+         User:            user,
+         HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+         Auth: []ssh.AuthMethod{
+            ssh.Password(cred.CR),
+         },
+      }
+   } else { // utils.HostCred
+      // Use SSH agent (https://pkg.go.dev/golang.org/x/crypto/ssh/agent#example-NewClient)
+      socket := os.Getenv("SSH_AUTH_SOCK")
+      conn, err := net.Dial("unix", socket)
+      if err != nil {
+         log.Fatalf("Failed to open SSH_AUTH_SOCK: %v", err)
+      }
+      agentClient := agent.NewClient(conn)
+      conf = &ssh.ClientConfig{
+         User: user,
+         Auth: []ssh.AuthMethod{
+            ssh.PublicKeysCallback(agentClient.Signers),
+         },
+         HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+      }
 	}
 
 	var conn *ssh.Client
@@ -81,9 +103,7 @@ func (c *MachineConfig) Exec(cmd string) error {
 			return err
 		}
 	}
-
 	return nil
-
 }
 
 func attachShell(session *ssh.Session) error {

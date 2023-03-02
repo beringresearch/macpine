@@ -8,8 +8,8 @@ import (
 
 type CredentialType int
 const (
-   Password CredentialType = iota
-   Host
+   PwdCred CredentialType = iota
+   HostCred
 )
 type Credential struct {
    CRType CredentialType;
@@ -36,23 +36,23 @@ func GetCredential(config string) (Credential, error) {
    var err error = nil
    if strings.HasPrefix(config, "raw::") {
       cred.CR = strings.TrimPrefix(config, "raw::")
-      cred.CRType = Password
+      cred.CRType = PwdCred
    } else if strings.HasPrefix(config, "env::") {
       envvar := strings.TrimPrefix(config, "env::")
       val, ok := os.LookupEnv(envvar)
       if ok {
          cred.CR = val
-         cred.CRType = Password
+         cred.CRType = PwdCred
       } else {
          err = fmt.Errorf("config.yaml specifies environment variable credential but variable is not set.")
       }
    } else if strings.HasPrefix(config, "ssh::") {
       cred.CR = strings.TrimPrefix(config, "ssh::")
-      cred.CRType = Host
+      cred.CRType = HostCred
    } else {
       // likely a legacy config file with a raw password and no prefix
       cred.CR = config
-      cred.CRType = Password
+      cred.CRType = PwdCred
    }
    return cred, err
 }
