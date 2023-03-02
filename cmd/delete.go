@@ -15,8 +15,8 @@ import (
 )
 
 var deleteCmd = &cobra.Command{
-	Use:   "delete NAME",
-	Short: "Delete an instance.",
+	Use:   "delete <instance> [<instance>...]",
+	Short: "Delete named instances.",
 	Run:   delete,
 
 	ValidArgsFunction:     host.AutoCompleteVMNames,
@@ -34,33 +34,36 @@ func delete(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	exists := utils.StringSliceContains(vmList, args[0])
-	if !exists {
-		log.Fatal("unknown machine " + args[0])
+	for _, vmName := range args {
+		exists := utils.StringSliceContains(vmList, vmName)
+		if !exists {
+			log.Fatal("unknown machine " + vmName)
+		}
+
+		userHomeDir, err := os.UserHomeDir()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		machineConfig := qemu.MachineConfig{}
+
+		config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", vmName, "config.yaml"))
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = yaml.Unmarshal(config, &machineConfig)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		err = host.Stop(machineConfig)
+		if err != nil {
+			log.Fatal(errors.New("unable to stop VM: " + err.Error()))
+		}
+
+		os.RemoveAll(machineConfig.Location)
+
 	}
-
-	userHomeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	machineConfig := qemu.MachineConfig{}
-
-	config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", args[0], "config.yaml"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = yaml.Unmarshal(config, &machineConfig)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = host.Stop(machineConfig)
-	if err != nil {
-		log.Fatal(errors.New("unable to stop VM: " + err.Error()))
-	}
-
-	os.RemoveAll(machineConfig.Location)
 
 }

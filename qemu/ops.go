@@ -34,7 +34,7 @@ type MachineConfig struct {
 	SSHPort      string  `yaml:"sshport"`
 	SSHUser      string  `yaml:"sshuser"`
 	SSHPassword  string  `yaml:"sshpassword"`
-	RootPassword *string `yaml:"rootpassword,omitempty"` // nil if not specified
+	RootPassword *string `yaml:"rootpassword,omitempty"`
 	MACAddress   string  `yaml:"macaddress"`
 	Location     string  `yaml:"location"`
 }
@@ -71,7 +71,7 @@ func (c *MachineConfig) Exec(cmd string, root bool) error {
 		socket := os.Getenv("SSH_AUTH_SOCK")
 		conn, err := net.Dial("unix", socket)
 		if err != nil {
-			log.Fatalf("Failed to open SSH_AUTH_SOCK: %v", err)
+			log.Fatalf("failed to open SSH_AUTH_SOCK: %v", err)
 		}
 		agentClient := agent.NewClient(conn)
 		conf = &ssh.ClientConfig{
@@ -568,6 +568,6 @@ func (c *MachineConfig) CreateQemuDiskImage(imageName string) error {
 func (c *MachineConfig) CleanPIDFile() {
 	pidFile := filepath.Join(c.Location, "alpine.pid")
 	if err := os.Remove(pidFile); err != nil && !errors.Is(err, os.ErrNotExist) {
-		log.Fatalf("Error deleting pidfile at %s. Manually delete it before proceeding.", pidFile)
+		log.Fatalf("error deleting pidfile at %s. Manually delete it before proceeding.", pidFile)
 	}
 }
