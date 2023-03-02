@@ -18,8 +18,6 @@ type Credential struct {
 	CR     string
 }
 
-// TODO check for all uses of sshpassword and rootpassword to wrap with GetCredential
-
 /*
 credential backends: raw, env, ssh-agent
 * if you want to store credentials in the macOS keychain, configure your SSH agent to use the keychain
