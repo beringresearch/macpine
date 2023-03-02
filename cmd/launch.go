@@ -168,7 +168,7 @@ func launch(cmd *cobra.Command, args []string) {
 		SSHPort:     sshPort,
 		MACAddress:  macAddress,
 		SSHUser:     "root",
-		SSHPassword: "root",
+      SSHPassword: "raw::root",
 	}
 	machineConfig.Location = filepath.Join(userHomeDir, ".macpine", machineConfig.Alias)
 
