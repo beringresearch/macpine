@@ -1,7 +1,7 @@
 BINARY_NAME := alpine
 PREFIX = /usr/local
 bindir = $(DESTDIR)$(PREFIX)/bin
-SRCS = $(wildcard cmd/*.go host/*.go qemu/*.go utils/*.go)
+SRCS = $(wildcard */*.go)
 MAIN = main.go
 
 bin/$(BINARY_NAME): $(MAIN) $(SRCS)
@@ -10,7 +10,7 @@ bin/$(BINARY_NAME): $(MAIN) $(SRCS)
 	go get
 	go build -ldflags=$(GO_LDFLAGS) -o $@ $<
 
-.PHONY: install clean
+.PHONY: install clean fmt
 install: bin/$(BINARY_NAME)
 	@echo "Installing ..."
 	install -d $(bindir)
@@ -21,3 +21,6 @@ clean:
 	@echo "Cleaning ..."
 	go clean
 	$(RM) -r bin/
+
+fmt:
+	@gofmt -e -l -s -w $(MAIN) $(SRCS)

@@ -41,7 +41,6 @@ func Retry(attempts int, sleep time.Duration, f func() error) (err error) {
 		if i > 0 {
 			fmt.Printf("\r%s", strings.Repeat(".", i))
 			time.Sleep(sleep)
-			sleep *= 2
 		}
 		err = f()
 		if err == nil {

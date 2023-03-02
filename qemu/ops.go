@@ -19,35 +19,43 @@ import (
 	"golang.org/x/crypto/ssh"
    "golang.org/x/crypto/ssh/agent"
 	"golang.org/x/term"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type MachineConfig struct {
-	Alias       string `yaml:"alias"`
-	Image       string `yaml:"image"`
-	Arch        string `yaml:"arch"`
-	CPU         string `yaml:"cpu"`
-	Memory      string `yaml:"memory"`
-	Disk        string `yaml:"disk"`
-	Mount       string `yaml:"mount"`
-	Port        string `yaml:"port"`
-	SSHPort     string `yaml:"sshport"`
-	SSHUser     string `yaml:"sshuser"`
-	SSHPassword string `yaml:"sshpassword"`
-	MACAddress  string `yaml:"macaddress"`
-	Location    string `yaml:"location"`
+	Alias        string  `yaml:"alias"`
+	Image        string  `yaml:"image"`
+	Arch         string  `yaml:"arch"`
+	CPU          string  `yaml:"cpu"`
+	Memory       string  `yaml:"memory"`
+	Disk         string  `yaml:"disk"`
+	Mount        string  `yaml:"mount"`
+	Port         string  `yaml:"port"`
+	SSHPort      string  `yaml:"sshport"`
+	SSHUser      string  `yaml:"sshuser"`
+	SSHPassword  string  `yaml:"sshpassword"`
+	RootPassword *string `yaml:"rootpassword,omitempty"` // nil if not specified
+	MACAddress   string  `yaml:"macaddress"`
+	Location     string  `yaml:"location"`
 }
 
 // Exec starts an interactive shell terminal in VM
-func (c *MachineConfig) Exec(cmd string) error {
-
+func (c *MachineConfig) Exec(cmd string, root bool) error {
 	host := "localhost:" + c.SSHPort
 	user := c.SSHUser
-	cred, err := utils.GetCredential(c.SSHPassword)
+	pwd := c.SSHPassword
+	if root && user != "root" {
+		user = "root"
+		if c.RootPassword == nil {
+			pwd = "root"
+		} else {
+			pwd = *c.RootPassword
+		}
+	}
+	cred, err := utils.GetCredential(pwd)
    if err != nil {
       return err
    }
-   log.Println("Using credential type %v (cred: %v)", cred.CRType, cred.CR)
 
    var conf *ssh.ClientConfig
    if cred.CRType == utils.PwdCred {
@@ -89,7 +97,7 @@ func (c *MachineConfig) Exec(cmd string) error {
 	}
 	defer session.Close()
 
-	if (cmd == "ash") || cmd == ("bash") {
+	if (cmd == "ash") || (cmd == "bash") {
 		err := attachShell(session)
 		if err != nil {
 			return err
@@ -185,6 +193,8 @@ func (c *MachineConfig) Status() (string, int) {
 // Stop stops an Alpine VM
 func (c *MachineConfig) Stop() error {
 	pidFile := filepath.Join(c.Location, "alpine.pid")
+	// qemu creates PID file with -pidfile flag, and deletes it on sigterm
+	// TODO check if removed on sigkill
 	if _, err := os.Stat(pidFile); err == nil {
 
 		_, pid := c.Status()
@@ -344,20 +354,21 @@ func (c *MachineConfig) Start() error {
 		return err
 	}
 
-	err = utils.Retry(10, 2*time.Second, func() error {
-		err := c.Exec("hwclock -s")
+	err = utils.Retry(5, 3*time.Second, func() error {
+		err := c.Exec("hwclock -w", true) // root=true i.e. run as root
 		if err != nil {
 			return err
 		}
 		return nil
 	})
 	if err != nil {
+		c.CleanPIDFile()
 		return errors.New("unable to sync clocks: " + err.Error())
 	}
 
 	if c.Mount != "" {
-		err = utils.Retry(10, 2*time.Second, func() error {
-			err := c.Exec("DIR=$(eval echo \"~$USER\");mkdir -p $DIR/mnt/; chmod 777 $DIR/mnt; mount -t 9p -o trans=virtio host0 $DIR/mnt/ -oversion=9p2000.L,msize=104857600")
+		err = utils.Retry(5, 3*time.Second, func() error {
+			err := c.Exec("DIR=$(eval echo \"~$USER\");mkdir -p $DIR/mnt/; chmod 777 $DIR/mnt; mount -t 9p -o trans=virtio host0 $DIR/mnt/ -oversion=9p2000.L,msize=104857600", true)
 			if err != nil {
 				return err
 			}
@@ -365,6 +376,7 @@ func (c *MachineConfig) Start() error {
 		})
 
 		if err != nil {
+			c.CleanPIDFile()
 			return errors.New("unable to mount: " + err.Error())
 		}
 
@@ -372,8 +384,8 @@ func (c *MachineConfig) Start() error {
 	}
 
 	status, _ := c.Status()
-
 	if status == "Stopped" {
+		c.CleanPIDFile()
 		return errors.New("unable to start vm")
 	}
 
@@ -459,8 +471,8 @@ func (c *MachineConfig) Launch() error {
 
 	//Resize disk on an alpine guest
 	if strings.Split(c.Image, "_")[0] == "alpine" {
-		err = utils.Retry(10, 1*time.Second, func() error {
-			err := c.Exec("apk add --no-cache e2fsprogs-extra sfdisk partx")
+		err = utils.Retry(3, 5*time.Second, func() error {
+			err := c.Exec("apk add --no-cache e2fsprogs-extra sfdisk partx", true) // root=true i.e. run as root
 			if err != nil {
 				return err
 			}
@@ -471,8 +483,8 @@ func (c *MachineConfig) Launch() error {
 			return errors.New("unable install dependencies: " + err.Error())
 		}
 
-		err = utils.Retry(3, 1*time.Second, func() error {
-			err = c.Exec(`echo ", +" | sfdisk --no-reread -N 3 /dev/vda; partx -u /dev/vda`)
+		err = utils.Retry(3, 5*time.Second, func() error {
+			err = c.Exec(`echo ", +" | sfdisk --no-reread -N 3 /dev/vda; partx -u /dev/vda`, true)
 			if err != nil {
 				return err
 			}
@@ -483,8 +495,8 @@ func (c *MachineConfig) Launch() error {
 			return errors.New("error expanding disk: " + err.Error())
 		}
 
-		err = utils.Retry(3, 1*time.Second, func() error {
-			err = c.Exec("resize2fs /dev/vda3")
+		err = utils.Retry(3, 10*time.Second, func() error {
+			err = c.Exec("resize2fs /dev/vda3", true)
 			if err != nil {
 				return err
 			}
@@ -495,7 +507,7 @@ func (c *MachineConfig) Launch() error {
 			return errors.New("error expanding disk: " + err.Error())
 		}
 
-		err = c.Exec("df -h")
+		err = c.Exec("df -h", false)
 		if err != nil {
 			return err
 		}
@@ -543,4 +555,11 @@ func (c *MachineConfig) CreateQemuDiskImage(imageName string) error {
 	}
 
 	return nil
+}
+
+func (c *MachineConfig) CleanPIDFile() {
+	pidFile := filepath.Join(c.Location, "alpine.pid")
+	if err := os.Remove(pidFile); err != nil && !errors.Is(err, os.ErrNotExist) {
+		log.Fatalf("Error deleting pidfile at %s. Manually delete it before proceeding.", pidFile)
+	}
 }

@@ -44,39 +44,39 @@ func edit(cmd *cobra.Command, args []string) {
 
 	targetFile := filepath.Join(userHomeDir, ".macpine", args[0], "config.yaml")
 
-   editor, found := os.LookupEnv("EDITOR")
-   if !found || !utils.CommandExists(editor) {
-      if !found {
-         log.Println("edit: No $EDITOR set.")
-      } else {
-         log.Println("edit: $EDITOR set but not found in $PATH.")
-      }
-      if utils.CommandExists("vim") {
-         log.Println("defaulting to \"vim\"")
-         editor = "vim"
-      } else if utils.CommandExists("nano") {
-         log.Println("defaulting to \"nano\"")
-         editor = "nano"
-      } else {
-         log.Fatal("no basic editor found in $PATH (tried vim, nano). You can still edit the config manually at " + targetFile)
-      }
-   }
+	editor, found := os.LookupEnv("EDITOR")
+	if !found || !utils.CommandExists(editor) {
+		if !found {
+			log.Println("edit: No $EDITOR set.")
+		} else {
+			log.Println("edit: $EDITOR set but not found in $PATH.")
+		}
+		if utils.CommandExists("vim") {
+			log.Println("defaulting to \"vim\"")
+			editor = "vim"
+		} else if utils.CommandExists("nano") {
+			log.Println("defaulting to \"nano\"")
+			editor = "nano"
+		} else {
+			log.Fatal("no basic editor found in $PATH (tried vim, nano). You can still edit the config manually at " + targetFile)
+		}
+	}
 
-   edit := run.Command(editor, targetFile)
+	edit := run.Command(editor, targetFile)
 
-   edit.Stdin = os.Stdin
-   edit.Stdout = os.Stdout
-   edit.Stderr = os.Stderr
+	edit.Stdin = os.Stdin
+	edit.Stdout = os.Stdout
+	edit.Stderr = os.Stderr
 
-   err = edit.Start()
-   if err != nil {
-      log.Fatal(err)
-   }
+	err = edit.Start()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-   err = edit.Wait()
-   if err != nil {
-      log.Fatalf("error while editing. Error: %v\n", err)
-   } else {
-      log.Printf("configuration saved. restart " + args[0] + " for changes to take effect.")
-   }
+	err = edit.Wait()
+	if err != nil {
+		log.Fatalf("error while editing. Error: %v\n", err)
+	} else {
+		log.Printf("configuration saved. restart " + args[0] + " for changes to take effect.")
+	}
 }

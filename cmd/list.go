@@ -12,7 +12,7 @@ import (
 	"github.com/beringresearch/macpine/host"
 	"github.com/beringresearch/macpine/qemu"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // listCmd lists Alpine instances
@@ -33,7 +33,7 @@ func list(cmd *cobra.Command, args []string) {
 
 	status := []string{}
 	config := []qemu.MachineConfig{}
-	pid := []int{}
+	pid := []string{}
 
 	vmNames, err := host.ListVMNames()
 	if err != nil {
@@ -57,7 +57,11 @@ func list(cmd *cobra.Command, args []string) {
 
 		s, p := host.Status(machineConfig)
 		status = append(status, s)
-		pid = append(pid, p)
+		if s == "Stopped" {
+			pid = append(pid, "-")
+		} else {
+			pid = append(pid, fmt.Sprint(p))
+		}
 	}
 
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 1, ' ', 0)

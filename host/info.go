@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/beringresearch/macpine/qemu"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 func Info(vmName string) (string, error) {
