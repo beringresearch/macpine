@@ -15,8 +15,8 @@ import (
 )
 
 var deleteCmd = &cobra.Command{
-	Use:   "delete NAME",
-	Short: "Delete an instance.",
+	Use:   "delete <instance> [<instance>...]",
+	Short: "Delete named instances.",
 	Run:   delete,
 
 	ValidArgsFunction:     host.AutoCompleteVMNames,
@@ -35,7 +35,7 @@ func delete(cmd *cobra.Command, args []string) {
 	}
 
 	for _, vmName := range args {
-		exists := utils.StringSliceContains(vmList, args[0])
+		exists := utils.StringSliceContains(vmList, vmName)
 		if !exists {
 			log.Fatal("unknown machine " + vmName)
 		}
