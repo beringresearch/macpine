@@ -235,6 +235,7 @@ func (c *MachineConfig) GetAccel() string {
 			return "whpx" // untested
 		}
 	}
+	log.Println("Note: defaulting to QEMU tiny codegen. Emulation overhead may be significant.")
 	return "tcg,tb-size=1024,thread=multi"
 }
 
@@ -243,10 +244,17 @@ func (c *MachineConfig) Start() error {
 
 	exposedPorts := "user,id=net0,hostfwd=tcp::" + c.SSHPort + "-:22"
 
-	if c.Port != "" {
-		s := strings.Split(c.Port, ",")
-		for _, p := range s {
-			exposedPorts += ",hostfwd=tcp::" + p + "-:" + p
+	ports, err := utils.ParsePort(c.Port)
+	if err != nil {
+		log.Fatal("Error configuring ports: %v\n", err)
+	}
+	for _, p := range ports {
+		hostp := strconv.Itoa(p.Host)
+		guestp := strconv.Itoa(p.Guest)
+		if p.Proto == utils.Tcp {
+			exposedPorts += ",hostfwd=tcp::" + hostp + "-:" + guestp
+		} else { // Udp
+			exposedPorts += ",hostfwd=udp::" + hostp + "-:" + guestp
 		}
 	}
 

@@ -2,6 +2,7 @@ package host
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/beringresearch/macpine/qemu"
@@ -16,17 +17,27 @@ func Start(config qemu.MachineConfig) error {
 		return errors.New(config.Alias + " is already running")
 	}
 
-	ports := strings.Split(config.Port, ",")
-	allPorts := append([]string{config.SSHPort}, ports...)
+	ports, err := utils.ParsePort(config.Port)
+	if err != nil {
+		return err
+	}
+	hostports := make([]string, len(ports))
+	for i, p := range ports {
+		hostports[i] = strconv.Itoa(p.Host)
+	}
+	allPorts := append([]string{config.SSHPort}, hostports...)
 
 	for _, p := range allPorts {
+		if strings.Contains(p, ":") {
+			p = strings.Split(p, ":")[0]
+		}
 		err := utils.Ping("localhost", p)
 		if err != nil {
 			return err
 		}
 	}
 
-	err := config.Start()
+	err = config.Start()
 	if err != nil {
 		return err
 	}

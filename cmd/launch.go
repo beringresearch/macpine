@@ -92,15 +92,9 @@ func correctArguments(imageVersion string, machineArch string, machineCPU string
 		return errors.New("ssh port (-s) must be a positive integer")
 	}
 
-	ports := strings.Split(machinePort, ",")
-
-	if machinePort != "" {
-		for _, p := range ports {
-			int, err = strconv.Atoi(p)
-			if err != nil || int < 0 {
-				return errors.New("port must be positive integer separated by commas without spaces")
-			}
-		}
+	_, err = utils.ParsePort(machinePort)
+	if err != nil {
+		return err
 	}
 
 	if machineMount != "" {

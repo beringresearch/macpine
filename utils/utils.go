@@ -50,6 +50,59 @@ func Retry(attempts int, sleep time.Duration, f func() error) (err error) {
 	return fmt.Errorf("after %d attempts, last error: %s", attempts, err)
 }
 
+type Protocol int
+
+const (
+	Tcp Protocol = iota
+	Udp
+)
+
+type PortMap struct {
+	Host  int
+	Guest int
+	Proto Protocol
+}
+
+// Parses port mapping configurations
+func ParsePort(ports string) ([]PortMap, error) {
+	var maps []PortMap = nil
+	if ports == "" {
+		return maps, nil
+	}
+	mapcount := strings.Count(ports, ",") + 1
+	if mapcount > 65535 {
+		return nil, errors.New("Too many port mappings specified, likely an error. Check config.yaml")
+	}
+	maps = make([]PortMap, mapcount)
+	for i, p := range strings.Split(ports, ",") {
+		newmap := PortMap{0, 0, Tcp}
+		var herr, gerr error = nil, nil
+		if strings.HasSuffix(p, "u") {
+			newmap.Proto = Udp
+			p = strings.TrimSuffix(p, "u")
+		}
+		if strings.Contains(p, ":") {
+			pair := strings.Split(p, ":")
+			if len(pair) != 2 {
+				return nil, errors.New("Incorrect port mapping pair specified. Check config.yaml")
+			}
+			newmap.Host, herr = strconv.Atoi(pair[0])
+			newmap.Guest, gerr = strconv.Atoi(pair[1])
+		} else {
+			newmap.Host, herr = strconv.Atoi(p)
+			newmap.Guest = newmap.Host
+		}
+		if herr != nil || gerr != nil {
+			return nil, errors.New("Error parsing specified ports. Check config.yaml")
+		}
+		if newmap.Host < 0 || newmap.Host > 65535 || newmap.Guest < 0 || newmap.Guest > 65535 {
+			return nil, errors.New("Invalid specified ports (must be 0-65535). Check config.yaml")
+		}
+		maps[i] = newmap
+	}
+	return maps, nil
+}
+
 // Ping checks if connection is reachable
 func Ping(ip string, port string) error {
 	address, err := net.ResolveTCPAddr("tcp", ip+":"+port)
