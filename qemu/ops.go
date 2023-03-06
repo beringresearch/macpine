@@ -13,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/beringresearch/macpine/utils"
 	"golang.org/x/crypto/ssh"
@@ -41,6 +40,9 @@ type MachineConfig struct {
 
 // Exec starts an interactive shell terminal in VM
 func (c *MachineConfig) Exec(cmd string, root bool) error {
+	if cmd == "" {
+		return nil
+	}
 	host := "localhost:" + c.SSHPort
 	user := c.SSHUser
 	pwd := c.SSHPassword
@@ -97,6 +99,7 @@ func (c *MachineConfig) Exec(cmd string, root bool) error {
 	}
 	defer session.Close()
 
+	// XXX get shells from /etc/shells instead?
 	if (cmd == "ash") || (cmd == "bash") {
 		err := attachShell(session)
 		if err != nil {
@@ -192,29 +195,25 @@ func (c *MachineConfig) Status() (string, int) {
 
 // Stop stops an Alpine VM
 func (c *MachineConfig) Stop() error {
-	pidFile := filepath.Join(c.Location, "alpine.pid")
 	// qemu creates PID file with -pidfile flag, and deletes it on sigterm
-	// TODO check if removed on sigkill
-	if _, err := os.Stat(pidFile); err == nil {
-
-		_, pid := c.Status()
-
+	if status, pid := c.Status(); status != "Stopped" {
 		if pid > 0 {
-
 			p, procErr := os.FindProcess(pid)
-
 			if procErr != nil {
 				return procErr
 			}
-
-			return p.Signal(syscall.SIGTERM)
-
+			if err := p.Signal(syscall.SIGTERM); err != nil {
+				return err
+			}
+			log.Println(c.Alias + " stopped")
+			return nil
 		} else {
-			return errors.New("unable to SIGTERM 15: incorrect PID")
+			pidFile := filepath.Join(c.Location, "alpine.pid")
+			return errors.New("error stopping, incorrect PID in " + pidFile + "?")
 		}
+	} else {
+		return errors.New(c.Alias + " is not running")
 	}
-
-	return nil
 }
 
 func getHostArchitecture() (string, error) {
@@ -266,7 +265,7 @@ func (c *MachineConfig) Start() error {
 
 	ports, err := utils.ParsePort(c.Port)
 	if err != nil {
-		log.Fatal("Error configuring ports: %v\n", err)
+		log.Fatalf("Error configuring ports: %v\n", err)
 	}
 	for _, p := range ports {
 		hostp := strconv.Itoa(p.Host)
@@ -336,6 +335,7 @@ func (c *MachineConfig) Start() error {
 		"-parallel", "none",
 		"-device", "virtio-rng-pci",
 		"-rtc", "base=utc,clock=host",
+		"-daemonize",
 		"-name", c.Alias}
 
 	if c.Arch == "aarch64" {
@@ -356,47 +356,39 @@ func (c *MachineConfig) Start() error {
 	// Uncomment to debug qemu messages
 	cmd.Stderr = os.Stderr
 
-	log.Printf("Booting...")
-	err = cmd.Start()
+	log.Println("booting " + c.Alias)
+	err = cmd.Run()
 	if err != nil {
+		c.CleanPIDFile()
 		return err
 	}
 
-	err = utils.Retry(5, 3*time.Second, func() error {
-		err := c.Exec("hwclock -w", true) // root=true i.e. run as root
-		if err != nil {
-			return err
-		}
-		return nil
-	})
+	log.Println("awaiting ssh server...")
+	err = c.Exec("hwclock -w", true) // root=true i.e. run as root
 	if err != nil {
 		c.CleanPIDFile()
-		return errors.New("unable to sync clocks: " + err.Error())
+		return err
 	}
 
 	if c.Mount != "" {
-		err = utils.Retry(5, 3*time.Second, func() error {
-			err := c.Exec("DIR=$(eval echo \"~$USER\");mkdir -p $DIR/mnt/; chmod 777 $DIR/mnt; mount -t 9p -o trans=virtio host0 $DIR/mnt/ -oversion=9p2000.L,msize=104857600", true)
-			if err != nil {
-				return err
-			}
-			return nil
-		})
-
-		if err != nil {
-			c.CleanPIDFile()
-			return errors.New("unable to mount: " + err.Error())
+		basename := filepath.Base(c.Mount)
+		mntcmd := make([]string, 3)
+		mntcmd[0] = "mkdir -p /mnt/" + basename
+		mntcmd[1] = "chmod 777 /mnt/" + basename
+		mntcmd[2] = "mount -t 9p -o trans=virtio,version=9p2000.L,msize=104857600 host0 /mnt/" + basename
+		if err := c.Exec(strings.Join(mntcmd, " && "), true); err != nil {
+			log.Println("error mounting directory: " + err.Error())
+		} else {
+			log.Println("mounted " + c.Mount + " on /mnt/" + basename)
 		}
-
-		log.Printf("Mounted " + c.Mount + " --> $HOME/mnt/")
 	}
 
-	status, _ := c.Status()
+	status, pid := c.Status()
 	if status == "Stopped" {
-		c.CleanPIDFile()
 		return errors.New("unable to start vm")
 	}
 
+	log.Println(c.Alias + " started (" + strconv.Itoa(pid) + ")")
 	return nil
 }
 
@@ -477,45 +469,26 @@ func (c *MachineConfig) Launch() error {
 		return errors.New("unable launch a new machine. " + err.Error())
 	}
 
-	//Resize disk on an alpine guest
+	// Resize disk on an alpine guest
 	if strings.Split(c.Image, "_")[0] == "alpine" {
-		err = utils.Retry(3, 5*time.Second, func() error {
-			err := c.Exec("apk add --no-cache e2fsprogs-extra sfdisk partx", true) // root=true i.e. run as root
-			if err != nil {
-				return err
-			}
-
-			return nil
-		})
+		err := c.Exec("apk add --no-cache e2fsprogs-extra sfdisk partx", true) // root=true i.e. run as root
 		if err != nil {
 			return errors.New("unable install dependencies: " + err.Error())
 		}
 
-		err = utils.Retry(3, 5*time.Second, func() error {
-			err = c.Exec(`echo ", +" | sfdisk --no-reread -N 3 /dev/vda; partx -u /dev/vda`, true)
-			if err != nil {
-				return err
-			}
-
-			return nil
-		})
+		// send sfdisk command ,+ (<start>,<size>,<type>,<bootable>)
+		// default start (0), size + (all available), default type (linux data), default bootable (false)
+		err = c.Exec(`echo ",+" | sfdisk --no-reread --partno 3 /dev/vda && partx -u /dev/vda`, true)
 		if err != nil {
-			return errors.New("error expanding disk: " + err.Error())
+			return errors.New("error updating partition table: " + err.Error())
 		}
 
-		err = utils.Retry(3, 10*time.Second, func() error {
-			err = c.Exec("resize2fs /dev/vda3", true)
-			if err != nil {
-				return err
-			}
-
-			return nil
-		})
+		err = c.Exec("resize2fs /dev/vda3", true)
 		if err != nil {
-			return errors.New("error expanding disk: " + err.Error())
+			return errors.New("error expanding filesystem: " + err.Error())
 		}
 
-		err = c.Exec("df -h", false)
+		err = c.Exec("df -h", true)
 		if err != nil {
 			return err
 		}
