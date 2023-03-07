@@ -190,7 +190,6 @@ func getAllFlags(cmd *cobra.Command) []string {
 			flags = append(flags, flag[0][1])
 		}
 	}
-
 	return flags
 }
 
