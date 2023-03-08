@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -59,11 +58,8 @@ func delete(cmd *cobra.Command, args []string) {
 
 		err = host.Stop(machineConfig)
 		if err != nil {
-			log.Fatal(errors.New("unable to stop VM: " + err.Error()))
+			log.Println("error stopping vm: " + err.Error())
 		}
-
 		os.RemoveAll(machineConfig.Location)
-
 	}
-
 }

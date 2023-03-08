@@ -60,5 +60,4 @@ func start(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
