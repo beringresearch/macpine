@@ -46,6 +46,9 @@ func importMachine(cmd *cobra.Command, args []string) {
 			log.Fatalln("error accessing archive file: " + err.Error())
 		}
 	}
+   if (strings.HasSuffix(archive, ".age") || agePrivate != "") && !utils.CommandExists("age") {
+ 		log.Fatalln("decryption requested but `age` not installed or not in path")
+   }
 
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
