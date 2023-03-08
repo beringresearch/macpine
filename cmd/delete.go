@@ -53,10 +53,8 @@ func delete(cmd *cobra.Command, args []string) {
 			log.Fatal(err)
 		}
 
-		err = host.Stop(machineConfig)
-		if err != nil {
-			log.Println("error stopping vm: " + err.Error())
-		}
+		host.Stop(machineConfig)
+
 		os.RemoveAll(machineConfig.Location)
 	}
 }
