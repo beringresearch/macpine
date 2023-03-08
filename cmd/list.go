@@ -35,10 +35,7 @@ func list(cmd *cobra.Command, args []string) {
 	config := []qemu.MachineConfig{}
 	pid := []string{}
 
-	vmNames, err := host.ListVMNames()
-	if err != nil {
-		log.Fatal(err)
-	}
+	vmNames := host.ListVMNames()
 
 	for _, f := range vmNames {
 

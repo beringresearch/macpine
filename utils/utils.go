@@ -124,9 +124,9 @@ func Ping(ip string, port string) error {
 }
 
 // StringSliceContains check if string value is in []string
-func StringSliceContains(s []string, e string) bool {
-	for _, a := range s {
-		if a == e {
+func StringSliceContains(haystack []string, needle string) bool {
+	for _, x := range haystack {
+		if x == needle {
 			return true
 		}
 	}

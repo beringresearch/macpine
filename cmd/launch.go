@@ -135,10 +135,7 @@ func launch(cmd *cobra.Command, args []string) {
 		machineName = utils.GenerateRandomAlias()
 	}
 
-	vmList, err := host.ListVMNames()
-	if err != nil {
-		log.Fatal(err)
-	}
+	vmList := host.ListVMNames()
 
 	exists := utils.StringSliceContains(vmList, machineName)
 	if exists {

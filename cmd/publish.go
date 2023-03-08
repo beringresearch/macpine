@@ -21,7 +21,7 @@ var publishCmd = &cobra.Command{
 	Short: "Publish an instance.",
 	Run:   publish,
 
-	ValidArgsFunction:     flagsPublish,
+	ValidArgsFunction: flagsPublish,
 }
 
 var ageRecipient, ageIdent string
@@ -49,10 +49,7 @@ func publish(cmd *cobra.Command, args []string) {
 		log.Fatalln("missing VM name")
 	}
 
-	vmList, err := host.ListVMNames()
-	if err != nil {
-		log.Fatalln(err)
-	}
+	vmList := host.ListVMNames()
 
 	exists := utils.StringSliceContains(vmList, args[0])
 	if !exists {

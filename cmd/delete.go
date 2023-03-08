@@ -28,10 +28,7 @@ func delete(cmd *cobra.Command, args []string) {
 		log.Fatal("missing VM name")
 	}
 
-	vmList, err := host.ListVMNames()
-	if err != nil {
-		log.Fatal(err)
-	}
+	vmList := host.ListVMNames()
 
 	for _, vmName := range args {
 		exists := utils.StringSliceContains(vmList, vmName)
