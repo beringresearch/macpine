@@ -171,7 +171,7 @@ func attachShell(session *ssh.Session) error {
 
 // Status returns VM status
 func (c *MachineConfig) Status() (string, int) {
-	status := ""
+	status := "Stopped"
 	var pid int
 
 	pidFile := filepath.Join(c.Location, "alpine.pid")
@@ -187,8 +187,6 @@ func (c *MachineConfig) Status() (string, int) {
 		process := string(vmPID)
 		process = strings.TrimSuffix(process, "\n")
 		pid, _ = strconv.Atoi(process)
-	} else {
-		status = "Stopped"
 	}
 	return status, pid
 }
@@ -359,13 +357,15 @@ func (c *MachineConfig) Start() error {
 	log.Println("booting " + c.Alias)
 	err = cmd.Run()
 	if err != nil {
+		c.Stop()
 		c.CleanPIDFile()
 		return err
 	}
 
 	log.Println("awaiting ssh server...")
-	err = c.Exec("hwclock -w", true) // root=true i.e. run as root
+	_ = c.Exec("hwclock -w", true) // root=true i.e. run as root
 	if err != nil {
+		c.Stop()
 		c.CleanPIDFile()
 		return err
 	}
@@ -471,9 +471,10 @@ func (c *MachineConfig) Launch() error {
 
 	// Resize disk on an alpine guest
 	if strings.Split(c.Image, "_")[0] == "alpine" {
+		//TODO add these dependencies into pre-baked macpine image
 		err := c.Exec("apk add --no-cache e2fsprogs-extra sfdisk partx", true) // root=true i.e. run as root
 		if err != nil {
-			return errors.New("unable install dependencies: " + err.Error())
+			return errors.New("unable to install dependencies: " + err.Error())
 		}
 
 		// send sfdisk command ,+ (<start>,<size>,<type>,<bootable>)
@@ -490,6 +491,7 @@ func (c *MachineConfig) Launch() error {
 
 		err = c.Exec("df -h", true)
 		if err != nil {
+
 			return err
 		}
 	}
