@@ -24,6 +24,7 @@
     - Manage Instance:
       - Create an Instance: create_instance.md
       - Modify an instance: modify_instance.md
+      - VM Security: hardening.md
       - Create an LXD container in Macpine: lxd_macpine.md
     
  #theme: material
