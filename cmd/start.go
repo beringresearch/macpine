@@ -58,6 +58,7 @@ func start(cmd *cobra.Command, args []string) {
 
 	err = host.Start(machineConfig)
 	if err != nil {
+		host.Stop(machineConfig)
 		log.Fatal(err)
 	}
 }

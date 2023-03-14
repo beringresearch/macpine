@@ -1,9 +1,10 @@
 package host
 
 import (
+	"strconv"
+
 	"github.com/beringresearch/macpine/qemu"
 	"github.com/beringresearch/macpine/utils"
-	"strconv"
 )
 
 // Launch launches a new VM using user-defined configuration
@@ -28,6 +29,8 @@ func Launch(config qemu.MachineConfig) error {
 
 	err = config.Launch()
 	if err != nil {
+		config.Stop()
+		config.CleanPIDFile()
 		return err
 	}
 
