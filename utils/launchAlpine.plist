@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>LaunchAlpineAtLogin</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>{{ ALPINE_PATH }}</string>
+        <string>arg1</string>
+        <string>arg2</string>
+        <string>...</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+</dict>
+</plist>
+<!-- TODO
+    - add a script that launches all VMs with "-daemon" in background
+    - add a command which compiles this .plist (adds correct ALPINE_PATH) and installs it to ~/Library/LaunchAgents
+        and call launchctl load <plist>
+    - once VM tags are implemented, change to selecting "daemon" or "autorun" tags or whatever
+-->
