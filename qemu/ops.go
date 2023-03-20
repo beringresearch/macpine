@@ -363,7 +363,7 @@ func (c *MachineConfig) Start() error {
 	}
 
 	log.Println("awaiting ssh server...")
-	_ = c.Exec("hwclock -w", true) // root=true i.e. run as root
+	err = c.Exec("hwclock -w", true) // root=true i.e. run as root
 	if err != nil {
 		c.Stop()
 		c.CleanPIDFile()
