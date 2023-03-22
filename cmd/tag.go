@@ -55,7 +55,7 @@ func macpineTag(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	for _, tag := range(tags) {
+	for _, tag := range tags {
 		i, found := find(machineConfig.Tags, tag)
 		if remove && found {
 			machineConfig.Tags = append(machineConfig.Tags[:i], machineConfig.Tags[i+1:]...)
@@ -77,7 +77,7 @@ func macpineTag(cmd *cobra.Command, args []string) {
 }
 
 func find(s []string, t string) (int, bool) {
-	for i, e := range(s) {
+	for i, e := range s {
 		if e == t {
 			return i, true
 		} else if e > t {
