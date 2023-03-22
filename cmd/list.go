@@ -35,11 +35,7 @@ func list(cmd *cobra.Command, args []string) {
 	config := []qemu.MachineConfig{}
 	pid := []string{}
 
-	vmNames, err := host.ListVMNames()
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	vmNames := host.ListVMNames()
 	for _, f := range vmNames {
 
 		machineConfig := qemu.MachineConfig{}
@@ -65,9 +61,20 @@ func list(cmd *cobra.Command, args []string) {
 	}
 
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 1, ' ', 0)
-	fmt.Fprintln(w, "NAME\tOS\tSTATUS\tSSH\tPORTS\tARCH\tPID\t")
+	fmt.Fprintln(w, "NAME\tOS\tSTATUS\tSSH\tPORTS\tARCH\tPID\tTAGS\t")
 	for i, machine := range config {
-		fmt.Fprintln(w, machine.Alias+"    \t"+strings.Split(machine.Image, "_")[0]+"    \t"+status[i]+"    \t"+machine.SSHPort+"    \t"+machine.Port+"    \t"+machine.Arch+"    \t"+fmt.Sprint(pid[i])+"    \t")
+		spacer := "    \t"
+		row := []string{
+			machine.Alias,
+			strings.Split(machine.Image, "_")[0],
+			status[i],
+			machine.SSHPort,
+			machine.Port,
+			machine.Arch,
+			fmt.Sprint(pid[i]),
+			strings.Join(machine.Tags, ","),
+		}
+		fmt.Fprintln(w, strings.Join(row, "    \t")+spacer)
 	}
 	w.Flush()
 

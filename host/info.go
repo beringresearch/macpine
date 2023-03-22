@@ -29,14 +29,15 @@ func Info(vmName string) (string, error) {
 		log.Fatal(err)
 	}
 
-	info := fmt.Sprintf("Name: %s\nArch: %s\nDisk usage: %s\nMemory usage: %s\nCPU usage: %s\nMounts: %s",
-
+	info := fmt.Sprintf("Name: %s\nArch: %s\nDisk usage: %s\nMemory usage: %s\nCPU usage: %s\nMounts: %s\nTags: %s\n",
 		machineConfig.Alias,
 		machineConfig.Arch,
 		machineConfig.Disk,
 		machineConfig.Memory,
 		machineConfig.CPU,
-		machineConfig.Mount)
+		machineConfig.Mount,
+		machineConfig.Tags,
+	)
 
 	return info, nil
 }
