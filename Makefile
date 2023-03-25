@@ -10,7 +10,7 @@ bin/$(BINARY_NAME): $(MAIN) $(SRCS)
 	go get
 	go build -ldflags=$(GO_LDFLAGS) -o $@ $<
 
-.PHONY: install clean fmt
+.PHONY: install clean fmt installagent
 install: bin/$(BINARY_NAME)
 	@echo "Installing ..."
 	install -d $(bindir)
@@ -24,3 +24,8 @@ clean:
 
 fmt:
 	@gofmt -e -l -s -w $(MAIN) $(SRCS)
+
+
+installagent:
+	# install bash script somewhere (prefix/libexec?)
+	# sed 's/\{\{ ALPINE_PATH \}\}/<path to installed bash script>/' <path to plist> > ~/Library/LaunchAgents/<plist name>
