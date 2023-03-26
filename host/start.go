@@ -1,7 +1,7 @@
 package host
 
 import (
-	"errors"
+	"log"
 	"strconv"
 	"strings"
 
@@ -14,7 +14,8 @@ func Start(config qemu.MachineConfig) error {
 
 	status, _ := config.Status()
 	if status == "Running" {
-		return errors.New(config.Alias + " is already running")
+		log.Println(config.Alias + " is already running")
+		return nil
 	}
 
 	ports, err := utils.ParsePort(config.Port)
