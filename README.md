@@ -98,9 +98,9 @@ VMs can be easily packaged for export and re-use as tar.gz files:
 ```bash
 alpine list
 
-NAME                STATUS      SSH    PORTS ARCH        PID
-forthright-hook     Running     23           aarch64     91598
-hot-cow             Running     22           x86_64      82361
+NAME                 OS         STATUS      SSH    PORTS ARCH      PID     TAGS
+cheerful-result      alpine     Running     25           aarch64   26568
+glittering-swing     alpine     Running     23           x86_64    57206   emulation,intel
 ```
 
 ```bash
