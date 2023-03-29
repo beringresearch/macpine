@@ -22,20 +22,21 @@ import (
 )
 
 type MachineConfig struct {
-	Alias        string  `yaml:"alias"`
-	Image        string  `yaml:"image"`
-	Arch         string  `yaml:"arch"`
-	CPU          string  `yaml:"cpu"`
-	Memory       string  `yaml:"memory"`
-	Disk         string  `yaml:"disk"`
-	Mount        string  `yaml:"mount"`
-	Port         string  `yaml:"port"`
-	SSHPort      string  `yaml:"sshport"`
-	SSHUser      string  `yaml:"sshuser"`
-	SSHPassword  string  `yaml:"sshpassword"`
-	RootPassword *string `yaml:"rootpassword,omitempty"`
-	MACAddress   string  `yaml:"macaddress"`
-	Location     string  `yaml:"location"`
+	Alias        string   `yaml:"alias"`
+	Image        string   `yaml:"image"`
+	Arch         string   `yaml:"arch"`
+	CPU          string   `yaml:"cpu"`
+	Memory       string   `yaml:"memory"`
+	Disk         string   `yaml:"disk"`
+	Mount        string   `yaml:"mount"`
+	Port         string   `yaml:"port"`
+	SSHPort      string   `yaml:"sshport"`
+	SSHUser      string   `yaml:"sshuser"`
+	SSHPassword  string   `yaml:"sshpassword"`
+	RootPassword *string  `yaml:"rootpassword,omitempty"`
+	MACAddress   string   `yaml:"macaddress"`
+	Location     string   `yaml:"location"`
+	Tags         []string `yaml:"tags"`
 }
 
 // Exec starts an interactive shell terminal in VM

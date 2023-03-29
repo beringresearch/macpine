@@ -135,11 +135,7 @@ func launch(cmd *cobra.Command, args []string) {
 		machineName = utils.GenerateRandomAlias()
 	}
 
-	vmList, err := host.ListVMNames()
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	vmList := host.ListVMNames()
 	exists := utils.StringSliceContains(vmList, machineName)
 	if exists {
 		log.Fatal("machine " + machineName + " exists")
@@ -163,6 +159,7 @@ func launch(cmd *cobra.Command, args []string) {
 		MACAddress:  macAddress,
 		SSHUser:     "root",
 		SSHPassword: "raw::root",
+		Tags:        []string{},
 	}
 	machineConfig.Location = filepath.Join(userHomeDir, ".macpine", machineConfig.Alias)
 

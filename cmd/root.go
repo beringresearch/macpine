@@ -38,4 +38,5 @@ func init() {
 	MacpineCmd.AddCommand(editCmd)
 	MacpineCmd.AddCommand(shellCmd)
 	MacpineCmd.AddCommand(completionCmd)
+	MacpineCmd.AddCommand(tagCmd)
 }

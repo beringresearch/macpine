@@ -6,6 +6,5 @@ import (
 
 // Status launches a new VM using user-defined configuration
 func Status(config qemu.MachineConfig) (string, int) {
-	status, pid := config.Status()
-	return status, pid
+	return config.Status() // status, pid
 }

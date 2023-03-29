@@ -32,11 +32,7 @@ func edit(cmd *cobra.Command, args []string) {
 		log.Fatal("missing VM name")
 	}
 
-	vmList, err := host.ListVMNames()
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	vmList := host.ListVMNames()
 	exists := utils.StringSliceContains(vmList, args[0])
 	if !exists {
 		log.Fatal("unknown machine " + args[0])
