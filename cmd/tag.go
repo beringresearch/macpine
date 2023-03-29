@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
@@ -32,6 +33,15 @@ var tagCmd = &cobra.Command{
 	ValidArgsFunction: host.AutoCompleteVMNames,
 }
 
+func validateTags(tags []string) {
+	format := regexp.MustCompile("^[a-zA-Z0-9_]*$")
+	for _, tag := range tags {
+		if !format.MatchString(tag) {
+			log.Fatalf("[%s] contains non-alphanumeric characters", tag)
+		}
+	}
+}
+
 func macpineTag(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
 		log.Fatal("missing VM name")
@@ -39,12 +49,14 @@ func macpineTag(cmd *cobra.Command, args []string) {
 	vmName := args[0]
 
 	tags := args[1:]
+	validateTags(tags)
+
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", vmName, "config.yaml"))
+	config, err := os.ReadFile(filepath.Join(userHomeDir, ".macpine", vmName, "config.yaml"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -69,11 +81,11 @@ func macpineTag(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	err = ioutil.WriteFile(filepath.Join(userHomeDir, ".macpine", vmName, "config.yaml"), updatedConfig, 0644)
+	err = os.WriteFile(filepath.Join(userHomeDir, ".macpine", vmName, "config.yaml"), updatedConfig, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println(machineConfig.Tags)
+	log.Printf("(%s) active tags: "+strings.Join(machineConfig.Tags[:], ", "), machineConfig.Alias)
 }
 
 func find(s []string, t string) (int, bool) {
