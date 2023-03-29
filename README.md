@@ -104,13 +104,13 @@ glittering-swing     alpine     Running     23           x86_64    57206   emula
 ```
 
 ```bash
-alpine publish hot-cow
+alpine publish cheerful-result
 ```
 
-This will create a file hot-cow.tar.gz which can be imported as:
+This will create a file cheerful-result.tar.gz which can be imported as:
 
 ```bash
-alpine import hot-cow.tar.gz
+alpine import cheerful-result.tar.gz
 ```
 
 ## Command Reference
@@ -122,8 +122,9 @@ Usage:
   alpine [command]
 
 Available Commands:
-  delete      Delete an instance.
-  edit        Edit instance configuration using Vim.
+  completion  Generate shell autocompletions.
+  delete      Delete named instances.
+  edit        Edit instance configuration.
   exec        execute COMMAND over ssh.
   help        Help about any command
   import      Imports an instance.
@@ -134,7 +135,7 @@ Available Commands:
   ssh         Attach an interactive shell to an instance.
   start       Start an instance.
   stop        Stop an instance.
-  completion  Generate shell command completion file.
+  tag         Add or remove tags from an instance.
 
 Flags:
   -h, --help   help for alpine
