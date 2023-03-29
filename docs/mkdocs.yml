@@ -4,6 +4,7 @@
  nav:
   - Home: index.md
   - CLI:
+    - completion: cli/alpine_completion.md
     - delete: cli/alpine_delete.md
     - edit: cli/alpine_edit.md
     - exec: cli/alpine_exec.md
@@ -15,6 +16,7 @@
     - ssh: cli/alpine_ssh.md
     - start: cli/alpine_start.md
     - stop: cli/alpine_stop.md
+    - tag: cli/alpine_tag.md
 
   - Docs:
     - Installation:
