@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -16,7 +17,7 @@ import (
 
 // publishCmd stops an Alpine instance
 var publishCmd = &cobra.Command{
-	Use:   "publish NAME",
+	Use:   "publish <instance> [<instance>...]",
 	Short: "Publish an instance.",
 	Run:   publish,
 
@@ -36,57 +37,70 @@ func publish(cmd *cobra.Command, args []string) {
 	}
 
 	vmList := host.ListVMNames()
+	errs := make([]utils.CmdResult, len(args))
+	for i, vmName := range args {
 
-	exists := utils.StringSliceContains(vmList, args[0])
-	if !exists {
-		log.Fatal("unknown machine " + args[0])
+		exists := utils.StringSliceContains(vmList, vmName)
+		if !exists {
+			errs[i] = utils.CmdResult{Name: vmName, Err: errors.New("unknown machine " + vmName)}
+			continue
+		}
+
+		machineConfig := qemu.MachineConfig{}
+
+		config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", vmName, "config.yaml"))
+		if err != nil {
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
+			continue
+		}
+
+		err = yaml.Unmarshal(config, &machineConfig)
+		if err != nil {
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
+			continue
+		}
+
+		err = host.Stop(machineConfig)
+		if err != nil {
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
+			continue
+		}
+		time.Sleep(time.Second)
+
+		fileInfo, err := ioutil.ReadDir(machineConfig.Location)
+		if err != nil {
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
+			continue
+		}
+
+		files := []string{}
+		for _, f := range fileInfo {
+			files = append(files, filepath.Join(machineConfig.Location, f.Name()))
+		}
+
+		out, err := os.Create(machineConfig.Alias + ".tar.gz")
+		if err != nil {
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
+			continue
+		}
+		defer out.Close()
+
+		// Create the archive and write the output to the "out" Writer
+      log.Printf("creating archive %s...\n", machineConfig.Alias + ".tar.gz")
+		err = utils.Compress(files, out)
+		if err != nil {
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
+			continue
+		}
 	}
-
-	machineConfig := qemu.MachineConfig{}
-
-	config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", args[0], "config.yaml"))
-	if err != nil {
-		log.Fatal(err)
+	wasErr := false
+	for _, res := range errs {
+		if res.Err != nil {
+			log.Printf("failed to publish %s: %v\n", res.Name, res.Err)
+			wasErr = true
+		}
 	}
-
-	err = yaml.Unmarshal(config, &machineConfig)
-	if err != nil {
-		log.Fatal(err)
+	if wasErr {
+		log.Fatalln("error publishing VM(s)")
 	}
-
-	err = host.Stop(machineConfig)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	time.Sleep(time.Second)
-
-	fileInfo, err := ioutil.ReadDir(machineConfig.Location)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	files := []string{}
-	for _, f := range fileInfo {
-		files = append(files, filepath.Join(machineConfig.Location, f.Name()))
-	}
-
-	out, err := os.Create(machineConfig.Alias + ".tar.gz")
-	if err != nil {
-		log.Fatalln("Error writing archive:", err)
-	}
-	defer out.Close()
-
-	// Create the archive and write the output to the "out" Writer
-	err = utils.Compress(files, out)
-	if err != nil {
-		log.Fatalln("error creating archive:", err)
-	}
-
-	err = host.Start(machineConfig)
-	if err != nil {
-		host.Stop(machineConfig)
-		log.Fatal(err)
-	}
-
 }
