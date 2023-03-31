@@ -34,9 +34,9 @@ func edit(cmd *cobra.Command, args []string) {
 
 	vmList := host.ListVMNames()
 	for i, vmName := range args {
-      if utils.StringSliceContains(args[:i], vmName) {
-         continue
-      }
+		if utils.StringSliceContains(args[:i], vmName) {
+			continue
+		}
 		exists := utils.StringSliceContains(vmList, vmName)
 		if !exists {
 			log.Fatalln("unknown machine " + vmName)
