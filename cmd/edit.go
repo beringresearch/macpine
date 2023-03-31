@@ -33,12 +33,17 @@ func edit(cmd *cobra.Command, args []string) {
 	}
 
 	vmList := host.ListVMNames()
-	exists := utils.StringSliceContains(vmList, args[0])
-	if !exists {
-		log.Fatal("unknown machine " + args[0])
+	for _, vmName := range args {
+		exists := utils.StringSliceContains(vmList, vmName)
+		if !exists {
+			log.Fatalln("unknown machine " + args[0])
+		}
 	}
 
-	targetFile := filepath.Join(userHomeDir, ".macpine", args[0], "config.yaml")
+	targetFiles := make([]string, len(args))
+	for i, name := range args {
+		targetFiles[i] = filepath.Join(userHomeDir, ".macpine", name, "config.yaml")
+	}
 
 	editor, found := os.LookupEnv("EDITOR")
 	if !found || !utils.CommandExists(editor) {
@@ -54,11 +59,11 @@ func edit(cmd *cobra.Command, args []string) {
 			log.Println("defaulting to \"nano\"")
 			editor = "nano"
 		} else {
-			log.Fatal("no basic editor found in $PATH (tried vim, nano). You can still edit the config manually at " + targetFile)
+			log.Fatal("no basic editor found in $PATH (tried vim, nano). You can still edit the config manually in ~/.macpine")
 		}
 	}
 
-	edit := run.Command(editor, targetFile)
+	edit := run.Command(editor, targetFiles...)
 
 	edit.Stdin = os.Stdin
 	edit.Stdout = os.Stdout
@@ -71,8 +76,8 @@ func edit(cmd *cobra.Command, args []string) {
 
 	err = edit.Wait()
 	if err != nil {
-		log.Fatalf("error while editing. Error: %v\n", err)
+		log.Fatalf("error while editing: %v\n", err)
 	} else {
-		log.Printf("configuration saved. restart " + args[0] + " for changes to take effect.")
+		log.Println("configuration(s) saved. restart VM(s) for changes to take effect.")
 	}
 }
