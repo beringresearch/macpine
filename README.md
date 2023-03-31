@@ -113,6 +113,8 @@ This will create a file cheerful-result.tar.gz which can be imported as:
 alpine import cheerful-result.tar.gz
 ```
 
+Refer also to the [quickstart guide](docs/docs/quickstart.md) and [troubleshooting documentation](docs/docs/troubleshooting.md).
+
 ## Command Reference
 
 ```bash
