@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -35,26 +36,43 @@ func start(cmd *cobra.Command, args []string) {
 	}
 
 	vmList := host.ListVMNames()
-	exists := utils.StringSliceContains(vmList, args[0])
-	if !exists {
-		log.Fatal("unknown machine " + args[0])
+	errs := make([]utils.CmdResult, len(args))
+	for i, arg := range args {
+		exists := utils.StringSliceContains(vmList, arg)
+		if !exists {
+			errs[i] = utils.CmdResult{Name: arg, Err: errors.New("unknown machine " + arg)}
+			continue
+		}
+
+		machineConfig := qemu.MachineConfig{}
+
+		config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", arg, "config.yaml"))
+		if err != nil {
+			errs[i] = utils.CmdResult{Name: arg, Err: err}
+			continue
+		}
+
+		err = yaml.Unmarshal(config, &machineConfig)
+		if err != nil {
+			errs[i] = utils.CmdResult{Name: arg, Err: err}
+			continue
+		}
+
+		err = host.Start(machineConfig)
+		if err != nil {
+			host.Stop(machineConfig)
+			errs[i] = utils.CmdResult{Name: arg, Err: err}
+			continue
+		}
 	}
-
-	machineConfig := qemu.MachineConfig{}
-
-	config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", args[0], "config.yaml"))
-	if err != nil {
-		log.Fatal(err)
+	wasErr := false
+	for _, res := range errs {
+		if res.Err != nil {
+			log.Printf("failed to start %s: %v\n", res.Name, res.Err)
+			wasErr = true
+		}
 	}
-
-	err = yaml.Unmarshal(config, &machineConfig)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = host.Start(machineConfig)
-	if err != nil {
-		host.Stop(machineConfig)
-		log.Fatal(err)
+	if wasErr {
+		log.Fatalln("error starting VM(s)")
 	}
 }

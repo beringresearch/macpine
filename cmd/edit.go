@@ -36,7 +36,7 @@ func edit(cmd *cobra.Command, args []string) {
 	for _, vmName := range args {
 		exists := utils.StringSliceContains(vmList, vmName)
 		if !exists {
-			log.Fatalln("unknown machine " + args[0])
+			log.Fatalln("unknown machine " + vmName)
 		}
 	}
 
@@ -78,6 +78,6 @@ func edit(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatalf("error while editing: %v\n", err)
 	} else {
-		log.Println("configuration(s) saved. restart VM(s) for changes to take effect.")
+		log.Println("configuration(s) saved, restart VM(s) for changes to take effect")
 	}
 }
