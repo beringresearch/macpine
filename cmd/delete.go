@@ -58,7 +58,12 @@ func delete(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		host.Stop(machineConfig) // ignore error stopping when deleting & delete anyway
+		err = host.Stop(machineConfig)
+		if err != nil {
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
+			continue
+		}
+
 		os.RemoveAll(machineConfig.Location)
 	}
 	wasErr := false
