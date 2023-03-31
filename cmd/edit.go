@@ -13,7 +13,7 @@ import (
 
 // editCmd lists Alpine instances
 var editCmd = &cobra.Command{
-	Use:   "edit NAME",
+	Use:   "edit <instance> [<instance>...]",
 	Short: "Edit instance configuration.",
 	Run:   edit,
 
