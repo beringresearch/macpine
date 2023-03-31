@@ -345,6 +345,6 @@ func GenerateRandomAlias() string {
 }
 
 type CmdResult struct {
-   Name string;
-   Err error;
+	Name string
+	Err  error
 }
