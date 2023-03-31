@@ -32,6 +32,9 @@ func delete(cmd *cobra.Command, args []string) {
 	vmList := host.ListVMNames()
 	errs := make([]utils.CmdResult, len(args))
 	for i, vmName := range args {
+      if utils.StringSliceContains(args[:i], vmName) {
+         continue
+      }
 		exists := utils.StringSliceContains(vmList, vmName)
 		if !exists {
 			errs[i] = utils.CmdResult{Name: vmName, Err: errors.New("unknown machine " + vmName)}

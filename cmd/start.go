@@ -37,31 +37,34 @@ func start(cmd *cobra.Command, args []string) {
 
 	vmList := host.ListVMNames()
 	errs := make([]utils.CmdResult, len(args))
-	for i, arg := range args {
-		exists := utils.StringSliceContains(vmList, arg)
+	for i, vmName := range args {
+      if utils.StringSliceContains(args[:i], vmName) {
+         continue
+      }
+		exists := utils.StringSliceContains(vmList, vmName)
 		if !exists {
-			errs[i] = utils.CmdResult{Name: arg, Err: errors.New("unknown machine " + arg)}
+			errs[i] = utils.CmdResult{Name: vmName, Err: errors.New("unknown machine " + vmName)}
 			continue
 		}
 
 		machineConfig := qemu.MachineConfig{}
 
-		config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", arg, "config.yaml"))
+		config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", vmName, "config.yaml"))
 		if err != nil {
-			errs[i] = utils.CmdResult{Name: arg, Err: err}
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
 			continue
 		}
 
 		err = yaml.Unmarshal(config, &machineConfig)
 		if err != nil {
-			errs[i] = utils.CmdResult{Name: arg, Err: err}
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
 			continue
 		}
 
 		err = host.Start(machineConfig)
 		if err != nil {
 			host.Stop(machineConfig)
-			errs[i] = utils.CmdResult{Name: arg, Err: err}
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
 			continue
 		}
 	}
