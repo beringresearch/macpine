@@ -211,7 +211,7 @@ func (c *MachineConfig) Stop() error {
 			return errors.New("error stopping, incorrect PID in " + pidFile + "?")
 		}
 	}
-   return nil
+	return nil
 }
 
 func getHostArchitecture() (string, error) {
