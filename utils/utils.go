@@ -343,3 +343,8 @@ func GenerateRandomAlias() string {
 	return alias
 
 }
+
+type CmdResult struct {
+   Name string;
+   Err error;
+}
