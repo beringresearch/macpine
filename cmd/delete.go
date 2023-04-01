@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -29,33 +30,53 @@ func delete(cmd *cobra.Command, args []string) {
 	}
 
 	vmList := host.ListVMNames()
-	for _, vmName := range args {
+	errs := make([]utils.CmdResult, len(args))
+	for i, vmName := range args {
+		if utils.StringSliceContains(args[:i], vmName) {
+			continue
+		}
 		exists := utils.StringSliceContains(vmList, vmName)
 		if !exists {
-			log.Fatal("unknown machine " + vmName)
+			errs[i] = utils.CmdResult{Name: vmName, Err: errors.New("unknown machine " + vmName)}
+			continue
 		}
 
 		userHomeDir, err := os.UserHomeDir()
 		if err != nil {
-			log.Fatal(err)
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
+			continue
 		}
 
 		machineConfig := qemu.MachineConfig{}
 
 		config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", vmName, "config.yaml"))
 		if err != nil {
-			log.Fatal(err)
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
+			continue
 		}
 
 		err = yaml.Unmarshal(config, &machineConfig)
 		if err != nil {
-			log.Fatal(err)
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
+			continue
 		}
 
 		err = host.Stop(machineConfig)
 		if err != nil {
-			log.Println("error stopping vm: " + err.Error())
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
+			continue
 		}
+
 		os.RemoveAll(machineConfig.Location)
+	}
+	wasErr := false
+	for _, res := range errs {
+		if res.Err != nil {
+			log.Printf("failed to delete %s: %v\n", res.Name, res.Err)
+			wasErr = true
+		}
+	}
+	if wasErr {
+		log.Fatalln("error deleting VM(s)")
 	}
 }

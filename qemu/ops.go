@@ -210,9 +210,8 @@ func (c *MachineConfig) Stop() error {
 			pidFile := filepath.Join(c.Location, "alpine.pid")
 			return errors.New("error stopping, incorrect PID in " + pidFile + "?")
 		}
-	} else {
-		return errors.New(c.Alias + " is not running")
 	}
+	return nil
 }
 
 func getHostArchitecture() (string, error) {
