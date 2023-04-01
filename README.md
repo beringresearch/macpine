@@ -1,4 +1,4 @@
-[![Go Report Card](https://goreportcard.com/badge/github.com/beringresearch/macpine)](https://goreportcard.com/report/github.com/beringresearch/macpine)
+[![build](https://github.com/beringresearch/macpine/actions/workflows/build.yml/badge.svg)](https://github.com/beringresearch/macpine/actions/workflows/build.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/beringresearch/macpine)](https://goreportcard.com/report/github.com/beringresearch/macpine)
 
 # Lightweight Alpine VMs on MacOS
 
