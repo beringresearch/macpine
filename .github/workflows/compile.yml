@@ -1,4 +1,4 @@
-name: 'compile macpine'
+name: 'build'
 on:
   workflow_dispatch:
   push:
