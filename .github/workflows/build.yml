@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  compile:
+  build:
     runs-on: macos-latest
     steps:
       - name: Checkout
