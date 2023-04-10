@@ -30,6 +30,7 @@ func init() {
 	MacpineCmd.AddCommand(launchCmd)
 	MacpineCmd.AddCommand(stopCmd)
 	MacpineCmd.AddCommand(startCmd)
+	MacpineCmd.AddCommand(restartCmd)
 	MacpineCmd.AddCommand(deleteCmd)
 	MacpineCmd.AddCommand(listCmd)
 	MacpineCmd.AddCommand(publishCmd)
