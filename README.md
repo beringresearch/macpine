@@ -60,9 +60,11 @@ See more information [here](https://ports.macports.org/port/macpine/).
 ## Install from source
 
 ```bash
+#brew install go
 git clone https://github.com/beringresearch/macpine
 cd macpine
-make
+make #compiles the project into a local bin/ directory
+make install #installs binaries to /usr/local (or other configured PREFIX)
 ```
 
 
@@ -91,6 +93,8 @@ Expose additional VM ports to host:
 alpine launch -s 23 -p 8888,5432 #launch a VM, expose SSH to host port 23 and forward host ports 8888 and 5432 to VM ports 8888 and 5432
 alpine launch -s 8023 -p 8081:8082,8083 #launch a VM, expose SSH to host port 8023, forward host port 8081 to VM port 8082, and forward
                                         #host port 8083 to VM port 8083
+alpine launch -s 9023 -p 9091u,9092:9093u #launch a VM, expose SSH to host port 9023, forward (UDP) host port 9091 to VM port 9091, and forward (UDP)
+                                        #host port 9092 to VM port 9093
 ```
 
 VMs can be easily packaged for export and re-use as tar.gz files:
@@ -98,22 +102,22 @@ VMs can be easily packaged for export and re-use as tar.gz files:
 ```bash
 alpine list
 
-NAME                 OS         STATUS      SSH    PORTS ARCH      PID     TAGS
-cheerful-result      alpine     Running     25           aarch64   26568
-glittering-swing     alpine     Running     23           x86_64    57206   emulation,intel
+NAME                 STATUS      SSH    PORTS ARCH      PID     TAGS
+cheerful-result      Running     25           aarch64   26568
+glittering-swing     Running     23           x86_64    57206   emulation,intel
 ```
 
 ```bash
 alpine publish cheerful-result
 ```
 
-This will create a file cheerful-result.tar.gz which can be imported as:
+This will create a file `cheerful-result.tar.gz` which can be imported as:
 
 ```bash
 alpine import cheerful-result.tar.gz
 ```
 
-Refer also to the [quickstart guide](docs/docs/quickstart.md) and [troubleshooting documentation](docs/docs/troubleshooting.md).
+Refer to the [troubleshooting documentation](docs/docs/troubleshooting.md) for general information and guidance on common issues.
 
 ## Command Reference
 
@@ -137,6 +141,7 @@ Available Commands:
   ssh         Attach an interactive shell to an instance.
   start       Start an instance.
   stop        Stop an instance.
+  restart     Stop and start an instance.
   tag         Add or remove tags from an instance.
 
 Flags:
@@ -145,5 +150,7 @@ Flags:
 Use "alpine [command] --help" for more information about a command.
 ```
 
-Shell command completion files can be generated with `alpine completion [bash|zsh|fish|powershell]`.
+Most commands accept multiple instance names and will repeat the operation over each unique named instance once.
+
+Shell command completion files (installed by default with `brew install macpine`) can be generated with `alpine completion [bash|zsh|fish|powershell]`.
 See `alpine completion -h` or the [completion documentation](docs/docs/completions.md) for more information.
