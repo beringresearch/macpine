@@ -12,7 +12,7 @@ import (
 // infoCmd displays macpine machine info
 var infoCmd = &cobra.Command{
 	Use:   "info NAME",
-	Short: "Display information about instances.",
+	Short: "Display information about an instance.",
 	Run:   macpineInfo,
 
 	ValidArgsFunction:     host.AutoCompleteVMNames,

@@ -61,12 +61,11 @@ func list(cmd *cobra.Command, args []string) {
 	}
 
 	w := tabwriter.NewWriter(os.Stdout, 1, 1, 1, ' ', 0)
-	fmt.Fprintln(w, "NAME\tOS\tSTATUS\tSSH\tPORTS\tARCH\tPID\tTAGS\t")
+	fmt.Fprintln(w, "NAME\tSTATUS\tSSH\tPORTS\tARCH\tPID\tTAGS\t")
 	for i, machine := range config {
 		spacer := "    \t"
 		row := []string{
 			machine.Alias,
-			strings.Split(machine.Image, "_")[0],
 			status[i],
 			machine.SSHPort,
 			machine.Port,
