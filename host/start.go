@@ -38,10 +38,5 @@ func Start(config qemu.MachineConfig) error {
 		}
 	}
 
-	err = config.Start()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return config.Start()
 }
