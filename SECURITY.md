@@ -11,4 +11,4 @@ reporting their finding(s). The maintainers will triage and address issues when 
 existing issue (open or closed) already addresses the concern.
 
 Pull requests addressing any discovered vulnerabilities are welcome, with accompanying documentation of the issue and how it can be resolved. Please 
-note that contributions to this respository are subject to the terms of the [license.](https://github.com/beringresearch/macpine/blob/main/LICENSE.md)
+note that contributions to this repository are subject to the terms of the [license.](https://github.com/beringresearch/macpine/blob/main/LICENSE.md)
