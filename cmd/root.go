@@ -37,6 +37,7 @@ func init() {
 	MacpineCmd.AddCommand(importCmd)
 	MacpineCmd.AddCommand(execCmd)
 	MacpineCmd.AddCommand(editCmd)
+	MacpineCmd.AddCommand(renameCmd)
 	MacpineCmd.AddCommand(shellCmd)
 	MacpineCmd.AddCommand(completionCmd)
 	MacpineCmd.AddCommand(tagCmd)
