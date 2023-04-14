@@ -400,7 +400,7 @@ func (c *MachineConfig) Launch() error {
 		return err
 	}
 
-	cacheDir := filepath.Join(userHomeDir, ".macpine", "cache")
+	cacheDir := filepath.Join(userHomeDir, ".macpine", ".cache")
 	err = os.MkdirAll(cacheDir, os.ModePerm)
 	if err != nil {
 		return err

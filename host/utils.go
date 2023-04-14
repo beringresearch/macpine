@@ -22,7 +22,7 @@ func ListVMNames() []string {
 	}
 
 	for _, f := range dirList {
-		if f.Name() != "cache" {
+		if f.Name() != ".cache" {
 			vmList = append(vmList, f.Name())
 		}
 	}
