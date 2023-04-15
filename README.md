@@ -121,7 +121,7 @@ Refer to the [troubleshooting documentation](docs/docs/troubleshooting.md) for g
 
 ## Command Reference
 
-```bash
+```man
 Create, control and connect to Alpine instances.
 
 Usage:
@@ -134,14 +134,15 @@ Available Commands:
   exec        execute COMMAND over ssh.
   help        Help about any command
   import      Imports an instance.
-  info        Display information about instances.
+  info        Display information about an instance.
   launch      Launch an Alpine instance.
   list        List all available instances.
   publish     Publish an instance.
+  rename      Rename an instance.
+  restart     Stop and start an instance.
   ssh         Attach an interactive shell to an instance.
   start       Start an instance.
   stop        Stop an instance.
-  restart     Stop and start an instance.
   tag         Add or remove tags from an instance.
 
 Flags:
@@ -150,7 +151,7 @@ Flags:
 Use "alpine [command] --help" for more information about a command.
 ```
 
-Most commands accept multiple instance names and will repeat the operation over each unique named instance once.
+**Multiple VMs per command:** some commands accept multiple instance names and will repeat the operation over each unique named instance once.
 
-Shell command completion files (installed by default with `brew install macpine`) can be generated with `alpine completion [bash|zsh|fish|powershell]`.
+**Shell autocompletion:** shell command completion files (installed by default with `brew install macpine`) can be generated with `alpine completion [bash|zsh|fish|powershell]`.
 See `alpine completion -h` or the [completion documentation](docs/docs/completions.md) for more information.
