@@ -16,8 +16,8 @@ import (
 
 // execCmd executes command on alpine vm
 var execCmd = &cobra.Command{
-	Use:   "exec NAME COMMAND",
-	Short: "execute COMMAND over ssh.",
+	Use:   "exec <instance> <command>",
+	Short: "execute a command on an instance over ssh.",
 	Run:   exec,
 
 	ValidArgsFunction:     host.AutoCompleteVMNames,
@@ -26,13 +26,13 @@ var execCmd = &cobra.Command{
 
 func exec(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
-		log.Fatal("missing VM name")
+		log.Fatal("missing instance name")
 	}
 
 	vmList := host.ListVMNames()
 	exists := utils.StringSliceContains(vmList, args[0])
 	if !exists {
-		log.Fatal("unknown machine " + args[0])
+		log.Fatal("unknown instance " + args[0])
 	}
 
 	instName := args[0]

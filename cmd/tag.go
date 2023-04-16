@@ -26,7 +26,7 @@ func includeTagFlag(cmd *cobra.Command) {
 
 // infoCmd displays macpine machine info
 var tagCmd = &cobra.Command{
-	Use:   "tag NAME tag1 [tag2...]",
+	Use:   "tag [-r] <instance> <tag1> [<tag2>...]",
 	Short: "Add or remove tags from an instance.",
 	Run:   macpineTag,
 
@@ -44,7 +44,7 @@ func validateTags(tags []string) {
 
 func macpineTag(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
-		log.Fatal("missing VM name")
+		log.Fatal("missing instance name")
 	}
 	vmName := args[0]
 
@@ -85,7 +85,7 @@ func macpineTag(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("(%s) active tags: "+strings.Join(machineConfig.Tags[:], ", "), machineConfig.Alias)
+	log.Printf("%s tags: "+strings.Join(machineConfig.Tags[:], ", "), machineConfig.Alias)
 }
 
 func find(s []string, t string) (int, bool) {

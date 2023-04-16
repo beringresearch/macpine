@@ -15,8 +15,8 @@ import (
 
 // importCmd iports an Alpine VM from file
 var importCmd = &cobra.Command{
-	Use:   "import NAME",
-	Short: "Imports an instance.",
+	Use:   "import <archive>",
+	Short: "Imports an instance archived with `alpine publish`.",
 	Run:   importMachine,
 
 	DisableFlagsInUseLine: true,
@@ -25,7 +25,7 @@ var importCmd = &cobra.Command{
 func importMachine(cmd *cobra.Command, args []string) {
 
 	if len(args) == 0 {
-		log.Fatal("missing VM name")
+		log.Fatal("missing instance name")
 	}
 
 	userHomeDir, err := os.UserHomeDir()

@@ -15,8 +15,8 @@ import (
 
 // shellCmd starts an Alpine instance
 var shellCmd = &cobra.Command{
-	Use:   "ssh NAME",
-	Short: "Attach an interactive shell to an instance.",
+	Use:   "ssh <instance>",
+	Short: "Attach an interactive shell to an instance via ssh.",
 	Run:   shell,
 
 	ValidArgsFunction:     host.AutoCompleteVMNames,
@@ -31,13 +31,13 @@ func shell(cmd *cobra.Command, args []string) {
 	}
 
 	if len(args) == 0 {
-		log.Fatal("missing VM name")
+		log.Fatal("missing instance name")
 	}
 
 	vmList := host.ListVMNames()
 	exists := utils.StringSliceContains(vmList, args[0])
 	if !exists {
-		log.Fatal("unknown machine " + args[0])
+		log.Fatal("unknown instance " + args[0])
 	}
 
 	machineConfig := qemu.MachineConfig{}
