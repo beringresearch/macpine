@@ -11,7 +11,7 @@ var completionOptions = cobra.CompletionOptions{DisableDefaultCmd: true}
 // MacpineCmd represents the base command when called without any subcommands
 var MacpineCmd = &cobra.Command{
 	Use:               "alpine",
-	Short:             "Create, control and connect to Alpine instances.",
+	Short:             "Create, control, and connect to Alpine instances.",
 	Long:              ``,
 	CompletionOptions: completionOptions,
 }

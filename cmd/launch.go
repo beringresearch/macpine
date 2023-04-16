@@ -6,10 +6,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"regexp"
 	"runtime"
 	"strconv"
-	"strings"
 
 	"github.com/beringresearch/macpine/host"
 	qemu "github.com/beringresearch/macpine/qemu"
@@ -19,12 +17,11 @@ import (
 
 // launchCmd launches an Alpine instance
 var launchCmd = &cobra.Command{
-	Use:   "launch FLAGS",
-	Short: "Launch an Alpine instance.",
+	Use:   "launch",
+	Short: "Create and start an instance.",
 	Run:   launch,
 
-	ValidArgsFunction:     flagsLaunch,
-	DisableFlagsInUseLine: true,
+	ValidArgsFunction: flagsLaunch,
 }
 
 var machineArch, imageVersion, machineCPU, machineMemory, machineDisk, machinePort, sshPort, machineName, machineMount string
@@ -35,14 +32,14 @@ func init() {
 
 func includeLaunchFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&imageVersion, "image", "i", "alpine_3.16.0", "Image to be launched.")
-	cmd.Flags().StringVarP(&machineArch, "arch", "a", "", "Machine architecture. Defaults to host cpu architecture.")
-	cmd.Flags().StringVarP(&machineCPU, "cpu", "c", "4", "Number of CPUs to allocate.")
-	cmd.Flags().StringVarP(&machineMemory, "memory", "m", "2048", "Amount of memory to allocate. Positive integers, in kilobytes.")
-	cmd.Flags().StringVarP(&machineDisk, "disk", "d", "10G", "Disk space to allocate. Positive integers, in bytes, or with K, M, G suffix.")
-	cmd.Flags().StringVarP(&machineMount, "mount", "", "", "Path to host directory to be exposed on guest.")
-	cmd.Flags().StringVarP(&sshPort, "ssh", "s", "22", "Forward VM SSH port to host.")
-	cmd.Flags().StringVarP(&machinePort, "port", "p", "", "Forward VM ports to host. Multiple ports can be separated by `,`.")
-	cmd.Flags().StringVarP(&machineName, "name", "n", "", "Name for the instance")
+	cmd.Flags().StringVarP(&machineArch, "arch", "a", "", "Machine architecture. Defaults to host architecture.")
+	cmd.Flags().StringVarP(&machineCPU, "cpu", "c", "2", "Number of CPUs to allocate.")
+	cmd.Flags().StringVarP(&machineMemory, "memory", "m", "2048", "Amount of memory (in kB) to allocate.")
+	cmd.Flags().StringVarP(&machineDisk, "disk", "d", "10G", "Disk space (in bytes) to allocate. K, M, G suffixes are supported.")
+	cmd.Flags().StringVar(&machineMount, "mount", "", "Path to a host directory to be shared with the instance.")
+	cmd.Flags().StringVarP(&sshPort, "ssh", "s", "22", "Host port to forward for SSH (required).")
+	cmd.Flags().StringVarP(&machinePort, "port", "p", "", "Forward additional host ports. Multiple ports can be separated by `,`.")
+	cmd.Flags().StringVarP(&machineName, "name", "n", "", "Instance name for use in `alpine` commands.")
 }
 
 func correctArguments(imageVersion string, machineArch string, machineCPU string,
@@ -54,7 +51,7 @@ func correctArguments(imageVersion string, machineArch string, machineCPU string
 
 	if machineArch != "" {
 		if machineArch != "aarch64" && machineArch != "x86_64" {
-			return errors.New("unsupported machine architecture. use x86_64 or aarch64")
+			return errors.New("unsupported guest architecture. use x86_64 or aarch64")
 		}
 	}
 
@@ -64,8 +61,8 @@ func correctArguments(imageVersion string, machineArch string, machineCPU string
 	}
 
 	int, err = strconv.Atoi(machineMemory)
-	if err != nil || int < 250 {
-		return errors.New("machine memory (-m) must be a positive integer greater than 250")
+	if err != nil || int < 256 {
+		return errors.New("memory (-m) must be a positive integer greater than 256")
 	}
 
 	var l, n []rune
@@ -80,10 +77,10 @@ func correctArguments(imageVersion string, machineArch string, machineCPU string
 
 	int, err = strconv.Atoi(string(n))
 	if err != nil || int < 0 {
-		return errors.New("disk size (-d) must be a positive integer followed by either K, M, G suffix")
+		return errors.New("disk size (-d) must be a positive integer optionally followed by K, M, or G")
 	}
 
-	if !utils.StringSliceContains([]string{"K", "M", "G"}, string(l)) {
+	if !utils.StringSliceContains([]string{"", "K", "M", "G"}, string(l)) {
 		return errors.New("disk size suffix must be K, M, or G")
 	}
 
@@ -110,12 +107,12 @@ func launch(cmd *cobra.Command, args []string) {
 
 	err := correctArguments(imageVersion, machineArch, machineCPU, machineMemory, machineDisk, sshPort, machinePort)
 	if err != nil {
-		log.Fatal("parameter format: " + err.Error())
+		log.Fatalln(err.Error())
 	}
 
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	if machineArch == "" {
@@ -131,14 +128,15 @@ func launch(cmd *cobra.Command, args []string) {
 		}
 	}
 
+	vmList := host.ListVMNames()
+
 	if machineName == "" {
 		machineName = utils.GenerateRandomAlias()
-	}
-
-	vmList := host.ListVMNames()
-	exists := utils.StringSliceContains(vmList, machineName)
-	if exists {
-		log.Fatal("machine " + machineName + " exists")
+		for utils.StringSliceContains(vmList, machineName) { // if exists, re-randomize
+			machineName = utils.GenerateRandomAlias()
+		}
+	} else if utils.StringSliceContains(vmList, machineName) {
+		log.Fatal("instance with name \"" + machineName + "\" already exists")
 	}
 
 	macAddress, err := utils.GenerateMACAddress()
@@ -169,28 +167,9 @@ func launch(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Launched:", machineName)
-
-}
-
-// (workaround) we parse Flags().FlagUsages() to get all flags previously annotated. Another way to get all flags??
-func getAllFlags(cmd *cobra.Command) []string {
-	var flags []string
-
-	usage := cmd.Flags().FlagUsages()
-	arrUsage := strings.Split(usage, "\n")
-
-	for _, f := range arrUsage {
-		regx := regexp.MustCompile(`^\s+(\-[\-]?[a-z]+),?\s+`)
-		if regx.MatchString(f) {
-			flag := regx.FindAllStringSubmatch(f, -1)
-			flags = append(flags, flag[0][1])
-		}
-	}
-
-	return flags
+	fmt.Println("launched: " + machineName)
 }
 
 func flagsLaunch(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	return getAllFlags(cmd), cobra.ShellCompDirectiveNoFileComp
+	return nil, cobra.ShellCompDirectiveNoFileComp
 }
