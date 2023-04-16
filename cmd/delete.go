@@ -19,7 +19,7 @@ var deleteCmd = &cobra.Command{
 	Short: "Delete instances.",
 	Run:   delete,
 
-	ValidArgsFunction:     host.AutoCompleteVMNames,
+	ValidArgsFunction:     host.AutoCompleteVMNamesOrTags,
 	DisableFlagsInUseLine: true,
 }
 
@@ -27,6 +27,11 @@ func delete(cmd *cobra.Command, args []string) {
 
 	if len(args) == 0 {
 		log.Fatal("missing instance name")
+	}
+
+	args, err := host.ExpandTagArguments(args)
+	if err != nil {
+		log.Fatalln(err)
 	}
 
 	vmList := host.ListVMNames()
