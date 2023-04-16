@@ -18,7 +18,7 @@ var stopCmd = &cobra.Command{
 	Short: "Stop an instance.",
 	Run:   stop,
 
-	ValidArgsFunction:     host.AutoCompleteVMNames,
+	ValidArgsFunction:     host.AutoCompleteVMNamesOrTags,
 	DisableFlagsInUseLine: true,
 }
 
@@ -31,6 +31,11 @@ func stop(cmd *cobra.Command, args []string) {
 
 	if len(args) == 0 {
 		log.Fatal("missing instance name")
+	}
+
+	args, err = host.ExpandTagArguments(args)
+	if err != nil {
+		log.Fatalln(err)
 	}
 
 	vmList := host.ListVMNames()
