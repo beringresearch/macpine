@@ -10,23 +10,21 @@ Macpine makes it possible to run LXD/LXC containers on MacOS with support for bo
 
 ## Prerequisites
 
-1. Install QEMU
+1. Install QEMU and macpine
 
 ```bash
-brew install qemu
+brew install qemu macpine
 ```
 
-2. Install [the latest Macpine binary](https://github.com/beringresearch/macpine#install-the-latest-binary)
-
-3. Install the LXD client
+2. Install the LXD client
 
 ```bash
 brew install lxc
 ```
 
-## Launch an LXD VM
+## Launch an LXD instance
 
-Now that that the system is ready, we can create a lightweight Macpine VM, which has been preconfigured to run LXD. In your terminal run:
+Now that that the system is ready, we can create a lightweight Macpine instance, which has been pre-configured to run LXD. In your terminal run:
 
 ```bash
 alpine launch --image alpine_3.16.0_lxd --name lxd --port 8443 --ssh 2222 --mount $(pwd)

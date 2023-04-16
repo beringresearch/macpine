@@ -4,7 +4,6 @@
 
 Create and manage lightweight Alpine VMs on MacOS with:
 
-
 * Seamless port forwarding
 
 * Automatic file sharing
