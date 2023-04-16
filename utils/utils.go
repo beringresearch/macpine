@@ -76,7 +76,7 @@ func ParsePort(ports string) ([]PortMap, error) {
 	maps = make([]PortMap, mapcount)
 	for i, p := range strings.Split(ports, ",") {
 		newmap := PortMap{0, 0, Tcp}
-		var herr, gerr error = nil, nil
+		var herr, gerr error
 		if strings.HasSuffix(p, "u") {
 			newmap.Proto = Udp
 			p = strings.TrimSuffix(p, "u")
