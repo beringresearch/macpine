@@ -1,10 +1,8 @@
 # How to create an instance
 
+## Host-to-Instance Port Forwarding
 
-
-## Host-to-VM Port Forwarding
-
-Network ingress over the virtual interface can be enabled during VM creation or after a "reboot" (`alpine stop ... ; alpine start ...`).
+Network ingress over the virtual interface can be enabled during instance creation or after a "reboot" (`alpine restart <instance name>`).
 
 When using `-p` in `alpine launch` or adding to the `port` string in `config.yaml` (with `alpine edit` or otherwise), a string argument
 must be provided. This string identifies ports which should be forwarded from the host to the guest by QEMU. A single port number will
@@ -15,14 +13,16 @@ The string can be described formally in pseudo-EBNF:
 
 ```
 ports := "" | <port>,<ports>
-port := number[u] | number:number[u]
+port := <number><proto> | <number>:<number><proto>
 number := 0 to 65535
+proto := "" | u
 ```
 
 Or informally as a `,` comma-delimited list of zero or more port mappings. A port mapping is either a number between 0 and 65536,
-or two such port numbers separated by a `:` colon. An optional character `u` can be appended to configure a UDP port forward.
+or two such port numbers separated by a `:` colon. An optional character `u` can be appended to configure a UDP port forward rather
+than the default TCP.
 
-For example, to forward port 8080 from host to guest: `-p 8080` or `port: "8080"`
+For example, to forward port 8080 from host to guest: `-p 8080` in `alpine launch` or `port: "8080"` in `config.yaml`.
 
 Further examples:
 

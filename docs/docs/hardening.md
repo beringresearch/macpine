@@ -1,4 +1,4 @@
-# Hardening `macpine` VMs (via QEMU use and configuration)
+# Hardening `macpine` instances (via QEMU use and configuration)
 
 ### QEMU Resources
 
@@ -19,3 +19,5 @@
   with localhost proxying if needed
 * Configure `ssh-agent` authentication to the guest machine with certificate-based credentials, and then disable password
   authentication (`PermitRootLogin prohibit-password` and/or `PasswordAuthentication no` in `/etc/ssh/sshd_config`)
+* `qemu` port forwarding binds `0.0.0.0`, meaning any source IP may send traffic to the guest. Enabling a firewall on the host can prevent
+    unwanted ingress traffic to the guest.

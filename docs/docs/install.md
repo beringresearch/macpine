@@ -1,6 +1,6 @@
 # Installation
 
-Macpine depends on QEMU >= 6.2.0_1:
+`macpine` depends on QEMU >= 6.2.0_1:
 
 ```bash
 #brew update
@@ -14,7 +14,15 @@ Download the [latest binary release](https://github.com/beringresearch/macpine/r
 
 ```bash
 wget https://github.com/beringresearch/macpine/releases/download/v0.10/alpine_darwin_arm64
-sudo mv alpine_darwin_arm64 /usr/local/bin/
+mv alpine_darwin_arm64 alpine
+sudo chmod +x alpine
+sudo mv alpine /usr/local/bin/
+```
+
+## Install via Homebrew (recommended)
+
+```bash
+brew install macpine
 ```
 
 ## Install via MacPorts
@@ -32,4 +40,5 @@ See more information [here](https://ports.macports.org/port/macpine/).
 git clone https://github.com/beringresearch/macpine
 cd macpine
 make
+make install #install to /usr/local by default, may require sudo
 ```
