@@ -180,7 +180,6 @@ func (c *MachineConfig) Status() (string, int) {
 	if _, err := os.Stat(pidFile); err == nil {
 		status = "Running"
 		vmPID, err := ioutil.ReadFile(pidFile)
-
 		if err != nil {
 			log.Fatalf("unable to read file: %v", err)
 		}
@@ -188,6 +187,16 @@ func (c *MachineConfig) Status() (string, int) {
 		process := string(vmPID)
 		process = strings.TrimSuffix(process, "\n")
 		pid, _ = strconv.Atoi(process)
+
+		// check if stopped and return "Paused"
+		cmd := exec.Command("ps", "-o", "stat=", "-p", strconv.Itoa(pid))
+		out, err := cmd.Output()
+		if err != nil {
+			log.Fatalf("error checking status of qemu process: %v\n", err)
+		}
+		if strings.TrimSpace(string(out)) == "T" {
+			status = "Paused"
+		}
 	}
 	return status, pid
 }
@@ -209,6 +218,48 @@ func (c *MachineConfig) Stop() error {
 		} else {
 			pidFile := filepath.Join(c.Location, "alpine.pid")
 			return errors.New("error stopping, incorrect PID in " + pidFile + "?")
+		}
+	}
+	return nil
+}
+
+// Pauses an Alpine VM
+func (c *MachineConfig) Pause() error {
+	if status, pid := c.Status(); status == "Running" {
+		if pid > 0 {
+			p, procErr := os.FindProcess(pid)
+			if procErr != nil {
+				return procErr
+			}
+			if err := p.Signal(syscall.SIGSTOP); err != nil {
+				return err
+			}
+			log.Println(c.Alias + " paused")
+			return nil
+		} else {
+			pidFile := filepath.Join(c.Location, "alpine.pid")
+			return errors.New("error pausing, incorrect PID in " + pidFile + "?")
+		}
+	}
+	return nil
+}
+
+// Unpauses an Alpine VM
+func (c *MachineConfig) Resume() error {
+	if status, pid := c.Status(); status == "Paused" {
+		if pid > 0 {
+			p, procErr := os.FindProcess(pid)
+			if procErr != nil {
+				return procErr
+			}
+			if err := p.Signal(syscall.SIGCONT); err != nil {
+				return err
+			}
+			log.Println(c.Alias + " resumed")
+			return nil
+		} else {
+			pidFile := filepath.Join(c.Location, "alpine.pid")
+			return errors.New("error resuming, incorrect PID in " + pidFile + "?")
 		}
 	}
 	return nil
@@ -384,7 +435,7 @@ func (c *MachineConfig) Start() error {
 	}
 
 	status, pid := c.Status()
-	if status == "Stopped" {
+	if status != "Running" {
 		return errors.New("unable to start vm")
 	}
 
