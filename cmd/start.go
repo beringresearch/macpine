@@ -20,7 +20,7 @@ var startCmd = &cobra.Command{
 	Short: "Start an instance.",
 	Run:   start,
 
-	ValidArgsFunction:     host.AutoCompleteVMNames,
+	ValidArgsFunction:     host.AutoCompleteVMNamesOrTags,
 	DisableFlagsInUseLine: true,
 }
 
@@ -32,7 +32,12 @@ func start(cmd *cobra.Command, args []string) {
 	}
 
 	if len(args) == 0 {
-		log.Fatal("missing VM name")
+		log.Fatal("missing instance name")
+	}
+
+	args, err = host.ExpandTagArguments(args)
+	if err != nil {
+		log.Fatalln(err)
 	}
 
 	vmList := host.ListVMNames()
@@ -43,7 +48,7 @@ func start(cmd *cobra.Command, args []string) {
 		}
 		exists := utils.StringSliceContains(vmList, vmName)
 		if !exists {
-			errs[i] = utils.CmdResult{Name: vmName, Err: errors.New("unknown machine " + vmName)}
+			errs[i] = utils.CmdResult{Name: vmName, Err: errors.New("unknown instance " + vmName)}
 			continue
 		}
 
@@ -76,6 +81,6 @@ func start(cmd *cobra.Command, args []string) {
 		}
 	}
 	if wasErr {
-		log.Fatalln("error starting VM(s)")
+		log.Fatalln("error starting instance(s)")
 	}
 }

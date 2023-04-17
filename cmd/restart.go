@@ -21,7 +21,7 @@ var restartCmd = &cobra.Command{
 	Short: "Stop and start an instance.",
 	Run:   restart,
 
-	ValidArgsFunction:     host.AutoCompleteVMNames,
+	ValidArgsFunction:     host.AutoCompleteVMNamesOrTags,
 	DisableFlagsInUseLine: true,
 }
 
@@ -32,7 +32,12 @@ func restart(cmd *cobra.Command, args []string) {
 	}
 
 	if len(args) == 0 {
-		log.Fatal("missing VM name")
+		log.Fatal("missing instance name")
+	}
+
+	args, err = host.ExpandTagArguments(args)
+	if err != nil {
+		log.Fatalln(err)
 	}
 
 	vmList := host.ListVMNames()
@@ -44,7 +49,7 @@ func restart(cmd *cobra.Command, args []string) {
 		exists := utils.StringSliceContains(vmList, vmName)
 		if !exists {
 			wasErr = true
-			log.Println(errors.New("unknown machine " + vmName))
+			log.Println(errors.New("unknown instance " + vmName))
 			continue
 		}
 
@@ -81,6 +86,6 @@ func restart(cmd *cobra.Command, args []string) {
 		}
 	}
 	if wasErr {
-		log.Fatalln("error restarting VM(s)")
+		log.Fatalln("error restarting instance(s)")
 	}
 }

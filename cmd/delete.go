@@ -16,17 +16,22 @@ import (
 
 var deleteCmd = &cobra.Command{
 	Use:   "delete <instance> [<instance>...]",
-	Short: "Delete named instances.",
+	Short: "Delete instances.",
 	Run:   delete,
 
-	ValidArgsFunction:     host.AutoCompleteVMNames,
+	ValidArgsFunction:     host.AutoCompleteVMNamesOrTags,
 	DisableFlagsInUseLine: true,
 }
 
 func delete(cmd *cobra.Command, args []string) {
 
 	if len(args) == 0 {
-		log.Fatal("missing VM name")
+		log.Fatal("missing instance name")
+	}
+
+	args, err := host.ExpandTagArguments(args)
+	if err != nil {
+		log.Fatalln(err)
 	}
 
 	vmList := host.ListVMNames()
@@ -37,7 +42,7 @@ func delete(cmd *cobra.Command, args []string) {
 		}
 		exists := utils.StringSliceContains(vmList, vmName)
 		if !exists {
-			errs[i] = utils.CmdResult{Name: vmName, Err: errors.New("unknown machine " + vmName)}
+			errs[i] = utils.CmdResult{Name: vmName, Err: errors.New("unknown instance " + vmName)}
 			continue
 		}
 
@@ -77,6 +82,6 @@ func delete(cmd *cobra.Command, args []string) {
 		}
 	}
 	if wasErr {
-		log.Fatalln("error deleting VM(s)")
+		log.Fatalln("error deleting instance(s)")
 	}
 }

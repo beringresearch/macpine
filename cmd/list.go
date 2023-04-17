@@ -18,7 +18,7 @@ import (
 // listCmd lists Alpine instances
 var listCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List all available instances.",
+	Short: "List instances.",
 	Run:   list,
 
 	DisableFlagsInUseLine: true,

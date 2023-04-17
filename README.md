@@ -41,7 +41,7 @@ sudo chmod +x alpine
 sudo mv alpine /usr/local/bin/
 ```
 
-## Install from Homebrew
+## Install from Homebrew (recommended)
 
 ```bash
 brew install macpine
@@ -67,37 +67,37 @@ make #compiles the project into a local bin/ directory
 make install #installs binaries to /usr/local (or other configured PREFIX)
 ```
 
-
 # Getting Started
 
-To launch a brand new VM:
+To launch a new instance:
 
 ```bash
 alpine launch #launches with default parameters
 alpine launch -a aarch64 #create an aarch64 instance
-alpine launch -d 10G -c 4 -m 2048 #create a machine with a 10GB disk, 4 cpus and 2GB of RAM
-
+alpine launch -d 10G -c 4 -m 2048 #create an instance with a 10GB disk, 4 cpus and 2GB of RAM
 ```
 
-Access VM via ssh:
+`alpine help launch` to view defaults and other launch options.
+
+Access instance via ssh:
 
 ```bash
-alpine launch -s 22 #launch a VM and expose SSH port to host port 22
-ssh root@localhost -p 22 #password: root
-alpine ssh $VMNAME #attach to the VM shell
+alpine launch -s 22 #launch an instance and expose SSH port to host port 22
+alpine ssh <instance name> #attach shell to instance
+#Or: ssh root@localhost -p 22 #password: root
 ```
 
-Expose additional VM ports to host:
+Expose additional instance ports to host:
 
 ```bash
 alpine launch -s 23 -p 8888,5432 #launch a VM, expose SSH to host port 23 and forward host ports 8888 and 5432 to VM ports 8888 and 5432
 alpine launch -s 8023 -p 8081:8082,8083 #launch a VM, expose SSH to host port 8023, forward host port 8081 to VM port 8082, and forward
                                         #host port 8083 to VM port 8083
-alpine launch -s 9023 -p 9091u,9092:9093u #launch a VM, expose SSH to host port 9023, forward (UDP) host port 9091 to VM port 9091, and forward (UDP)
-                                        #host port 9092 to VM port 9093
+alpine launch -s 9023 -p 9091u,9092:9093u #launch a VM, expose SSH to host port 9023, forward (UDP) host port 9091 to VM port 9091,
+                                          #and forward (UDP) host port 9092 to VM port 9093
 ```
 
-VMs can be easily packaged for export and re-use as tar.gz files:
+Instances can be easily packaged for backup or sharing as tar.gz files:
 
 ```bash
 alpine list
@@ -151,7 +151,9 @@ Flags:
 Use "alpine [command] --help" for more information about a command.
 ```
 
-**Multiple VMs per command:** some commands (`delete`, `edit`, `publish`, `restart`, `start`, `stop`) accept multiple instance names and will repeat the operation over each unique named instance once.
+**Multiple instances in a command:** some commands (`delete`, `edit`, `publish`, `restart`, `start`, `stop`) accept multiple instance names and will repeat the operation over each unique named instance once.
+
+**Tags:** using `alpine tag`, instances can be tagged; tags can be used in multi-instance commands (see above) e.g. `alpine start +daemon` will start all instances which have had been tagged `daemon` with `alpine tag <instance name> daemon`.
 
 **Shell autocompletion:** shell command completion files (installed by default with `brew install macpine`) can be generated with `alpine completion [bash|zsh|fish|powershell]`.
 See `alpine completion -h` or the [completion documentation](docs/docs/completions.md) for more information.

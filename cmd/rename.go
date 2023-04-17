@@ -32,7 +32,7 @@ func rename(cmd *cobra.Command, args []string) {
 	}
 
 	if len(args) < 1 {
-		log.Fatalln("missing VM name")
+		log.Fatalln("missing instance name")
 	}
 	if len(args) < 2 {
 		log.Fatalln("missing new name argument")
@@ -42,7 +42,7 @@ func rename(cmd *cobra.Command, args []string) {
 	vmList := host.ListVMNames()
 	exists := utils.StringSliceContains(vmList, vmName)
 	if !exists {
-		log.Fatalln("unknown machine " + vmName)
+		log.Fatalln("unknown instance " + vmName)
 	}
 
 	newName := args[1]
@@ -51,7 +51,7 @@ func rename(cmd *cobra.Command, args []string) {
 	configDir := filepath.Join(userHomeDir, ".macpine")
 	files, err := os.ReadDir(configDir)
 	if err != nil {
-		log.Fatalf("error reading macpine config directory: %v\n", err)
+		log.Fatalf("error reading config directory: %v\n", err)
 	}
 
 	for _, oldVM := range files {

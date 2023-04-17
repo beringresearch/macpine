@@ -17,7 +17,7 @@ var editCmd = &cobra.Command{
 	Short: "Edit instance configuration.",
 	Run:   edit,
 
-	ValidArgsFunction:     host.AutoCompleteVMNames,
+	ValidArgsFunction:     host.AutoCompleteVMNamesOrTags,
 	DisableFlagsInUseLine: true,
 }
 
@@ -29,7 +29,12 @@ func edit(cmd *cobra.Command, args []string) {
 	}
 
 	if len(args) == 0 {
-		log.Fatal("missing VM name")
+		log.Fatal("missing instance name")
+	}
+
+	args, err = host.ExpandTagArguments(args)
+	if err != nil {
+		log.Fatalln(err)
 	}
 
 	vmList := host.ListVMNames()
@@ -39,7 +44,7 @@ func edit(cmd *cobra.Command, args []string) {
 		}
 		exists := utils.StringSliceContains(vmList, vmName)
 		if !exists {
-			log.Fatalln("unknown machine " + vmName)
+			log.Fatalln("unknown instance " + vmName)
 		}
 	}
 
@@ -81,6 +86,6 @@ func edit(cmd *cobra.Command, args []string) {
 	if err != nil {
 		log.Fatalf("error while editing: %v\n", err)
 	} else {
-		log.Println("configuration(s) saved, restart VM(s) for changes to take effect")
+		log.Println("configuration(s) saved, restart instance(s) for changes to take effect")
 	}
 }

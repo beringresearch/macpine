@@ -11,7 +11,7 @@ import (
 
 // infoCmd displays macpine machine info
 var infoCmd = &cobra.Command{
-	Use:   "info NAME",
+	Use:   "info <instance>",
 	Short: "Display information about an instance.",
 	Run:   macpineInfo,
 
@@ -21,7 +21,7 @@ var infoCmd = &cobra.Command{
 
 func macpineInfo(cmd *cobra.Command, args []string) {
 	if len(args) == 0 {
-		log.Fatal("missing VM name")
+		log.Fatal("missing instance name")
 	}
 
 	for _, vmName := range args {
