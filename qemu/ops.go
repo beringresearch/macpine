@@ -255,6 +255,11 @@ func (c *MachineConfig) Resume() error {
 			if err := p.Signal(syscall.SIGCONT); err != nil {
 				return err
 			}
+			err := c.Exec("hwclock -w", true)
+			if err != nil {
+				log.Println("failed to synchonrize clock, instance system clock may be skewed")
+				return err
+			}
 			log.Println(c.Alias + " resumed")
 			return nil
 		} else {
