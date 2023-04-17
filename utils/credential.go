@@ -45,7 +45,7 @@ func GetCredential(config string) (Credential, error) {
 			cred.CR = val
 			cred.CRType = PwdCred
 		} else {
-			err = fmt.Errorf("config.yaml specifies environment variable credential but variable is not set.")
+			err = fmt.Errorf("config.yaml specifies environment variable credential but variable is not set")
 		}
 	} else if strings.HasPrefix(config, "ssh::") {
 		cred.CR = strings.TrimPrefix(config, "ssh::")
