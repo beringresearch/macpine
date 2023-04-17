@@ -8,23 +8,23 @@ import (
 	"path/filepath"
 
 	"github.com/beringresearch/macpine/host"
-	qemu "github.com/beringresearch/macpine/qemu"
+	"github.com/beringresearch/macpine/qemu"
 	"github.com/beringresearch/macpine/utils"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
 )
 
-// startCmd starts an Alpine instance
-var startCmd = &cobra.Command{
-	Use:   "start <instance> [<instance>...]",
-	Short: "Start an instance.",
-	Run:   start,
+// stopCmd stops an Alpine instance
+var resumeCmd = &cobra.Command{
+	Use:   "resume <instance> [<instance>...]",
+	Short: "Unpause an instance.",
+	Run:   resume,
 
 	ValidArgsFunction:     host.AutoCompleteVMNamesOrTags,
 	DisableFlagsInUseLine: true,
 }
 
-func start(cmd *cobra.Command, args []string) {
+func resume(cmd *cobra.Command, args []string) {
 
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -66,13 +66,8 @@ func start(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		if status, _ := machineConfig.Status(); status != "Stopped" {
-			errs[i] = utils.CmdResult{Name: vmName, Err: errors.New(vmName + " is already running")}
-			continue
-		}
-		err = host.Start(machineConfig)
+		err = host.Resume(machineConfig)
 		if err != nil {
-			host.Stop(machineConfig)
 			errs[i] = utils.CmdResult{Name: vmName, Err: err}
 			continue
 		}
@@ -80,11 +75,11 @@ func start(cmd *cobra.Command, args []string) {
 	wasErr := false
 	for _, res := range errs {
 		if res.Err != nil {
-			log.Printf("failed to start %s: %v\n", res.Name, res.Err)
+			log.Printf("failed: %v\n", res.Err)
 			wasErr = true
 		}
 	}
 	if wasErr {
-		log.Fatalln("error starting instance(s)")
+		log.Fatalln("error unpausing instance(s)")
 	}
 }

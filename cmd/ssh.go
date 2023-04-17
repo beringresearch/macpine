@@ -52,6 +52,9 @@ func shell(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
+	if status, _ := machineConfig.Status(); status != "Running" {
+		log.Fatalf("%s is not running", machineConfig.Alias)
+	}
 	err = host.Exec(machineConfig, "bash")
 	if err != nil {
 		log.Fatal(err)
