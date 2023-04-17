@@ -66,6 +66,10 @@ func start(cmd *cobra.Command, args []string) {
 			continue
 		}
 
+		if status, _ := machineConfig.Status(); status != "Stopped" {
+			errs[i] = utils.CmdResult{Name: vmName, Err: errors.New(vmName + " is already running")}
+			continue
+		}
 		err = host.Start(machineConfig)
 		if err != nil {
 			host.Stop(machineConfig)
