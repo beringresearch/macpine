@@ -1,9 +1,0 @@
-#!/bin/bash
-
-IFS=$'\n'
-
-for n in $(alpine list | cut -d " " -f 1) ; do
-   if [[ "$n" =~ ^.*-daemon$ ]] ; then # TODO replace with VM tags when available
-      alpine start $n >/dev/null &
-   fi
-done

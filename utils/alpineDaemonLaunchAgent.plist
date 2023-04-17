@@ -7,10 +7,8 @@
     <key>ProgramArguments</key>
     <array>
         <string>{{ ALPINE_PATH }}</string>
+        <string>start</string>
+        <string>+launchctl-autostart</string>
     </array>
 </dict>
 </plist>
-<!-- TODO
-    - add a command which compiles this .plist (adds correct ALPINE_PATH) and installs it to ~/Library/LaunchAgents
-        and call launchctl load <plist>
--->

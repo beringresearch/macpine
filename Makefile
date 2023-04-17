@@ -10,7 +10,7 @@ bin/$(BINARY_NAME): $(MAIN) $(SRCS)
 	go get
 	go build -ldflags=$(GO_LDFLAGS) -o $@ $<
 
-.PHONY: install clean fmt installagent
+.PHONY: install clean fmt agent
 install: bin/$(BINARY_NAME)
 	@echo "Installing ..."
 	install -d $(bindir)
@@ -25,7 +25,11 @@ clean:
 fmt:
 	@gofmt -e -l -s -w $(MAIN) $(SRCS)
 
-
-installagent:
-	# install bash script somewhere (prefix/libexec?)
-	# sed 's/\{\{ ALPINE_PATH \}\}/<path to installed bash script>/' <path to plist> > ~/Library/LaunchAgents/<plist name>
+agent:
+	@if [ -f "$(shell which alpine)" ]; then \
+		sed "s/{{ ALPINE_PATH }}/$(subst /,\\/,$(shell which -a alpine))/" utils/alpineDaemonLaunchAgent.plist > compiledAgent ; \
+		mv compiledAgent ~/Library/LaunchAgents/alpineDaemonLaunchAgent.plist ; \
+		echo "installed launch agent to ~/Library/LaunchAgents" ; \
+	else \
+		echo "error: macpine not found in PATH" >&2 ; exit 1 ; \
+	fi
