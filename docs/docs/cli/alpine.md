@@ -1,10 +1,10 @@
 # alpine
 
-Create, control and connect to Alpine instances.
+Create, control, and connect to Alpine instances.
 
 ## Description
 
-Create, control and connect to Alpine instances.
+Create, control, and connect to Alpine instances.
 
 ## Options
 
