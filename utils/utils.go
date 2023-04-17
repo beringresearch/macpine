@@ -15,11 +15,24 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 )
 
 //go:embed *.txt
 var f embed.FS
+
+// SupportsHugePages
+func SupportsHugePages() (bool, error) {
+	sc, err := syscall.Sysctl("machdep.cpu.extfeatures")
+	if err != nil {
+		return false, err
+	}
+
+	supports := strings.Contains(sc, "1GBPAGE")
+
+	return supports, nil
+}
 
 // GenerateMACAddress
 func GenerateMACAddress() (string, error) {
@@ -71,7 +84,7 @@ func ParsePort(ports string) ([]PortMap, error) {
 	}
 	mapcount := strings.Count(ports, ",") + 1
 	if mapcount > 65535 {
-		return nil, errors.New("Too many port mappings specified, likely an error. Check config.yaml")
+		return nil, errors.New("too many port mappings specified, likely an error. Check config.yaml")
 	}
 	maps = make([]PortMap, mapcount)
 	for i, p := range strings.Split(ports, ",") {
@@ -84,7 +97,7 @@ func ParsePort(ports string) ([]PortMap, error) {
 		if strings.Contains(p, ":") {
 			pair := strings.Split(p, ":")
 			if len(pair) != 2 {
-				return nil, errors.New("Incorrect port mapping pair specified. Check config.yaml")
+				return nil, errors.New("incorrect port mapping pair specified. Check config.yaml")
 			}
 			newmap.Host, herr = strconv.Atoi(pair[0])
 			newmap.Guest, gerr = strconv.Atoi(pair[1])
@@ -93,10 +106,10 @@ func ParsePort(ports string) ([]PortMap, error) {
 			newmap.Guest = newmap.Host
 		}
 		if herr != nil || gerr != nil {
-			return nil, errors.New("Error parsing specified ports. Check config.yaml")
+			return nil, errors.New("error parsing specified ports. Check config.yaml")
 		}
 		if newmap.Host < 0 || newmap.Host > 65535 || newmap.Guest < 0 || newmap.Guest > 65535 {
-			return nil, errors.New("Invalid specified ports (must be 0-65535). Check config.yaml")
+			return nil, errors.New("invalid specified ports (must be 0-65535). Check config.yaml")
 		}
 		maps[i] = newmap
 	}

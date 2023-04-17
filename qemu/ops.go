@@ -279,12 +279,6 @@ func (c *MachineConfig) Start() error {
 
 	var qemuArgs []string
 
-	cpuType := map[string]string{
-		"aarch64":      "cortex-a72",
-		"x86_64":       "qemu64",
-		"x86_64_host":  "host,-pdpe1gb=on",
-		"aarch64_host": "host"}
-
 	hostCPU := ""
 
 	if c.IsNativeArch() {
@@ -292,6 +286,27 @@ func (c *MachineConfig) Start() error {
 			hostCPU = "_host"
 		}
 	}
+
+	hostCPUType := c.Arch + hostCPU
+	hugePages := ""
+
+	if hostCPUType == "x86_64_host" {
+		supports, err := utils.SupportsHugePages()
+		if err != nil {
+			return err
+		}
+
+		if !supports {
+			hugePages = ",pdpe1gb=off"
+		}
+	}
+
+	cpuType := map[string]string{
+		"aarch64":      "cortex-a72",
+		"x86_64":       "qemu64",
+		"x86_64_host":  "host" + hugePages,
+		"aarch64_host": "host"}
+
 	cpu := cpuType[c.Arch+hostCPU]
 
 	highmem := "off"
