@@ -128,25 +128,27 @@ See [all the docs](docs/docs) for more information:
 ## Command Reference
 
 ```man
-Create, control and connect to Alpine instances.
+Create, control, and connect to Alpine instances.
 
 Usage:
   alpine [command]
 
 Available Commands:
   completion  Generate shell autocompletions.
-  delete      Delete named instances.
+  delete      Delete instances.
   edit        Edit instance configuration.
-  exec        execute COMMAND over ssh.
+  exec        execute a command on an instance over ssh.
   help        Help about any command
-  import      Imports an instance.
+  import      Imports an instance archived with `alpine publish`.
   info        Display information about an instance.
-  launch      Launch an Alpine instance.
-  list        List all available instances.
+  launch      Create and start an instance.
+  list        List instances.
+  pause       Pause an instance.
   publish     Publish an instance.
   rename      Rename an instance.
   restart     Stop and start an instance.
-  ssh         Attach an interactive shell to an instance.
+  resume      Unpause an instance.
+  ssh         Attach an interactive shell to an instance via ssh.
   start       Start an instance.
   stop        Stop an instance.
   tag         Add or remove tags from an instance.
@@ -157,7 +159,7 @@ Flags:
 Use "alpine [command] --help" for more information about a command.
 ```
 
-**Multiple instances in a command:** some commands (`delete`, `edit`, `publish`, `restart`, `start`, `stop`) accept multiple instance names and will repeat the operation over each unique named instance once.
+**Multiple instances in a command:** some commands (`delete`, `edit`, `publish`, `restart`, `start`, `stop`, `pause`, `resume`) accept multiple instance names and will repeat the operation over each unique named instance once.
 
 **Tags:** using `alpine tag`, instances can be tagged; tags can be used in multi-instance commands (see above) e.g. `alpine start +daemon` will start all instances which have had been tagged `daemon` with `alpine tag <instance name> daemon`.
 

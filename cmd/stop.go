@@ -55,6 +55,9 @@ func stop(cmd *cobra.Command, args []string) {
 		}
 		machineConfig.Location = filepath.Join(userHomeDir, ".macpine", machineConfig.Alias)
 
+		if status, _ := machineConfig.Status(); status == "Paused" {
+			host.Resume(machineConfig)
+		}
 		err = host.Stop(machineConfig)
 		if err != nil {
 			errs[i] = utils.CmdResult{Name: vmName, Err: err}
