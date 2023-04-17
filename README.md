@@ -117,7 +117,13 @@ This will create a file `cheerful-result.tar.gz` which can be imported as:
 alpine import cheerful-result.tar.gz
 ```
 
-Refer to the [troubleshooting documentation](docs/docs/troubleshooting.md) for general information and guidance on common issues.
+See [all the docs](docs/docs) for more information:
+- [advanced port forwarding and securing instance SSH](docs/docs/create_instance.md)
+- [managing instances](docs/docs/modify_instance.md)
+- [running LXD within instances](docs/docs/lxd_macpine.md) 
+- [hardening instances](docs/docs/hardening.md)
+- [auto-starting instances at login](docs/docs/autostart.md)
+- [general troubleshooting](docs/docs/troubleshooting.md)
 
 ## Command Reference
 
