@@ -21,14 +21,14 @@ func withTerminal(f func(in, out *os.File) error) error {
 	}
 }
 
-func PrintfToTerminal(format string, v ...interface{}) error {
+func printfToTerminal(format string, v ...interface{}) error {
 	return withTerminal(func(_, out *os.File) error {
 		_, err := fmt.Fprintf(out, format+"\n", v...)
 		return err
 	})
 }
 
-func ReadSecret(prompt string) (s []byte, err error) {
+func readSecret(prompt string) (s []byte, err error) {
 	err = withTerminal(func(in, out *os.File) error {
 		fmt.Fprintf(out, "%s ", prompt)
 		defer clearLine(out)
