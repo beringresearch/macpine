@@ -136,12 +136,11 @@ func publish(cmd *cobra.Command, args []string) {
 }
 
 func encryptArchive(machineConfig *qemu.MachineConfig) error {
-	var rs age.Recipient
 	pass, err := utils.PassphrasePromptForEncryption()
 	if err != nil {
 		return err
 	}
-	rs, err = age.NewScryptRecipient(pass)
+	rs, err := age.NewScryptRecipient(pass)
 	if err != nil {
 		return fmt.Errorf("error generating key for passphrase: %v\n", err)
 	}

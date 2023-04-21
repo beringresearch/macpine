@@ -99,12 +99,11 @@ func importMachine(cmd *cobra.Command, args []string) {
 }
 
 func decryptArchive(archive string) error {
-	var id age.Identity
 	pass, err := utils.PassphrasePromptForDecryption()
 	if err != nil {
 		return err
 	}
-	id, err = age.NewScryptIdentity(pass)
+	id, err := age.NewScryptIdentity(pass)
 	if err != nil {
 		return fmt.Errorf("error generating key for passphrase: %v\n", err)
 	}
