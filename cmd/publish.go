@@ -104,7 +104,11 @@ func publish(cmd *cobra.Command, args []string) {
 		defer out.Close()
 
 		// Create the archive and write the output to the "out" Writer
-		log.Printf("creating archive %s...\n", machineConfig.Alias+".tar.gz")
+		ext := ""
+		if encrypt {
+			ext = ".age"
+		}
+		log.Printf("creating archive %s...\n", machineConfig.Alias+".tar.gz"+ext)
 		err = utils.Compress(files, out)
 		if err != nil {
 			errs[i] = utils.CmdResult{Name: vmName, Err: err}
@@ -122,7 +126,7 @@ func publish(cmd *cobra.Command, args []string) {
 	wasErr := false
 	for _, res := range errs {
 		if res.Err != nil {
-			log.Printf("failed to publish %s: %v\n", res.Name, res.Err)
+			log.Printf("unable to publish %s: %v\n", res.Name, res.Err)
 			wasErr = true
 		}
 	}
