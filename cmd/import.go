@@ -53,34 +53,31 @@ func importMachine(cmd *cobra.Command, args []string) {
 		os.RemoveAll(tempArchive)
 		log.Fatal("unable to import: " + err.Error())
 	}
+	defer os.RemoveAll(tempArchive)
 
 	targetDir := strings.TrimSuffix(tempArchive, ".tar.gz")
 	exists, err := utils.DirExists(targetDir)
 	if err != nil {
-		os.RemoveAll(tempArchive)
 		log.Fatal("unable to import: " + err.Error())
 	}
 	if exists {
-		os.RemoveAll(tempArchive)
 		log.Fatalf("unable to import: instance %s already exists\n", importName)
 	}
 	err = utils.Uncompress(tempArchive, targetDir)
 	if err != nil {
-		os.RemoveAll(tempArchive)
+		os.RemoveAll(targetDir)
 		log.Fatal("unable to import: " + err.Error())
 	}
 
 	machineConfig := qemu.MachineConfig{}
 	config, err := ioutil.ReadFile(filepath.Join(targetDir, "config.yaml"))
 	if err != nil {
-		os.RemoveAll(tempArchive)
 		os.RemoveAll(targetDir)
 		log.Fatal("unable to import: " + err.Error())
 	}
 
 	err = yaml.Unmarshal(config, &machineConfig)
 	if err != nil {
-		os.RemoveAll(tempArchive)
 		os.RemoveAll(targetDir)
 		log.Fatal("unable to import: " + err.Error())
 	}
@@ -90,21 +87,14 @@ func importMachine(cmd *cobra.Command, args []string) {
 
 	updatedConfig, err := yaml.Marshal(&machineConfig)
 	if err != nil {
-		os.RemoveAll(tempArchive)
 		os.RemoveAll(targetDir)
 		log.Fatal("unable to import: " + err.Error())
 	}
 
 	err = ioutil.WriteFile(filepath.Join(targetDir, "config.yaml"), updatedConfig, 0644)
 	if err != nil {
-		os.RemoveAll(tempArchive)
 		os.RemoveAll(targetDir)
 		log.Fatal("unable to import: " + err.Error())
-	}
-
-	err = os.RemoveAll(tempArchive)
-	if err != nil {
-		log.Fatalf("unable to clean up after import: delete %s failed\n", tempArchive)
 	}
 }
 
