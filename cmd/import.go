@@ -33,7 +33,7 @@ func importMachine(cmd *cobra.Command, args []string) {
 
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("unable to import: " + err.Error())
 	}
 
 	archive := args[0]
@@ -41,33 +41,33 @@ func importMachine(cmd *cobra.Command, args []string) {
 	if strings.HasSuffix(archive, ".age") {
 		err = decryptArchive(archive)
 		if err != nil {
-			log.Fatalln(err)
+			log.Fatal("unable to import: " + err.Error())
 		}
 		archive = strings.TrimSuffix(archive, ".age")
 	}
 
 	_, err = utils.CopyFile(archive, filepath.Join(userHomeDir, ".macpine", archive))
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("unable to import: " + err.Error())
 	}
 
 	targetDir := filepath.Join(userHomeDir, ".macpine", strings.Split(archive, ".tar.gz")[0])
 	err = utils.Uncompress(filepath.Join(userHomeDir, ".macpine", archive), targetDir)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("unable to import: " + err.Error())
 	}
 
 	machineConfig := qemu.MachineConfig{}
 	config, err := ioutil.ReadFile(filepath.Join(targetDir, "config.yaml"))
 	if err != nil {
 		os.RemoveAll(targetDir)
-		log.Fatal(err)
+		log.Fatal("unable to import: " + err.Error())
 	}
 
 	err = yaml.Unmarshal(config, &machineConfig)
 	if err != nil {
 		os.RemoveAll(targetDir)
-		log.Fatal(err)
+		log.Fatal("unable to import: " + err.Error())
 	}
 
 	machineConfig.Alias = strings.Split(archive, ".tar.gz")[0]
@@ -76,13 +76,13 @@ func importMachine(cmd *cobra.Command, args []string) {
 	updatedConfig, err := yaml.Marshal(&machineConfig)
 	if err != nil {
 		os.RemoveAll(targetDir)
-		log.Fatal(err)
+		log.Fatal("unable to import: " + err.Error())
 	}
 
 	err = ioutil.WriteFile(filepath.Join(targetDir, "config.yaml"), updatedConfig, 0644)
 	if err != nil {
 		os.RemoveAll(targetDir)
-		log.Fatal(err)
+		log.Fatal("unable to import: " + err.Error())
 	}
 
 	if err != nil {
@@ -90,15 +90,13 @@ func importMachine(cmd *cobra.Command, args []string) {
 		if err != nil {
 			log.Fatal("unable to import: " + err.Error())
 		}
-
 		os.RemoveAll(targetDir)
 		log.Fatal("unable to import: " + err.Error())
 	}
 
 	err = os.Remove(filepath.Join(userHomeDir, ".macpine", archive))
 	if err != nil {
-		os.RemoveAll(targetDir)
-		log.Fatal("unable to import: " + err.Error())
+		log.Fatalf("unable to clean up after import: delete %s failed\n", filepath.Join(userHomeDir, ".macpine", archive))
 	}
 }
 
@@ -136,9 +134,5 @@ func decryptArchive(archive string) error {
 		return fmt.Errorf("error writing decrypted archive: %v\n", archive)
 	}
 
-	err = os.Remove(archive)
-	if err != nil {
-		log.Printf("error deleting archive after decrypt: %v\n", err)
-	}
 	return nil
 }

@@ -40,7 +40,7 @@ func publish(cmd *cobra.Command, args []string) {
 
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("unable to publish: " + err.Error())
 	}
 
 	if len(args) == 0 {
@@ -49,7 +49,7 @@ func publish(cmd *cobra.Command, args []string) {
 
 	args, err = host.ExpandTagArguments(args)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal("unable to publish: " + err.Error())
 	}
 
 	vmList := host.ListVMNames()
@@ -164,7 +164,7 @@ func encryptArchive(machineConfig *qemu.MachineConfig) error {
 
 	err = os.Remove(machineConfig.Alias + ".tar.gz")
 	if err != nil {
-		log.Printf("error deleting archive after enryption: %v\n", err)
+		return fmt.Errorf("error cleaning up after enryption: %v\n", err)
 	}
 	return nil
 }
