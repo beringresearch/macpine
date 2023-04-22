@@ -161,7 +161,7 @@ Use "alpine [command] --help" for more information about a command.
 
 **Multiple instances in a command:** some commands (`delete`, `edit`, `publish`, `restart`, `start`, `stop`, `pause`, `resume`) accept multiple instance names and will repeat the operation over each unique named instance once.
 
-**Tags:** using `alpine tag`, instances can be tagged; tags can be used in multi-instance commands (see above) e.g. `alpine start +daemon` will start all instances which have had been tagged `daemon` with `alpine tag <instance name> daemon`.
+**Tags:** using `alpine tag`, instances can be tagged; tags can be used in multi-instance commands (see above) e.g. `alpine start +daemon` will start all instances which have had been tagged `daemon` with `alpine tag <instance name> daemon`. Note that the tag `launchctl-autostart` [is used for auto-starting instances at login](docs/docs/autostart.md).
 
 **Shell autocompletion:** shell command completion files (installed by default with `brew install macpine`) can be generated with `alpine completion [bash|zsh|fish|powershell]`.
 See `alpine completion -h` or the [completion documentation](docs/docs/completions.md) for more information.
