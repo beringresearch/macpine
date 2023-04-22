@@ -1,5 +1,5 @@
 BINARY_NAME := alpine
-BUILD_DIR = build
+BUILD_DIR = bin
 PREFIX = /usr/local
 bindir = $(DESTDIR)$(PREFIX)/bin
 SRCS = $(wildcard */*.go)
