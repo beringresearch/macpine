@@ -44,6 +44,7 @@ func importMachine(cmd *cobra.Command, args []string) {
 			log.Fatal("unable to import: " + err.Error())
 		}
 		archive = strings.TrimSuffix(archive, ".age")
+		defer os.RemoveAll(archive)
 	}
 	importName := strings.TrimSuffix(archive, ".tar.gz")
 	tempArchive := filepath.Join(userHomeDir, ".macpine", archive)
