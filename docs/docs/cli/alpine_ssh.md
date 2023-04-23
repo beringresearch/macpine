@@ -15,4 +15,3 @@ Attach an interactive shell to an instance via ssh.
 ```
   -h, --help   help for ssh
 ```
-

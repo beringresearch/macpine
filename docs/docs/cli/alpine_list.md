@@ -15,4 +15,3 @@ List instances.
 ```
   -h, --help   help for list
 ```
-

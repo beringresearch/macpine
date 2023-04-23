@@ -15,4 +15,3 @@ Display information about an instance.
 ```
   -h, --help   help for info
 ```
-

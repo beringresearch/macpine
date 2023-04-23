@@ -15,4 +15,3 @@ Edit instance configuration.
 ```
   -h, --help   help for edit
 ```
-

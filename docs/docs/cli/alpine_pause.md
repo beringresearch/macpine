@@ -15,4 +15,3 @@ Pause an instance.
 ```
   -h, --help   help for pause
 ```
-

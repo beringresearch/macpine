@@ -15,4 +15,3 @@ Stop an instance.
 ```
   -h, --help   help for stop
 ```
-

@@ -15,4 +15,3 @@ Generate shell autocompletions. Valid arguments are bash, fish, zsh, and powersh
 ```
   -h, --help   help for completion
 ```
-

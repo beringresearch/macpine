@@ -15,4 +15,3 @@ Start an instance.
 ```
   -h, --help   help for start
 ```
-

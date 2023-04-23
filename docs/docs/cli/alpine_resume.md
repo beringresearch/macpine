@@ -15,4 +15,3 @@ Unpause an instance.
 ```
   -h, --help   help for resume
 ```
-

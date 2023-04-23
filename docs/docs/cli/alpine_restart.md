@@ -15,4 +15,3 @@ Stop and start an instance.
 ```
   -h, --help   help for restart
 ```
-

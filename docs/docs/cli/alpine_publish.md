@@ -16,4 +16,3 @@ Publish an instance.
   -e, --encrypt   Encrypt published archive (prompts for passphrase).
   -h, --help      help for publish
 ```
-

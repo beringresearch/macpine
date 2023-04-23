@@ -15,4 +15,3 @@ execute a command on an instance over ssh.
 ```
   -h, --help   help for exec
 ```
-
