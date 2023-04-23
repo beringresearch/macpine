@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	qemu "github.com/beringresearch/macpine/qemu"
+	"github.com/beringresearch/macpine/qemu"
 	"github.com/beringresearch/macpine/utils"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"

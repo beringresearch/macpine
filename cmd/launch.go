@@ -10,7 +10,7 @@ import (
 	"strconv"
 
 	"github.com/beringresearch/macpine/host"
-	qemu "github.com/beringresearch/macpine/qemu"
+	"github.com/beringresearch/macpine/qemu"
 	"github.com/beringresearch/macpine/utils"
 	"github.com/spf13/cobra"
 )
