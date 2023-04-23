@@ -10,8 +10,7 @@ Installing the agent currently requires building `macpine` from source:
 ```bash
 git clone https://github.com/beringresearch/macpine.git
 cd macpine
-make install
-ln -s bin/alpineDaemonLaunchAgent.plist ~/Library/LaunchAgents/alpineDaemonLaunchAgent.plist
+make install && make agent
 ```
 
 This will add `alpineDaemonLaunchAgent.plist` to `~/Library/LaunchAgents` with the directive to start the
