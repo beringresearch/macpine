@@ -12,7 +12,7 @@ Create and manage lightweight Alpine VMs on MacOS with:
 
 :rocket: aarch64 and x86_64 emulation
 
-<img src="https://user-images.githubusercontent.com/5474655/233823903-357fcece-08e4-44fd-a173-b038c978de3f.gif" width="50%" />
+<img src="https://user-images.githubusercontent.com/5474655/233823903-357fcece-08e4-44fd-a173-b038c978de3f.gif" width="80%" />
 
 ## Motivation
 The goal of this project is to enable MacOS users to:
