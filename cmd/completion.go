@@ -22,11 +22,9 @@ var (
 		Use:                   fmt.Sprintf("completion [%s]", strings.Join(shells, "|")),
 		Short:                 "Generate shell autocompletions.",
 		Long:                  longCompletion,
-		DisableSuggestions:    false,
 		DisableFlagsInUseLine: true,
 		ValidArgs:             shells,
 		Run:                   completion,
-		Hidden:                false,
 	}
 )
 
