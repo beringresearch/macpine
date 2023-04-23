@@ -80,7 +80,9 @@ func publish(cmd *cobra.Command, args []string) {
 
 		vmStatus, _ := host.Status(machineConfig)
 
+		machineConfig.Exec("sync && sleep 1", true)
 		err = host.Pause(machineConfig)
+
 		if err != nil {
 			errs[i] = utils.CmdResult{Name: vmName, Err: err}
 			continue
