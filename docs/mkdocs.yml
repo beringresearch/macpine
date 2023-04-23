@@ -25,7 +25,8 @@
     - Quickstart: quickstart.md
     - Manage Instance:
       - Create an Instance: create_instance.md
-      - Modify an instance: modify_instance.md
+      - Modify an Instance: modify_instance.md
+      - Publish an Instance: verifiable_publish.md
       - VM Security: hardening.md
       - Create an LXD container in Macpine: lxd_macpine.md
     
