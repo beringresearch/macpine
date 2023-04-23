@@ -37,3 +37,17 @@ devel      Stopped     22                   aarch64     -         daemon,dev
 ### Further information
 
 For the details of `age`, such as the [`age` file format](https://github.com/C2SP/C2SP/blob/main/age.md), refer to the documentation of the project.
+
+`age` also supports asymmetric cryptography, encrypting & signing using `age` public keys or even `ssh` keys. In order to share a `macpine`
+instance (e.g. `example-instance`) to a GitHub user (e.g. `example-user`) with the `ssh` keys listed in their profile:
+
+```bash
+brew install age
+curl -s https://github.com/example-user.keys | head -n1 > example-user.pub
+alpine publish example-instance
+age -e -o example-instance.tar.gz.age -R example-user.pub example-instance.tar.gz
+# example-instance.tar.gz.age can be decrypted with example-user's private key
+```
+
+Note that `ssh` keys are generally used for authentication rather than long-term encryption and therefore may not be kept private. This
+approach should be used only if this caveat can be considered an acceptable risk.
