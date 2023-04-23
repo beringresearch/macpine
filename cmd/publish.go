@@ -78,7 +78,11 @@ func publish(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		err = host.Stop(machineConfig)
+		vmStatus, _ := host.Status(machineConfig)
+
+		machineConfig.Exec("sync && sleep 1", true)
+		err = host.Pause(machineConfig)
+
 		if err != nil {
 			errs[i] = utils.CmdResult{Name: vmName, Err: err}
 			continue
@@ -109,6 +113,12 @@ func publish(cmd *cobra.Command, args []string) {
 			ext = ".age"
 		}
 		log.Printf("creating archive %s...\n", machineConfig.Alias+".tar.gz"+ext)
+
+		files = utils.StringSliceDifference(files,
+			[]string{filepath.Join(machineConfig.Location, "alpine.qmp"),
+				filepath.Join(machineConfig.Location, "alpine.sock"),
+				filepath.Join(machineConfig.Location, "alpine.pid")})
+
 		err = utils.Compress(files, out)
 		if err != nil {
 			errs[i] = utils.CmdResult{Name: vmName, Err: err}
@@ -117,6 +127,14 @@ func publish(cmd *cobra.Command, args []string) {
 
 		if encrypt {
 			err = encryptArchive(&machineConfig)
+			if err != nil {
+				errs[i] = utils.CmdResult{Name: vmName, Err: err}
+				continue
+			}
+		}
+
+		if vmStatus == "Running" {
+			err = host.Resume(machineConfig)
 			if err != nil {
 				errs[i] = utils.CmdResult{Name: vmName, Err: err}
 				continue
