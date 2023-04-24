@@ -56,8 +56,6 @@ On macOS, you can install via [MacPorts](https://www.macports.org):
 sudo port install macpine
 ```
 
-See more information [here](https://ports.macports.org/port/macpine/).
-
 ## Install from source
 
 ```bash
