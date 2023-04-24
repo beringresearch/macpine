@@ -79,21 +79,21 @@ func publish(cmd *cobra.Command, args []string) {
 		}
 
 		vmStatus, _ := host.Status(machineConfig)
-      if vmStatus == "Running" {
-         err = machineConfig.Exec("sync", true)
-         if err != nil {
-            errs[i] = utils.CmdResult{
-               Name: vmName, Err: errors.New("error synchonizing filesystem before publish, stop instance and retry")}
-            continue
-         }
-         err = host.Pause(machineConfig)
-         if err != nil {
-            errs[i] = utils.CmdResult{
-               Name: vmName, Err: errors.New("error pausing instance before publish, stop instance and retry")}
-            continue
-         }
-         time.Sleep(time.Second)
-      }
+		if vmStatus == "Running" {
+			err = machineConfig.Exec("sync", true)
+			if err != nil {
+				errs[i] = utils.CmdResult{
+					Name: vmName, Err: errors.New("error synchonizing filesystem before publish, stop instance and retry")}
+				continue
+			}
+			err = host.Pause(machineConfig)
+			if err != nil {
+				errs[i] = utils.CmdResult{
+					Name: vmName, Err: errors.New("error pausing instance before publish, stop instance and retry")}
+				continue
+			}
+			time.Sleep(time.Second)
+		}
 
 		fileInfo, err := ioutil.ReadDir(machineConfig.Location)
 		if err != nil {
@@ -103,9 +103,9 @@ func publish(cmd *cobra.Command, args []string) {
 
 		files := []string{}
 		for _, f := range fileInfo {
-         if !utils.StringSliceContains([]string{"alpine.qmp", "alpine.sock", "alpine.pid"}, f.Name()) {
-            files = append(files, filepath.Join(machineConfig.Location, f.Name()))
-         }
+			if !utils.StringSliceContains([]string{"alpine.qmp", "alpine.sock", "alpine.pid"}, f.Name()) {
+				files = append(files, filepath.Join(machineConfig.Location, f.Name()))
+			}
 		}
 
 		out, err := os.Create(machineConfig.Alias + ".tar.gz")

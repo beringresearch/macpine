@@ -24,7 +24,7 @@ var f embed.FS
 
 // SupportsHugePages
 func SupportsHugePages() (bool, error) {
-   sc, err := exec.Command("sysctl", "machdep.cpu.extfeatures").Output()
+	sc, err := exec.Command("sysctl", "machdep.cpu.extfeatures").Output()
 	if err != nil {
 		return false, err
 	}
