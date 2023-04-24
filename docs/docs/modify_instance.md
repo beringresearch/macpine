@@ -2,15 +2,15 @@
 
 ## Adjusting time
 
-Timesync issues between the host and a VM are [well known](https://github.com/canonical/multipass/issues/2430). For example, when the host is suspended, VM clock will also stop ticking.
+Time sync issues between the host and a VM are [well known](https://github.com/canonical/multipass/issues/2430). For example, when the host is suspended, VM clock will also stop ticking.
 
-To re-adjust guest VM to host clock, execute inside your VM:
+To re-adjust a `macpine` instance real-time clock to its system clock, execute (inside the instance):
 
 ```bash
 hwclock -s
 ```
 
-Also, consider an `ntp` daemon such as `chronyc` within your instance.
+Also, consider an `ntp` daemon such as `chrony` within your instance to maintain the system clock.
 
 ## Changing configurations
 
