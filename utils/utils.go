@@ -16,38 +16,19 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 )
 
 //go:embed *.txt
 var f embed.FS
 
-// StringSliceDifference creates a set differences between slices a and b
-// difference returns the elements in `a` that aren't in `b`.
-func StringSliceDifference(a, b []string) []string {
-	mb := make(map[string]struct{}, len(b))
-	for _, x := range b {
-		mb[x] = struct{}{}
-	}
-	var diff []string
-	for _, x := range a {
-		if _, found := mb[x]; !found {
-			diff = append(diff, x)
-		}
-	}
-	return diff
-}
-
 // SupportsHugePages
 func SupportsHugePages() (bool, error) {
-	sc, err := syscall.Sysctl("machdep.cpu.extfeatures")
+   sc, err := exec.Command("sysctl", "machdep.cpu.extfeatures").Output()
 	if err != nil {
 		return false, err
 	}
-
-	supports := strings.Contains(sc, "1GBPAGE")
-
+	supports := strings.Contains(string(sc), "1GBPAGE")
 	return supports, nil
 }
 

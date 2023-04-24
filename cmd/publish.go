@@ -103,7 +103,9 @@ func publish(cmd *cobra.Command, args []string) {
 
 		files := []string{}
 		for _, f := range fileInfo {
-			files = append(files, filepath.Join(machineConfig.Location, f.Name()))
+         if !utils.StringSliceContains([]string{"alpine.qmp", "alpine.sock", "alpine.pid"}, f.Name()) {
+            files = append(files, filepath.Join(machineConfig.Location, f.Name()))
+         }
 		}
 
 		out, err := os.Create(machineConfig.Alias + ".tar.gz")
@@ -119,11 +121,6 @@ func publish(cmd *cobra.Command, args []string) {
 			ext = ".age"
 		}
 		log.Printf("creating archive %s...\n", machineConfig.Alias+".tar.gz"+ext)
-
-		files = utils.StringSliceDifference(files,
-			[]string{filepath.Join(machineConfig.Location, "alpine.qmp"),
-				filepath.Join(machineConfig.Location, "alpine.sock"),
-				filepath.Join(machineConfig.Location, "alpine.pid")})
 
 		err = utils.Compress(files, out)
 		if err != nil {
