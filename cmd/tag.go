@@ -34,10 +34,10 @@ var tagCmd = &cobra.Command{
 }
 
 func validateTags(tags []string) {
-	format := regexp.MustCompile("^[a-zA-Z0-9_]*$")
+	format := regexp.MustCompile("^[a-zA-Z0-9_\\-]*$")
 	for _, tag := range tags {
 		if !format.MatchString(tag) {
-			log.Fatalf("[%s] contains non-alphanumeric characters", tag)
+			log.Fatalf("[%s] contains invalid characters (alphanumeric, _, and -)", tag)
 		}
 	}
 }
