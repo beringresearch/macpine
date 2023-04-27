@@ -1,0 +1,55 @@
+name: tagged release
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  tagged-release:
+    name: "Tagged Release"
+    runs-on: "macos-latest"
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v3
+
+      - name: "Set Up Go"
+        uses: actions/setup-go@v4
+
+      - name: "Get gox"
+        run: |
+          go install github.com/mitchellh/gox@v1.0.1
+
+      - name: "Build & Quick Test"
+        run: |
+          make
+          bin/alpine list >/dev/null
+
+      - name: "Make Release Files"
+        run: |
+          chmod +x xcompile.sh && ./xcompile.sh
+          ls bin/alpine_darwin_arm64 bin/alpine_darwin_amd64 || exit 1           # ensure binaries are built
+          tagname="$(git tag --points-at HEAD | tr -d 'v\n')"                    # get current tag name
+          if [ -z "$tagname" ] ; then exit 1 ; fi
+          zip -x ".git/*" -x "bin/*" -r "bin/macpine-$tagname.zip" .             # create .zip
+          zip -sf "bin/macpine-$tagname.zip" >/dev/null || exit 1                # ensure .zip
+          tar --exclude-vcs --exclude "bin" -czf "bin/macpine-$tagname.tar.gz" . # create .tar.gz
+          tar -tzf "bin/macpine-$tagname.tar.gz" >/dev/null || exit 1            # ensure .tar.gz
+
+      - name: "Create Release"
+        uses: "marvinpinto/action-automatic-releases@1.2.1"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          files: |
+            LICENSE.md
+            bin/alpine_darwin_arm64
+            bin/alpine_darwin_amd64
+            bin/macpine-*.zip
+            bin/macpine-*.tar.gz
+
+      - name: "Update Homebrew Formula"
+        uses: dawidd6/action-homebrew-bump-formula@v3
+          with:
+            token: ${{ secrets.PUBLIC_RW_TOKEN }} # requires token with 'public_repo' scope
+            formula: macpine
+            livecheck: true
