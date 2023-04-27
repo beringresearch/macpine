@@ -28,12 +28,6 @@ jobs:
         run: |
           chmod +x xcompile.sh && ./xcompile.sh
           ls bin/alpine_darwin_arm64 bin/alpine_darwin_amd64 || exit 1           # ensure binaries are built
-          tagname="$(git tag --points-at HEAD | tr -d 'v\n')"                    # get current tag name
-          if [ -z "$tagname" ] ; then exit 1 ; fi
-          zip -x ".git/*" -x "bin/*" -r "bin/macpine-$tagname.zip" .             # create .zip
-          zip -sf "bin/macpine-$tagname.zip" >/dev/null || exit 1                # ensure .zip
-          tar --exclude-vcs --exclude "bin" -czf "bin/macpine-$tagname.tar.gz" . # create .tar.gz
-          tar -tzf "bin/macpine-$tagname.tar.gz" >/dev/null || exit 1            # ensure .tar.gz
 
       - name: "Create Release"
         uses: "marvinpinto/action-automatic-releases@v1.2.1"
@@ -44,8 +38,6 @@ jobs:
             LICENSE.md
             bin/alpine_darwin_arm64
             bin/alpine_darwin_amd64
-            bin/macpine-*.zip
-            bin/macpine-*.tar.gz
 
       - name: "Update Homebrew Formula"
         uses: dawidd6/action-homebrew-bump-formula@v3
