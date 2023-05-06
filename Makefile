@@ -24,9 +24,11 @@ clean:
 	$(RM) -r $(BUILD_DIR)
 
 fmt:
+	@echo "Formatting ..."
 	@gofmt -e -l -s -w $(MAIN) $(SRCS)
 
 agent:
+	@echo "Installing agent ..."
 	@if [ -f "$(shell which alpine)" ]; then \
 		sed "s/{{ ALPINE_PATH }}/$(subst /,\\/,$(shell which -a alpine))/" utils/alpineDaemonLaunchAgent.plist > compiledAgent ; \
 		mv compiledAgent ~/Library/LaunchAgents/alpineDaemonLaunchAgent.plist ; \
