@@ -14,9 +14,10 @@ import (
 
 // stopCmd stops an Alpine instance
 var stopCmd = &cobra.Command{
-	Use:   "stop <instance> [<instance>...]",
-	Short: "Stop an instance.",
-	Run:   stop,
+	Use:     "stop <instance> [<instance>...]",
+	Short:   "Stop an instance.",
+	Run:     stop,
+	Aliases: []string{"shutdown", "poweroff", "off"},
 
 	ValidArgsFunction:     host.AutoCompleteVMNamesOrTags,
 	DisableFlagsInUseLine: true,

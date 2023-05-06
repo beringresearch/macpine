@@ -18,9 +18,10 @@ import (
 
 // importCmd iports an Alpine VM from file
 var importCmd = &cobra.Command{
-	Use:   "import <archive>",
-	Short: "Imports an instance archived with `alpine publish`.",
-	Run:   importMachine,
+	Use:     "import <archive>",
+	Short:   "Imports an instance archived with `alpine publish`.",
+	Run:     importMachine,
+	Aliases: []string{"unarchive"},
 
 	DisableFlagsInUseLine: true,
 }

@@ -25,6 +25,7 @@ var (
 		DisableFlagsInUseLine: true,
 		ValidArgs:             shells,
 		Run:                   completion,
+		Aliases:               []string{"comp", "cmp"},
 	}
 )
 

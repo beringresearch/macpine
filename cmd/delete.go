@@ -15,9 +15,10 @@ import (
 )
 
 var deleteCmd = &cobra.Command{
-	Use:   "delete <instance> [<instance>...]",
-	Short: "Delete instances.",
-	Run:   delete,
+	Use:     "delete <instance> [<instance>...]",
+	Short:   "Delete instances.",
+	Run:     delete,
+	Aliases: []string{"del", "rm", "remove"},
 
 	ValidArgsFunction:     host.AutoCompleteVMNamesOrTags,
 	DisableFlagsInUseLine: true,

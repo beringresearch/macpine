@@ -17,9 +17,10 @@ import (
 
 // launchCmd launches an Alpine instance
 var launchCmd = &cobra.Command{
-	Use:   "launch",
-	Short: "Create and start an instance.",
-	Run:   launch,
+	Use:     "launch",
+	Short:   "Create and start an instance.",
+	Run:     launch,
+	Aliases: []string{"create", "new", "l"},
 
 	ValidArgsFunction: flagsLaunch,
 }

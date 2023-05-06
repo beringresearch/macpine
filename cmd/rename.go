@@ -16,9 +16,10 @@ import (
 )
 
 var renameCmd = &cobra.Command{
-	Use:   "rename <instance> <name>",
-	Short: "Rename an instance.",
-	Run:   rename,
+	Use:     "rename <instance> <name>",
+	Short:   "Rename an instance.",
+	Run:     rename,
+	Aliases: []string{"mv", "move"},
 
 	ValidArgsFunction:     host.AutoCompleteVMNames,
 	DisableFlagsInUseLine: true,
