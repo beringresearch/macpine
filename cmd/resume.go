@@ -17,7 +17,7 @@ import (
 // stopCmd stops an Alpine instance
 var resumeCmd = &cobra.Command{
 	Use:   "resume <instance> [<instance>...]",
-	Short: "Unpause an instance.",
+	Short: "Unpause instances.",
 	Run:   resume,
 
 	ValidArgsFunction:     host.AutoCompleteVMNamesOrTags,

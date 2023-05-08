@@ -3,7 +3,6 @@ package host
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -14,22 +13,22 @@ import (
 func Info(vmName string) (string, error) {
 	userHomeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", vmName, "config.yaml"))
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	machineConfig := qemu.MachineConfig{}
 
 	err = yaml.Unmarshal(config, &machineConfig)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
-	info := fmt.Sprintf("Name: %s\nImage: %s\nArch: %s\nDisk usage: %s\nMemory usage: %s\nCPU usage: %s\nMounts: %s\nTags: %s\n",
+	info := fmt.Sprintf("Name: %s\nImage: %s\nArch: %s\nDisk size: %s\nMemory size: %s\nCPUs: %s\nMount: %s\nTags: %s\n",
 		machineConfig.Alias,
 		machineConfig.Image,
 		machineConfig.Arch,
@@ -39,6 +38,5 @@ func Info(vmName string) (string, error) {
 		machineConfig.Mount,
 		machineConfig.Tags,
 	)
-
 	return info, nil
 }

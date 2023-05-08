@@ -14,7 +14,7 @@ import (
 // editCmd lists Alpine instances
 var editCmd = &cobra.Command{
 	Use:     "edit <instance> [<instance>...]",
-	Short:   "Edit instance configuration.",
+	Short:   "Edit instance configurations.",
 	Run:     edit,
 	Aliases: []string{"conf", "config", "configure"},
 

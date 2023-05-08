@@ -18,7 +18,7 @@ import (
 // stopCmd stops an Alpine instance
 var restartCmd = &cobra.Command{
 	Use:     "restart <instance> [<instance>...]",
-	Short:   "Stop and start an instance.",
+	Short:   "Stop and start instances.",
 	Run:     restart,
 	Aliases: []string{"reboot"},
 

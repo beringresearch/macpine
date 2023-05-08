@@ -17,7 +17,7 @@ import (
 // startCmd starts an Alpine instance
 var startCmd = &cobra.Command{
 	Use:     "start <instance> [<instance>...]",
-	Short:   "Start an instance.",
+	Short:   "Start instances.",
 	Run:     start,
 	Aliases: []string{"boot", "on"},
 

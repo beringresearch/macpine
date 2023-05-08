@@ -23,87 +23,96 @@ The goal of this project is to enable MacOS users to:
 
 # Installation
 
-Macpine depends on QEMU >= 6.2.0_1:
-
-```bash
-#brew update
-#brew upgrade
-brew install qemu
-```
-
-## Install the latest binary
-
-Download the [latest binary release](https://github.com/beringresearch/macpine/releases) for your system and add it to your path by placing to e.g. `/usr/local/bin/`:
-
-```bash
-wget https://github.com/beringresearch/macpine/releases/download/v1.0/alpine_darwin_arm64
-mv alpine_darwin_arm64 alpine
-sudo chmod +x alpine
-sudo mv alpine /usr/local/bin/
-```
+`macpine` is intended for use on modern macOS. Support for older versions of macOS and other OSes may vary.
 
 ## Install from Homebrew (recommended)
 
 ```bash
-brew install macpine
+brew install macpine # installs `alpine` command and `qemu` dependency automatically
+```
+
+## Get the latest binary
+
+Download the [latest binary release](https://github.com/beringresearch/macpine/releases/latest) for your system and add it to your `$PATH`
+by moving it to e.g. `/usr/local/bin/`:
+
+```bash
+arch="$([ `uname -m` = 'x86_64' ] && echo 'amd64' || echo 'arm64')" # detect architecture
+wget "https://github.com/beringresearch/macpine/releases/latest/download/alpine_darwin_$arch"
+mv alpine_darwin_arm64 alpine
+sudo chmod +x alpine
+sudo mv alpine /usr/local/bin/
+#export PATH="$PATH:/usr/local/bin"
+```
+
+Macpine depends on QEMU >= 6.2.0_1:
+
+```bash
+brew install qemu
 ```
 
 ## Install from MacPorts
 
-On macOS, you can install via [MacPorts](https://www.macports.org):
+You can also install `macpine` via [MacPorts](https://www.macports.org):
 
 ```bash
 sudo port install macpine
 ```
-
 ## Install from source
 
+Building from source requires a working `go` compiler, and running requires `qemu`:
+
 ```bash
-#brew install go
+brew install go qemu
 git clone https://github.com/beringresearch/macpine
 cd macpine
-make #compiles the project into a local bin/ directory
-make install #installs binaries to /usr/local (or other configured PREFIX)
+make            # compiles the project into a local bin/ directory
+make install    # installs binaries to /usr/local/bin
+#PREFIX=/some/other/path make install
 ```
 
 # Getting Started
 
-To launch a new instance:
+To create and start a new instance:
 
 ```bash
-alpine launch #launches with default parameters
-alpine launch -a aarch64 #create an aarch64 instance
-alpine launch -d 10G -c 4 -m 2048 #create an instance with a 10GB disk, 4 cpus and 2GB of RAM
-```
+alpine launch                       # launches with default parameters
+alpine launch -a aarch64            # create an aarch64 instance
+alpine launch -d 10G -c 4 -m 2048   # create an instance with a 10GB disk, 4 cpus, and 2GB of RAM
 
-`alpine help launch` to view defaults and other launch options.
+alpine launch -h                    # view all configuration options and defaults
+```
 
 Access instance via ssh:
 
 ```bash
-alpine launch -s 22 #launch an instance and expose SSH port to host port 22
-alpine ssh <instance name> #attach shell to instance
-#Or: ssh root@localhost -p 22 #password: root
+alpine launch -s 22         # launch an instance and expose SSH port to host port 22
+alpine ssh instance-name    # attach shell to instance (replace `instance-name` as appropriate)
 ```
 
 Expose additional instance ports to host:
 
 ```bash
-alpine launch -s 23 -p 8888,5432 #launch a VM, expose SSH to host port 23 and forward host ports 8888 and 5432 to VM ports 8888 and 5432
-alpine launch -s 8023 -p 8081:8082,8083 #launch a VM, expose SSH to host port 8023, forward host port 8081 to VM port 8082, and forward
-                                        #host port 8083 to VM port 8083
-alpine launch -s 9023 -p 9091u,9092:9093u #launch a VM, expose SSH to host port 9023, forward (UDP) host port 9091 to VM port 9091,
-                                          #and forward (UDP) host port 9092 to VM port 9093
+# launch an instance, expose SSH to host port 2022 and forward host ports 8888 and 5432 to instance ports 8888 and 5432
+alpine launch -s 2022 -p 8888,5432
+
+# launch an instance, expose SSH to host port 8022, forward host port 8081 to instance port 8082, and forward
+# host port 8083 to instance port 8083
+alpine launch -s 8022 -p 8081:8082,8083
+
+# launch an instance, expose SSH to host port 9022, forward host port 9091 UDP to instance port 9091 UDP,
+# and forward host port 9092 UDP to instance port 9093 UDP
+alpine launch -s 9023 -p 9091u,9092:9093u
 ```
 
-Instances can be easily packaged for backup or sharing as tar.gz files:
+Instances can be easily packaged for backup or sharing as `.tar.gz` files:
 
 ```bash
 alpine list
 
-NAME                 STATUS      SSH    PORTS ARCH      PID     TAGS
-cheerful-result      Running     25           aarch64   26568
-glittering-swing     Running     23           x86_64    57206   emulation,intel
+NAME                 STATUS      SSH    PORTS   ARCH      PID     TAGS
+cheerful-result      Running     2022           aarch64   26568
+glittering-swing     Running     3022           x86_64    57206   emulation,intel
 ```
 
 ```bash
@@ -113,13 +122,14 @@ alpine publish cheerful-result
 This will create a file `cheerful-result.tar.gz` which can be imported as:
 
 ```bash
+#alpine delete cheerful-result
 alpine import cheerful-result.tar.gz
 ```
 
 See [all the docs](docs/docs) for more information:
 - [advanced port forwarding and securing instance SSH](docs/docs/create_instance.md)
-- [managing instances](docs/docs/modify_instance.md)
-- [running LXD within instances](docs/docs/lxd_macpine.md) 
+- [editing instance configurations](docs/docs/modify_instance.md)
+- [running LXD within instances](docs/docs/lxd_macpine.md)
 - [hardening instances](docs/docs/hardening.md)
 - [auto-starting instances at login](docs/docs/autostart.md)
 - [general troubleshooting](docs/docs/troubleshooting.md)
@@ -135,21 +145,21 @@ Usage:
 Available Commands:
   completion  Generate shell autocompletions.
   delete      Delete instances.
-  edit        Edit instance configuration.
+  edit        Edit instance configurations.
   exec        execute a command on an instance over ssh.
   help        Help about any command
   import      Imports an instance archived with `alpine publish`.
-  info        Display information about an instance.
+  info        Display information about instances.
   launch      Create and start an instance.
   list        List instances.
-  pause       Pause an instance.
-  publish     Publish an instance.
+  pause       Pause instances.
+  publish     Publish instances.
   rename      Rename an instance.
-  restart     Stop and start an instance.
-  resume      Unpause an instance.
+  restart     Stop and start instances.
+  resume      Unpause instances.
   ssh         Attach an interactive shell to an instance via ssh.
-  start       Start an instance.
-  stop        Stop an instance.
+  start       Start instances.
+  stop        Stop instances.
   tag         Add or remove tags from an instance.
 
 Flags:
@@ -158,9 +168,13 @@ Flags:
 Use "alpine [command] --help" for more information about a command.
 ```
 
-**Multiple instances in a command:** some commands (`delete`, `edit`, `publish`, `restart`, `start`, `stop`, `pause`, `resume`) accept multiple instance names and will repeat the operation over each unique named instance once.
+**Multiple instances in a command:** some commands (`delete`, `edit`, `info`, `pause`, `publish`, `restart`, `resume`, `start`, `stop`)
+accept multiple instance names and will repeat the operation over each unique named instance once.
 
-**Tags:** using `alpine tag`, instances can be tagged; tags can be used in multi-instance commands (see above) e.g. `alpine start +daemon` will start all instances which have had been tagged `daemon` with `alpine tag <instance name> daemon`. Note that the tag `launchctl-autostart` [is used for auto-starting instances at login](docs/docs/autostart.md).
+**Tags:** using `alpine tag`, instances can be tagged; tags can be used in multi-instance commands (see above) e.g.
+`alpine start +foobar` will start all instances which have had been tagged `foobar` with `alpine tag instance-name foobar`. Note that
+the tag `launchctl-autostart` [is used for auto-starting instances at login](docs/docs/autostart.md).
 
-**Shell autocompletion:** shell command completion files (installed by default with `brew install macpine`) can be generated with `alpine completion [bash|zsh|fish|powershell]`.
-See `alpine completion -h` or the [completion documentation](docs/docs/completions.md) for more information.
+**Shell autocompletion:** shell command completion files (installed automatically with `brew install macpine`) can be generated with
+`alpine completion [bash|zsh|fish|powershell]`. See `alpine completion -h` or the [completion documentation](docs/docs/completions.md)
+for more information.
