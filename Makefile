@@ -1,6 +1,7 @@
 BINARY_NAME := alpine
 BUILD_DIR = bin
 PREFIX = /usr/local
+XCOMP_TARGETS = amd64 arm64
 bindir = $(DESTDIR)$(PREFIX)/bin
 SRCS = $(wildcard */*.go)
 MAIN = main.go
@@ -11,7 +12,10 @@ $(BUILD_DIR)/$(BINARY_NAME): $(MAIN) $(SRCS)
 	go get
 	go build -ldflags=$(GO_LDFLAGS) -o $@ $<
 
-.PHONY: install clean fmt agent
+$(BUILD_DIR)/$(BINARY_NAME)_darwin_%: $(MAIN) $(SRCS)
+	CGO_ENABLED=1 gox -ldflags "${LDFLAGS}" -output="$@" --osarch="darwin/$*"
+
+.PHONY: install clean fmt agent xcompile
 install: $(BUILD_DIR)/$(BINARY_NAME)
 	@echo "Installing ..."
 	install -d $(bindir)
@@ -36,3 +40,5 @@ agent:
 	else \
 		echo "error: macpine not found in PATH" >&2 ; exit 1 ; \
 	fi
+
+xcompile: $(patsubst %,$(BUILD_DIR)/$(BINARY_NAME)_darwin_%,$(XCOMP_TARGETS))
