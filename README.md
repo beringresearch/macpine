@@ -39,7 +39,7 @@ by moving it to e.g. `/usr/local/bin/`:
 ```bash
 arch="$([ `uname -m` = 'x86_64' ] && echo 'amd64' || echo 'arm64')" # detect architecture
 wget "https://github.com/beringresearch/macpine/releases/latest/download/alpine_darwin_$arch"
-mv alpine_darwin_arm64 alpine
+mv "alpine_darwin_$arch" alpine
 sudo chmod +x alpine
 sudo mv alpine /usr/local/bin/
 #export PATH="$PATH:/usr/local/bin"
@@ -68,7 +68,7 @@ git clone https://github.com/beringresearch/macpine
 cd macpine
 make            # compiles the project into a local bin/ directory
 make install    # installs binaries to /usr/local/bin
-#PREFIX=/some/other/path make install
+                # PREFIX=/some/other/path make install installs to /some/other/path
 ```
 
 # Getting Started
