@@ -45,7 +45,7 @@ By default, `macpine` requires `root` ssh to access and execute commands on gues
 which is set (insecurely) to `root`. In most cases, this is sufficient for the use cases `macpine` is expected to support, as security
 against malicious host system behavior is not within the threat model.
 
-However, more secure credentials such as certificate-based ssh, VM hardening (e.g. disabling password-based ssh), or security best
+However, more secure credentials such as certificate-based ssh, instance hardening (e.g. disabling password-based ssh), or security best
 practices may require credentials to be changed from the default, and stored outside the host filesystem.
 
 In order to support multiple credential methods, `macpine` supports multiple credential "backends":
@@ -86,9 +86,9 @@ Host alpine
     IdentitiesOnly yes
 ```
 
-`~/.macpine/vm-name/config.yaml`:
+`~/.macpine/instance-name/config.yaml`:
 ```
-alias: vm-name
+alias: instance-name
 image: alpine_3.16.0-aarch64.qcow2
 arch: aarch64
 cpu: "4"
@@ -100,10 +100,10 @@ sshport: "22"
 sshuser: root
 sshpassword: "ssh::alpine"
 macaddress: 00:11:22:33:44:55
-location: /Users/username/.macpine/vm-name
+location: /Users/username/.macpine/instance-name
 ```
 
-and ("inside" the VM) `/root/.ssh/authorized_keys`:
+and ("inside" the instance) `/root/.ssh/authorized_keys`:
 ```
 ... contents of id_ed25519.pub ...
 ```

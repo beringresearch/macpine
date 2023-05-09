@@ -1,6 +1,6 @@
 # Quickstart
 
-To launch a brand new VM:
+To launch a brand new instance:
 
 ```bash
 alpine launch #launches with default parameters
@@ -9,25 +9,25 @@ alpine launch -d 10G -c 4 -m 2048 #create a machine with a 10GB disk, 4 cpus and
 
 ```
 
-Access VM via ssh:
+Access instance via ssh:
 
 ```bash
-alpine launch -s 22 #launch a VM and expose SSH port to host port 22
+alpine launch -s 22 #launch a instance and expose SSH port to host port 22
 ssh root@localhost -p 22 #password: root
 ```
 
-Expose additional VM ports to host:
+Expose additional instance ports to host:
 
 ```bash
-alpine launch -s 23 -p 8888,5432 #launch a VM, expose SSH to host port 23 and forward VM ports 8888 and 5432 to host ports 8888 and 5432
+alpine launch -s 23 -p 8888,5432 #launch a instance, expose SSH to host port 23 and forward instance ports 8888 and 5432 to host ports 8888 and 5432
 ```
 
-VMs can be easily packaged for export and re-use as tar.gz files:
+Instances can be easily packaged for export and re-use as tar.gz files:
 
 ```bash
 alpine list
 
-NAME                STATUS      SSH    PORTS ARCH        PID 
+NAME                STATUS      SSH    PORTS ARCH        PID
 forthright-hook     Running     23           aarch64     91598
 hot-cow             Running     22           x86_64      82361
 ```
