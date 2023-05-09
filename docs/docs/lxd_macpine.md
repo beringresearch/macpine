@@ -30,7 +30,7 @@ Now that that the system is ready, we can create a lightweight Macpine instance,
 alpine launch --image alpine_3.16.0_lxd --name lxd --port 8443 --ssh 2222 --mount $(pwd)
 ```
 
-This will create a new VM called `lxd` and forward port `8443` (the default port that LXD client uses to communicate with the LXD server) of the VM to host. Macpine will attempt to match the native CPU architecture of your host to the correct VM image. However, if you can explicitly specify the architecture by adding either `--arch aarch64` or `--arch x86_64` to the above command. This will mount your current working directory to `/root/mnt` inside of the `lxd` VM.
+This will create a new instance called `lxd` and forward port `8443` (the default port that LXD client uses to communicate with the LXD server) of the instance to host. Macpine will attempt to match the native CPU architecture of your host to the correct instance image. However, if you can explicitly specify the architecture by adding either `--arch aarch64` or `--arch x86_64` to the above command. This will mount your current working directory to `/root/mnt` inside of the `lxd` instance.
 
 ## Configure LXD
 
@@ -44,7 +44,7 @@ alpine exec lxd "lxd init --auto"
 
 For the purposes of this tutorial, it is recommended to accept default settings.
 
->> NOTE: the above command is executed inside your `lxd` VM and is sandboxed from your host.
+>> NOTE: the above command is executed inside your `lxd` instance and is sandboxed from your host.
 
 ## Configure LXD remote
 
@@ -63,7 +63,7 @@ alpine exec lxd "lxc config set core.trust_password root"
 lxc remote add macpine 127.0.0.1 --accept-certificate --password root
 ```
 
->> NOTE: if you create an alpine lxd VM, then destroy it, then try to reconfigure another on later on your host, you may need to delete `macpine` remote from `~/.config/lxc/config.yml` due to new certificates each time?
+>> NOTE: if you create an alpine lxd instance, then destroy it, then try to reconfigure another on later on your host, you may need to delete `macpine` remote from `~/.config/lxc/config.yml` due to new certificates each time?
 
 Finally, set this remote as the default:
 
@@ -81,7 +81,7 @@ LXD containers can now be launched and manipulated through the `lxc` client:
 lxc launch images:debian/bullseye debian
 ```
 
-## Mounting host directory -> lxd Macpine VM -> lxd container
+## Mounting host directory -> lxd Macpine instance -> lxd container
 
 ```bash
 lxc config device add debian share disk source=/root/mnt path=/root/mnt

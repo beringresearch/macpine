@@ -3,8 +3,6 @@ package cmd
 import (
 	"errors"
 	"log"
-	"os"
-	"path/filepath"
 
 	"github.com/beringresearch/macpine/host"
 	"github.com/beringresearch/macpine/qemu"
@@ -24,16 +22,11 @@ var pauseCmd = &cobra.Command{
 
 func pause(cmd *cobra.Command, args []string) {
 
-	userHomeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	if len(args) == 0 {
 		log.Fatal("missing instance name")
 	}
 
-	args, err = host.ExpandTagArguments(args)
+	args, err := host.ExpandTagArguments(args)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -50,10 +43,11 @@ func pause(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		machineConfig := qemu.MachineConfig{
-			Alias: vmName,
+		machineConfig, err := qemu.GetMachineConfig(vmName)
+		if err != nil {
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
+			continue
 		}
-		machineConfig.Location = filepath.Join(userHomeDir, ".macpine", machineConfig.Alias)
 
 		err = host.Pause(machineConfig)
 		if err != nil {

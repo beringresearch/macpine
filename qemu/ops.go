@@ -3,7 +3,6 @@ package qemu
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
@@ -179,7 +178,7 @@ func (c *MachineConfig) Status() (string, int) {
 
 	if _, err := os.Stat(pidFile); err == nil {
 		status = "Running"
-		vmPID, err := ioutil.ReadFile(pidFile)
+		vmPID, err := os.ReadFile(pidFile)
 		if err != nil {
 			log.Fatalf("unable to read file: %v", err)
 		}
@@ -456,7 +455,7 @@ func (c *MachineConfig) Start() error {
 
 	status, pid := c.Status()
 	if status != "Running" {
-		return errors.New("unable to start vm")
+		return errors.New("unable to start instance")
 	}
 
 	log.Println(c.Alias + " started (" + strconv.Itoa(pid) + ")")
@@ -529,7 +528,7 @@ func (c *MachineConfig) Launch() error {
 		return err
 	}
 
-	err = ioutil.WriteFile(filepath.Join(c.Location, "config.yaml"), config, 0644)
+	err = os.WriteFile(filepath.Join(c.Location, "config.yaml"), config, 0644)
 	if err != nil {
 		os.RemoveAll(targetDir)
 		return err
@@ -616,4 +615,37 @@ func (c *MachineConfig) CleanPIDFile() {
 	if err := os.Remove(pidFile); err != nil && !errors.Is(err, os.ErrNotExist) {
 		log.Fatalf("error deleting pidfile at %s. Manually delete it before proceeding.", pidFile)
 	}
+}
+
+func GetMachineConfig(vmName string) (MachineConfig, error) {
+	machineConfig := MachineConfig{}
+
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return machineConfig, err
+	}
+
+	config, err := os.ReadFile(filepath.Join(userHomeDir, ".macpine", vmName, "config.yaml"))
+	if err != nil {
+		return machineConfig, err
+	}
+
+	err = yaml.Unmarshal(config, &machineConfig)
+	if err != nil {
+		return machineConfig, err
+	}
+	return machineConfig, nil
+}
+
+func SaveMachineConfig(machineConfig MachineConfig) error {
+	updatedConfig, err := yaml.Marshal(&machineConfig)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(filepath.Join(machineConfig.Location, "config.yaml"), updatedConfig, 0644)
+	if err != nil {
+		return err
+	}
+	return nil
 }

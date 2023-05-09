@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -200,7 +199,7 @@ func loadLongDescription(parentCmd *cobra.Command, path string) error {
 		mdFile := "brave_" + strings.ReplaceAll(name, " ", "_") + ".md"
 
 		fullPath := filepath.Join(path, mdFile)
-		content, err := ioutil.ReadFile(fullPath)
+		content, err := os.ReadFile(fullPath)
 		if os.IsNotExist(err) {
 			log.Printf("WARN: %s does not exist, skipping\n", mdFile)
 			continue

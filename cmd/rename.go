@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"io/ioutil"
+	"errors"
 	"log"
 	"os"
 	"path/filepath"
@@ -12,7 +12,6 @@ import (
 	"github.com/beringresearch/macpine/qemu"
 	"github.com/beringresearch/macpine/utils"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 var renameCmd = &cobra.Command{
@@ -47,7 +46,10 @@ func rename(cmd *cobra.Command, args []string) {
 	}
 
 	newName := args[1]
-	validateName(newName)
+	err = ValidateName(newName)
+	if err != nil {
+		log.Fatalln(err)
+	}
 
 	configDir := filepath.Join(userHomeDir, ".macpine")
 	files, err := os.ReadDir(configDir)
@@ -61,14 +63,7 @@ func rename(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	machineConfig := qemu.MachineConfig{}
-
-	config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", vmName, "config.yaml"))
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	err = yaml.Unmarshal(config, &machineConfig)
+	machineConfig, err := qemu.GetMachineConfig(vmName)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -84,12 +79,7 @@ func rename(cmd *cobra.Command, args []string) {
 	machineConfig.Alias = newName
 	machineConfig.Location = newLocation
 
-	config, err = yaml.Marshal(&machineConfig)
-	if err != nil {
-		log.Fatalf("error serializing config: %v\n", err)
-	}
-
-	err = ioutil.WriteFile(filepath.Join(newLocation, "config.yaml"), config, 0644)
+	err = qemu.SaveMachineConfig(machineConfig)
 	if err != nil {
 		log.Fatalf("error writing updated config: %v\n", err)
 	}
@@ -97,15 +87,16 @@ func rename(cmd *cobra.Command, args []string) {
 	log.Printf("renamed '%s' to '%s'\n", vmName, newName)
 }
 
-func validateName(name string) {
+func ValidateName(name string) error {
 	if name == "cache" {
-		log.Fatalln("cannot rename: 'cache' is reserved")
+		return errors.New("cannot rename: 'cache' is reserved")
 	}
 	if strings.HasPrefix(name, ".") {
-		log.Fatalln("cannot rename: name must not begin with '.'")
+		return errors.New("cannot rename: name must not begin with '.'")
 	}
 	format := regexp.MustCompile(`^[a-zA-Z0-9_\-\.]+$`)
 	if !format.MatchString(name) {
-		log.Fatalln("cannot rename: invalid name, accepted characters are [A-Za-z0-9], '.', '_', and '-'")
+		return errors.New("cannot rename: invalid name, accepted characters are [A-Za-z0-9], '.', '_', and '-'")
 	}
+	return nil
 }

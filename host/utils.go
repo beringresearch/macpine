@@ -2,14 +2,12 @@ package host
 
 import (
 	"errors"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/beringresearch/macpine/qemu"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 func ListVMNames() []string {
@@ -20,7 +18,7 @@ func ListVMNames() []string {
 		return vmList
 	}
 
-	dirList, err := ioutil.ReadDir(filepath.Join(userHomeDir, ".macpine"))
+	dirList, err := os.ReadDir(filepath.Join(userHomeDir, ".macpine"))
 	if err != nil {
 		return vmList
 	}
@@ -59,19 +57,14 @@ func ListTags() ([]string, error) {
 		return nil, err
 	}
 
-	dirList, err := ioutil.ReadDir(filepath.Join(userHomeDir, ".macpine"))
+	dirList, err := os.ReadDir(filepath.Join(userHomeDir, ".macpine"))
 	if err != nil {
 		return nil, err
 	}
 
 	for _, f := range dirList {
 		if f.Name() != "cache" {
-			config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", f.Name(), "config.yaml"))
-			if err != nil {
-				return nil, err
-			}
-			machineConfig := qemu.MachineConfig{}
-			err = yaml.Unmarshal(config, &machineConfig)
+			machineConfig, err := qemu.GetMachineConfig(f.Name())
 			if err != nil {
 				return nil, err
 			}
@@ -100,19 +93,14 @@ func ExpandTagArguments(args []string) ([]string, error) {
 		return nil, err
 	}
 
-	dirList, err := ioutil.ReadDir(filepath.Join(userHomeDir, ".macpine"))
+	dirList, err := os.ReadDir(filepath.Join(userHomeDir, ".macpine"))
 	if err != nil {
 		return nil, err
 	}
 
 	for _, f := range dirList {
 		if f.Name() != "cache" {
-			config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", f.Name(), "config.yaml"))
-			if err != nil {
-				return nil, err
-			}
-			machineConfig := qemu.MachineConfig{}
-			err = yaml.Unmarshal(config, &machineConfig)
+			machineConfig, err := qemu.GetMachineConfig(f.Name())
 			if err != nil {
 				return nil, err
 			}

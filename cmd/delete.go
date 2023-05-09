@@ -2,16 +2,13 @@ package cmd
 
 import (
 	"errors"
-	"io/ioutil"
 	"log"
 	"os"
-	"path/filepath"
 
 	"github.com/beringresearch/macpine/host"
 	"github.com/beringresearch/macpine/qemu"
 	"github.com/beringresearch/macpine/utils"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 var deleteCmd = &cobra.Command{
@@ -47,21 +44,7 @@ func delete(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		userHomeDir, err := os.UserHomeDir()
-		if err != nil {
-			errs[i] = utils.CmdResult{Name: vmName, Err: err}
-			continue
-		}
-
-		machineConfig := qemu.MachineConfig{}
-
-		config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", vmName, "config.yaml"))
-		if err != nil {
-			errs[i] = utils.CmdResult{Name: vmName, Err: err}
-			continue
-		}
-
-		err = yaml.Unmarshal(config, &machineConfig)
+		machineConfig, err := qemu.GetMachineConfig(vmName)
 		if err != nil {
 			errs[i] = utils.CmdResult{Name: vmName, Err: err}
 			continue
@@ -74,6 +57,7 @@ func delete(cmd *cobra.Command, args []string) {
 		}
 
 		os.RemoveAll(machineConfig.Location)
+		log.Printf("instance %s deleted\n", vmName)
 	}
 	wasErr := false
 	for _, res := range errs {

@@ -2,16 +2,12 @@ package cmd
 
 import (
 	"errors"
-	"io/ioutil"
 	"log"
-	"os"
-	"path/filepath"
 
 	"github.com/beringresearch/macpine/host"
 	"github.com/beringresearch/macpine/qemu"
 	"github.com/beringresearch/macpine/utils"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 // stopCmd stops an Alpine instance
@@ -25,17 +21,11 @@ var resumeCmd = &cobra.Command{
 }
 
 func resume(cmd *cobra.Command, args []string) {
-
-	userHomeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	if len(args) == 0 {
 		log.Fatal("missing instance name")
 	}
 
-	args, err = host.ExpandTagArguments(args)
+	args, err := host.ExpandTagArguments(args)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -52,15 +42,7 @@ func resume(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		machineConfig := qemu.MachineConfig{}
-
-		config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", vmName, "config.yaml"))
-		if err != nil {
-			errs[i] = utils.CmdResult{Name: vmName, Err: err}
-			continue
-		}
-
-		err = yaml.Unmarshal(config, &machineConfig)
+		machineConfig, err := qemu.GetMachineConfig(vmName)
 		if err != nil {
 			errs[i] = utils.CmdResult{Name: vmName, Err: err}
 			continue

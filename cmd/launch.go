@@ -43,7 +43,7 @@ func includeLaunchFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&machineName, "name", "n", "", "Instance name for use in `alpine` commands.")
 }
 
-func correctArguments(imageVersion string, machineArch string, machineCPU string,
+func CorrectArguments(imageVersion string, machineArch string, machineCPU string,
 	machineMemory string, machineDisk string, sshPort string, machinePort string) error {
 
 	if !utils.StringSliceContains([]string{"alpine_3.16.0", "alpine_3.16.0_lxd", "debian_11.3.0"}, imageVersion) {
@@ -96,8 +96,10 @@ func correctArguments(imageVersion string, machineArch string, machineCPU string
 	}
 
 	if machineMount != "" {
-		if _, err := os.Stat(machineMount); os.IsNotExist(err) {
-			return errors.New("mount directory " + machineMount + " does not exist")
+		if dir, err := os.Stat(machineMount); os.IsNotExist(err) {
+			return errors.New("mount target " + machineMount + " does not exist")
+		} else if !dir.IsDir() {
+			return errors.New("mount target " + machineMount + " is not a directory")
 		}
 	}
 
@@ -106,7 +108,7 @@ func correctArguments(imageVersion string, machineArch string, machineCPU string
 
 func launch(cmd *cobra.Command, args []string) {
 
-	err := correctArguments(imageVersion, machineArch, machineCPU, machineMemory, machineDisk, sshPort, machinePort)
+	err := CorrectArguments(imageVersion, machineArch, machineCPU, machineMemory, machineDisk, sshPort, machinePort)
 	if err != nil {
 		log.Fatalln(err.Error())
 	}

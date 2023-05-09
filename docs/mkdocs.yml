@@ -1,6 +1,6 @@
  site_name: Macpine
  site_url: https://beringresearch.github.io/macpine/
- 
+
  nav:
   - Home: index.md
   - CLI:
@@ -27,19 +27,19 @@
       - Create an Instance: create_instance.md
       - Modify an Instance: modify_instance.md
       - Publish an Instance: verifiable_publish.md
-      - VM Security: hardening.md
+      - Instance Security: hardening.md
       - Create an LXD container in Macpine: lxd_macpine.md
-    
+
  #theme: material
 
  theme:
   name: material
-  palette: 
+  palette:
 
     # Palette toggle for light mode
     - scheme: default
       toggle:
-        icon: material/brightness-7 
+        icon: material/brightness-7
         name: Switch to dark mode
 
     # Palette toggle for dark mode
