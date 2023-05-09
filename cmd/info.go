@@ -49,6 +49,9 @@ func macpineInfo(cmd *cobra.Command, args []string) {
 			continue
 		}
 		fmt.Print(info)
+		if i < len(args)-1 {
+			fmt.Println()
+		}
 	}
 	wasErr := false
 	for _, res := range errs {

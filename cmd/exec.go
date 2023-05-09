@@ -1,17 +1,13 @@
 package cmd
 
 import (
-	"io/ioutil"
 	"log"
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/beringresearch/macpine/host"
 	"github.com/beringresearch/macpine/qemu"
 	"github.com/beringresearch/macpine/utils"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 // execCmd executes command on alpine vm
@@ -36,28 +32,16 @@ func exec(cmd *cobra.Command, args []string) {
 		log.Fatal("unknown instance " + args[0])
 	}
 
-	instName := args[0]
+	vmName := args[0]
 	cmdArgs := strings.Join(args[1:], " ")
 
-	userHomeDir, err := os.UserHomeDir()
+	machineConfig, err := qemu.GetMachineConfig(vmName)
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	machineConfig := qemu.MachineConfig{}
-
-	config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", instName, "config.yaml"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = yaml.Unmarshal(config, &machineConfig)
-	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	err = host.Exec(machineConfig, cmdArgs)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 }

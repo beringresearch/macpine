@@ -1,16 +1,12 @@
 package cmd
 
 import (
-	"io/ioutil"
 	"log"
-	"os"
-	"path/filepath"
 
 	"github.com/beringresearch/macpine/host"
 	"github.com/beringresearch/macpine/qemu"
 	"github.com/beringresearch/macpine/utils"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 // shellCmd starts an Alpine instance
@@ -24,39 +20,24 @@ var shellCmd = &cobra.Command{
 }
 
 func shell(cmd *cobra.Command, args []string) {
-
-	userHomeDir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	if len(args) == 0 {
 		log.Fatal("missing instance name")
 	}
 
+	vmName := args[0]
 	vmList := host.ListVMNames()
-	exists := utils.StringSliceContains(vmList, args[0])
+	exists := utils.StringSliceContains(vmList, vmName)
 	if !exists {
-		log.Fatal("unknown instance " + args[0])
+		log.Fatalln("unknown instance " + vmName)
 	}
 
-	machineConfig := qemu.MachineConfig{}
-
-	config, err := ioutil.ReadFile(filepath.Join(userHomeDir, ".macpine", args[0], "config.yaml"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = yaml.Unmarshal(config, &machineConfig)
-	if err != nil {
-		log.Fatal(err)
-	}
+	machineConfig, err := qemu.GetMachineConfig(vmName)
 
 	if status, _ := machineConfig.Status(); status != "Running" {
 		log.Fatalf("%s is not running", machineConfig.Alias)
 	}
 	err = host.Exec(machineConfig, "bash")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 }

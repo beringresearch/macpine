@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -13,7 +12,6 @@ import (
 	"github.com/beringresearch/macpine/qemu"
 	"github.com/beringresearch/macpine/utils"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
 
 // importCmd iports an Alpine VM from file
@@ -71,14 +69,7 @@ func importMachine(cmd *cobra.Command, args []string) {
 		log.Fatal("unable to import: " + err.Error())
 	}
 
-	machineConfig := qemu.MachineConfig{}
-	config, err := ioutil.ReadFile(filepath.Join(targetDir, "config.yaml"))
-	if err != nil {
-		os.RemoveAll(targetDir)
-		log.Fatal("unable to import: " + err.Error())
-	}
-
-	err = yaml.Unmarshal(config, &machineConfig)
+	machineConfig, err := qemu.GetMachineConfig(importName)
 	if err != nil {
 		os.RemoveAll(targetDir)
 		log.Fatal("unable to import: " + err.Error())
@@ -87,13 +78,7 @@ func importMachine(cmd *cobra.Command, args []string) {
 	machineConfig.Alias = importName
 	machineConfig.Location = targetDir
 
-	updatedConfig, err := yaml.Marshal(&machineConfig)
-	if err != nil {
-		os.RemoveAll(targetDir)
-		log.Fatal("unable to import: " + err.Error())
-	}
-
-	err = ioutil.WriteFile(filepath.Join(targetDir, "config.yaml"), updatedConfig, 0644)
+	err = qemu.SaveMachineConfig(machineConfig)
 	if err != nil {
 		os.RemoveAll(targetDir)
 		log.Fatal("unable to import: " + err.Error())

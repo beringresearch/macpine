@@ -2,13 +2,10 @@ package cmd
 
 import (
 	"log"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 
 	"github.com/beringresearch/macpine/host"
 	"github.com/beringresearch/macpine/qemu"
@@ -24,7 +21,6 @@ func includeTagFlag(cmd *cobra.Command) {
 	cmd.Flags().BoolVarP(&remove, "remove", "r", false, "Remove tag(s) rather than add them.")
 }
 
-// infoCmd displays macpine machine info
 var tagCmd = &cobra.Command{
 	Use:   "tag [-r] <instance> <tag1> [<tag2>...]",
 	Short: "Add or remove tags from an instance.",
@@ -51,20 +47,9 @@ func macpineTag(cmd *cobra.Command, args []string) {
 	tags := args[1:]
 	validateTags(tags)
 
-	userHomeDir, err := os.UserHomeDir()
+	machineConfig, err := qemu.GetMachineConfig(vmName)
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	config, err := os.ReadFile(filepath.Join(userHomeDir, ".macpine", vmName, "config.yaml"))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	var machineConfig = qemu.MachineConfig{}
-	err = yaml.Unmarshal(config, &machineConfig)
-	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
 	for _, tag := range tags {
@@ -76,12 +61,7 @@ func macpineTag(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	updatedConfig, err := yaml.Marshal(&machineConfig)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = os.WriteFile(filepath.Join(userHomeDir, ".macpine", vmName, "config.yaml"), updatedConfig, 0644)
+	err = qemu.SaveMachineConfig(machineConfig)
 	if err != nil {
 		log.Fatal(err)
 	}
