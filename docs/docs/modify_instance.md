@@ -11,6 +11,8 @@ Configuration files can be found in `~/.macpine/instance-name/config.yaml` for e
 Do not modify the `alias` or `location` entries in `config.yaml`, rather, use `alpine rename <instance name> <new name>` to rename
 instances.
 
+Some validations are performed after an `alpine edit` editing, and if they fail the `config.yaml` will be reverted to its pre-edit state.
+
 ## Config file format
 
 The instance configurations are stored as [`YAML`](https://yaml.org) in their respective instance directories in `~/.macpine`.
