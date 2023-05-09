@@ -26,7 +26,7 @@ jobs:
 
       - name: "Make Release Files"
         run: |
-          chmod +x xcompile.sh && ./xcompile.sh
+          make xcompile
           ls bin/alpine_darwin_arm64 bin/alpine_darwin_amd64 || exit 1           # ensure binaries are built
 
       - name: "Create Release"
