@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"syscall"
 
 	"github.com/beringresearch/macpine/host"
 	"github.com/beringresearch/macpine/qemu"
@@ -167,6 +168,9 @@ func launch(cmd *cobra.Command, args []string) {
 	err = host.Launch(machineConfig)
 	if err != nil {
 		os.RemoveAll(machineConfig.Location)
+		pid, _ := machineConfig.GetInstancePID()
+		p, _ := os.FindProcess(pid)
+		p.Signal(syscall.SIGKILL)
 		log.Fatal(err)
 	}
 
