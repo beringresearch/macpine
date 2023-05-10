@@ -12,7 +12,7 @@ echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositorie
 apk update
 apk upgrade
 
-apk add --no-cache lxd lxd-client lxcfs dbus
+apk add --no-cache lxd lxd-client dbus
 
 echo "session optional pam_cgfs.so -c freezer,memory,name=systemd,unified" >> /etc/pam.d/system-login
 echo "lxc.idmap = u 0 100000 65536" >> /etc/lxc/default.conf
@@ -32,7 +32,7 @@ chmod -x /usr/bin/newgidmap
 
 rc-update add lxc
 rc-update add lxd
-rc-update add lxcfs
+#rc-update add lxcfs
 rc-update add dbus
 
 reboot
