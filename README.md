@@ -45,7 +45,7 @@ sudo mv alpine /usr/local/bin/
 #export PATH="$PATH:/usr/local/bin"
 ```
 
-Macpine depends on QEMU >= 6.2.0_1:
+Macpine depends on QEMU >= 7.22.0:
 
 ```bash
 brew install qemu
