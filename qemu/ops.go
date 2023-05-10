@@ -202,9 +202,18 @@ func (c *MachineConfig) Stop() error {
 			if procErr != nil {
 				return procErr
 			}
+
 			if err := p.Signal(syscall.SIGKILL); err != nil {
 				return err
 			}
+
+			pidFile := filepath.Join(c.Location, "alpine.pid")
+			sockFile := filepath.Join(c.Location, "alpine.sock")
+			qmpFile := filepath.Join(c.Location, "alpine.qmp")
+			os.Remove(pidFile)
+			os.Remove(sockFile)
+			os.Remove(qmpFile)
+
 			log.Println(c.Alias + " stopped")
 			return nil
 		} else {
