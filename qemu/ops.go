@@ -358,7 +358,7 @@ func (c *MachineConfig) Start() error {
 
 	cpuType := map[string]string{
 		"aarch64":      "cortex-a72",
-		"x86_64":       "qemu64",
+		"x86_64":       "qemu64,+avx,+avx2",
 		"x86_64_host":  "host" + hugePages,
 		"aarch64_host": "host"}
 
