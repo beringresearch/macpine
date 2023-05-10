@@ -178,14 +178,7 @@ func (c *MachineConfig) Status() (string, int) {
 
 	if _, err := os.Stat(pidFile); err == nil {
 		status = "Running"
-		vmPID, err := os.ReadFile(pidFile)
-		if err != nil {
-			log.Fatalf("unable to read file: %v", err)
-		}
-
-		process := string(vmPID)
-		process = strings.TrimSuffix(process, "\n")
-		pid, _ = strconv.Atoi(process)
+		pid, _ = c.GetInstancePID()
 
 		// check if stopped and return "Paused"
 		cmd := exec.Command("ps", "-o", "stat=", "-p", strconv.Itoa(pid))
@@ -209,7 +202,7 @@ func (c *MachineConfig) Stop() error {
 			if procErr != nil {
 				return procErr
 			}
-			if err := p.Signal(syscall.SIGTERM); err != nil {
+			if err := p.Signal(syscall.SIGKILL); err != nil {
 				return err
 			}
 			log.Println(c.Alias + " stopped")
@@ -615,6 +608,20 @@ func (c *MachineConfig) CleanPIDFile() {
 	if err := os.Remove(pidFile); err != nil && !errors.Is(err, os.ErrNotExist) {
 		log.Fatalf("error deleting pidfile at %s. Manually delete it before proceeding.", pidFile)
 	}
+}
+
+func (c *MachineConfig) GetInstancePID() (int, error) {
+	pidFile := filepath.Join(c.Location, "alpine.pid")
+	vmPID, err := os.ReadFile(pidFile)
+	if err != nil {
+		return 0, err
+	}
+
+	process := string(vmPID)
+	process = strings.TrimSuffix(process, "\n")
+	pid, _ := strconv.Atoi(process)
+
+	return pid, nil
 }
 
 func GetMachineConfig(vmName string) (MachineConfig, error) {
