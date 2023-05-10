@@ -15,3 +15,4 @@ Rename an instance.
 ```
   -h, --help   help for rename
 ```
+

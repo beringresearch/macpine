@@ -1,6 +1,6 @@
 # alpine edit
 
-Edit instance configuration.
+Edit instance configurations.
 
 ```
 alpine edit <instance> [<instance>...]
@@ -8,10 +8,11 @@ alpine edit <instance> [<instance>...]
 
 ## Description
 
-Edit instance configuration.
+Edit instance configurations.
 
 ## Options
 
 ```
   -h, --help   help for edit
 ```
+

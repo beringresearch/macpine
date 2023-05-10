@@ -1,17 +1,18 @@
 # alpine info
 
-Display information about an instance.
+Display information about instances.
 
 ```
-alpine info <instance>
+alpine info <instance> [<instance>...]
 ```
 
 ## Description
 
-Display information about an instance.
+Display information about instances.
 
 ## Options
 
 ```
   -h, --help   help for info
 ```
+

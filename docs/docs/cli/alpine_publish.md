@@ -1,6 +1,6 @@
 # alpine publish
 
-Publish an instance.
+Publish instances.
 
 ```
 alpine publish <instance> [<instance>...]
@@ -8,7 +8,7 @@ alpine publish <instance> [<instance>...]
 
 ## Description
 
-Publish an instance.
+Publish instances.
 
 ## Options
 
@@ -16,3 +16,4 @@ Publish an instance.
   -e, --encrypt   Encrypt published archive (prompts for passphrase).
   -h, --help      help for publish
 ```
+

@@ -1,6 +1,6 @@
 # alpine pause
 
-Pause an instance.
+Pause instances.
 
 ```
 alpine pause <instance> [<instance>...]
@@ -8,10 +8,11 @@ alpine pause <instance> [<instance>...]
 
 ## Description
 
-Pause an instance.
+Pause instances.
 
 ## Options
 
 ```
   -h, --help   help for pause
 ```
+

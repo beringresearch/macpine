@@ -1,6 +1,6 @@
 # alpine stop
 
-Stop an instance.
+Stop instances.
 
 ```
 alpine stop <instance> [<instance>...]
@@ -8,10 +8,11 @@ alpine stop <instance> [<instance>...]
 
 ## Description
 
-Stop an instance.
+Stop instances.
 
 ## Options
 
 ```
   -h, --help   help for stop
 ```
+

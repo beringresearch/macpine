@@ -1,6 +1,6 @@
 # alpine resume
 
-Unpause an instance.
+Unpause instances.
 
 ```
 alpine resume <instance> [<instance>...]
@@ -8,10 +8,11 @@ alpine resume <instance> [<instance>...]
 
 ## Description
 
-Unpause an instance.
+Unpause instances.
 
 ## Options
 
 ```
   -h, --help   help for resume
 ```
+

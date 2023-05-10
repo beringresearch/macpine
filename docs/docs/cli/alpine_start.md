@@ -1,6 +1,6 @@
 # alpine start
 
-Start an instance.
+Start instances.
 
 ```
 alpine start <instance> [<instance>...]
@@ -8,10 +8,11 @@ alpine start <instance> [<instance>...]
 
 ## Description
 
-Start an instance.
+Start instances.
 
 ## Options
 
 ```
   -h, --help   help for start
 ```
+

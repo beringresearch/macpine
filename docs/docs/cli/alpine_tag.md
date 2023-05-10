@@ -16,3 +16,4 @@ Add or remove tags from an instance.
   -h, --help     help for tag
   -r, --remove   Remove tag(s) rather than add them.
 ```
+

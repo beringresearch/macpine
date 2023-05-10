@@ -15,3 +15,4 @@ Delete instances.
 ```
   -h, --help   help for delete
 ```
+
