@@ -256,7 +256,7 @@ func (c *MachineConfig) Resume() error {
 			if err := p.Signal(syscall.SIGCONT); err != nil {
 				return err
 			}
-			err := c.Exec("hwclock -w", true)
+			err := c.Exec("hwclock -s", true)
 			if err != nil {
 				log.Println("failed to synchonrize clock, instance system clock may be skewed")
 				return err
@@ -435,7 +435,7 @@ func (c *MachineConfig) Start() error {
 	}
 
 	log.Println("awaiting ssh server...")
-	err = c.Exec("hwclock -w", true) // root=true i.e. run as root
+	err = c.Exec("hwclock -s", true) // root=true i.e. run as root
 	if err != nil {
 		c.Stop()
 		c.CleanPIDFile()
