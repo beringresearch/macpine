@@ -27,7 +27,13 @@ Or on the host:
 alpine exec instance-name "hwclock -s"
 ```
 
-Also, consider an `ntp` daemon such as `chrony` within your instance to maintain the system clock.
+Also, consider an `ntp` daemon within your instance to maintain the system clock. This can be added inside your instance:
+
+```bash
+apk update; apk add openntpd
+rc-update add openntpd default
+rc-service openntpd start
+```
 
 ### Networking issues
 
