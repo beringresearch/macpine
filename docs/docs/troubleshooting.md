@@ -34,6 +34,13 @@ apk update; apk add openntpd
 rc-update add openntpd default
 rc-service openntpd start
 ```
+or
+```bash
+apk update; apk add chrony
+service chronyd start
+```
+
+More information on `chronyd` can be found on [the Arch wiki](https://wiki.archlinux.org/title/Chrony)
 
 ### Networking issues
 
