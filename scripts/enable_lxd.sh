@@ -1,5 +1,5 @@
 apk update
-apk add zfs zfs-lts
+apk add zfs
 reboot
 
 # ssh back into the vm
