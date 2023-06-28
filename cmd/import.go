@@ -53,13 +53,6 @@ func importMachine(cmd *cobra.Command, args []string) {
 	importName := strings.TrimSuffix(archive, ".tar.gz")
 	tempArchive := filepath.Join(userHomeDir, ".macpine", archive)
 
-	_, err = utils.CopyFile(archive, tempArchive)
-	if err != nil {
-		os.RemoveAll(tempArchive)
-		log.Fatal("unable to import: " + err.Error())
-	}
-	defer os.RemoveAll(tempArchive)
-
 	targetDir := strings.TrimSuffix(tempArchive, ".tar.gz")
 	exists, err := utils.DirExists(targetDir)
 	if err != nil {
@@ -68,6 +61,14 @@ func importMachine(cmd *cobra.Command, args []string) {
 	if exists {
 		log.Fatalf("unable to import: instance %s already exists\n", importName)
 	}
+
+	_, err = utils.CopyFile(archive, tempArchive)
+	if err != nil {
+		os.RemoveAll(tempArchive)
+		log.Fatal("unable to import: " + err.Error())
+	}
+	defer os.RemoveAll(tempArchive)
+
 	err = utils.Uncompress(tempArchive, targetDir)
 	if err != nil {
 		os.RemoveAll(targetDir)
