@@ -71,6 +71,7 @@ func importMachine(cmd *cobra.Command, args []string) {
 	err = utils.Uncompress(tempArchive, targetDir)
 	if err != nil {
 		os.RemoveAll(targetDir)
+		os.RemoveAll(tempArchive)
 		log.Fatal("unable to import: " + err.Error())
 	}
 
