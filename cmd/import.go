@@ -45,6 +45,11 @@ func importMachine(cmd *cobra.Command, args []string) {
 		archive = strings.TrimSuffix(archive, ".age")
 		defer os.RemoveAll(archive)
 	}
+
+	if !strings.HasSuffix(archive, ".tar.gz") {
+		log.Fatal("unable to import: instance must be .age or .tar.gz file")
+	}
+
 	importName := strings.TrimSuffix(archive, ".tar.gz")
 	tempArchive := filepath.Join(userHomeDir, ".macpine", archive)
 
@@ -66,12 +71,14 @@ func importMachine(cmd *cobra.Command, args []string) {
 	err = utils.Uncompress(tempArchive, targetDir)
 	if err != nil {
 		os.RemoveAll(targetDir)
+		os.RemoveAll(tempArchive)
 		log.Fatal("unable to import: " + err.Error())
 	}
 
 	machineConfig, err := qemu.GetMachineConfig(importName)
 	if err != nil {
 		os.RemoveAll(targetDir)
+		os.RemoveAll(tempArchive)
 		log.Fatal("unable to import: " + err.Error())
 	}
 
@@ -81,6 +88,7 @@ func importMachine(cmd *cobra.Command, args []string) {
 	err = qemu.SaveMachineConfig(machineConfig)
 	if err != nil {
 		os.RemoveAll(targetDir)
+		os.RemoveAll(tempArchive)
 		log.Fatal("unable to import: " + err.Error())
 	}
 }
