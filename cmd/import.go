@@ -78,6 +78,7 @@ func importMachine(cmd *cobra.Command, args []string) {
 	machineConfig, err := qemu.GetMachineConfig(importName)
 	if err != nil {
 		os.RemoveAll(targetDir)
+		os.RemoveAll(tempArchive)
 		log.Fatal("unable to import: " + err.Error())
 	}
 
@@ -87,6 +88,7 @@ func importMachine(cmd *cobra.Command, args []string) {
 	err = qemu.SaveMachineConfig(machineConfig)
 	if err != nil {
 		os.RemoveAll(targetDir)
+		os.RemoveAll(tempArchive)
 		log.Fatal("unable to import: " + err.Error())
 	}
 }
