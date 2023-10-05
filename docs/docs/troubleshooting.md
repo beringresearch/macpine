@@ -52,3 +52,7 @@ More information on `chronyd` can be found on [the Arch wiki](https://wiki.archl
     machines which can reach the host can send traffic to the guest. If this is not desired, enable a host firewall. You do not need to
     click "Allow" for incoming connection to `qemu` when prompted by macOS as loopback connections (i.e. directly from the host itself)
     will still be allowed.
+
+### Other issues
+
+* If apline is not able to resize the disk it will error out with this message. eg: `unable to resize disk: signal: abort trap`. Internally it runs this command `qemu-img resize <IMAGE_LOCATION> <+SIZE>`. if qemu-img resize command errors out with `dyld[28316]: Library not loaded: /opt/homebrew/opt/libunistring/lib/libunistring.2.dylib` then reinstall gettext `brew reinstall gettext` to fix the issue.
