@@ -166,6 +166,9 @@ func Uncompress(source string, destination string) error {
 		} else if err != nil {
 			return err
 		}
+      if strings.Contains(string(cur.Name), "..") {
+         return fmt.Errorf("archive contains invalid filename: %s", cur.Name)
+      }
 
 		os.MkdirAll(destination, 0777)
 
