@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const descriptionSourcePath = "docs/docs/cli/"
+const descriptionSourcePath = "docs/cli/"
 
 func printOptions(buf *bytes.Buffer, cmd *cobra.Command, name string) error {
 	flags := cmd.NonInheritedFlags()
@@ -157,7 +157,7 @@ func main() {
 	}
 
 	rootCmd.DisableAutoGenTag = true
-	err := GenMarkdownTree(rootCmd, "./docs/cli")
+	err := GenMarkdownTree(rootCmd, descriptionSourcePath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -188,20 +188,20 @@ func loadLongDescription(parentCmd *cobra.Command, path string) error {
 			}
 		}
 		name := cmd.CommandPath()
+		if name == "" {
+			continue
+		}
 		log.Println("INFO: Generating docs for", name)
 		if i := strings.Index(name, " "); i >= 0 {
 			// remove root command / binary name
 			name = name[i+1:]
 		}
-		if name == "" {
-			continue
-		}
-		mdFile := "brave_" + strings.ReplaceAll(name, " ", "_") + ".md"
+		mdFile := "alpine_" + strings.ReplaceAll(name, " ", "_") + ".md"
 
 		fullPath := filepath.Join(path, mdFile)
 		content, err := os.ReadFile(fullPath)
 		if os.IsNotExist(err) {
-			log.Printf("WARN: %s does not exist, skipping\n", mdFile)
+			log.Printf("WARN: %s does not exist, skipping\n", fullPath)
 			continue
 		}
 		if err != nil {
