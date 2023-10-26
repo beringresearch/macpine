@@ -55,4 +55,4 @@ More information on `chronyd` can be found on [the Arch wiki](https://wiki.archl
 
 ### Other issues
 
-* If apline is not able to resize the disk it will error out with this message. eg: `unable to resize disk: signal: abort trap`. Internally it runs this command `qemu-img resize <IMAGE_LOCATION> <+SIZE>`. if qemu-img resize command errors out with `dyld[28316]: Library not loaded: /opt/homebrew/opt/libunistring/lib/libunistring.2.dylib` then reinstall gettext `brew reinstall gettext` to fix the issue.
+* If alpine is not able to resize the disk, it will error out with this message: `unable to resize disk: signal: abort trap`. Internally, it runs the command `qemu-img resize <IMAGE_LOCATION> <+SIZE>`. If the `qemu-img resize` command errors out with `dyld[...]: Library not loaded: /opt/homebrew/opt/libunistring/lib/libunistring.2.dylib` then re-installing `gettext` via `brew reinstall gettext` may resolve the issue.
