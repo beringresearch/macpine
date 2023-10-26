@@ -46,6 +46,11 @@ func restart(cmd *cobra.Command, args []string) {
 		}
 
 		machineConfig, err := qemu.GetMachineConfig(vmName)
+		if err != nil {
+			wasErr = true
+			log.Println(err)
+			continue
+		}
 
 		log.Println("restarting " + vmName + "...")
 		err = host.Stop(machineConfig)

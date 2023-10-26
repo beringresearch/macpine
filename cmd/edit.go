@@ -121,6 +121,10 @@ func validateConfig(args []string, targetFiles []string) []utils.CmdResult {
 	for i := 0; i < len(args); i++ {
 		vmName := args[i]
 		machineConfig, err := qemu.GetMachineConfig(vmName)
+		if err != nil {
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
+			continue
+		}
 
 		err = ValidateName(machineConfig.Alias)
 		if err != nil {

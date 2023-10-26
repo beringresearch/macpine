@@ -32,6 +32,9 @@ func shell(cmd *cobra.Command, args []string) {
 	}
 
 	machineConfig, err := qemu.GetMachineConfig(vmName)
+   if err != nil {
+      log.Fatalln(err)
+   }
 
 	if status, _ := machineConfig.Status(); status != "Running" {
 		log.Fatalf("%s is not running", machineConfig.Alias)
