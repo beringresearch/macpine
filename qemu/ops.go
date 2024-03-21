@@ -394,8 +394,8 @@ func (c *MachineConfig) Start() error {
 		"-smp", "cpus=" + c.CPU + ",sockets=1,cores=" + c.CPU + ",threads=1",
 		"-drive", "if=virtio,file=" + filepath.Join(c.Location, c.Image),
 		"-nographic",
-		"-netdev", exposedPorts,
 		"-device", "e1000,netdev=net0,mac=" + c.MACAddress,
+		"-netdev", exposedPorts,
 		"-pidfile", filepath.Join(c.Location, "alpine.pid"),
 		"-chardev", "socket,id=char-serial,path=" + filepath.Join(c.Location,
 			"alpine.sock") + ",server=on,wait=off,logfile=" + filepath.Join(c.Location, "alpine.log"),
@@ -539,6 +539,38 @@ func (c *MachineConfig) Launch() error {
 	err = c.Start()
 	if err != nil {
 		return errors.New("unable launch a new machine. " + err.Error())
+	}
+
+	// Make sure DNS is set up correctly
+	err = c.Exec("echo 'nameserver 8.8.8.8' > /etc/resolv.conf", true)
+	if err != nil {
+		return errors.New("unable to set up DNS: " + err.Error())
+	}
+
+	err = c.Exec("apk update && apk add --no-cache dhclient", true)
+	if err != nil {
+		return errors.New("unable to install dhclient: " + err.Error())
+	}
+
+	err = c.Exec(`cat >/etc/dhcp/dhclient.conf <<EOL
+option rfc3442-classless-static-routes code 121 = array of unsigned integer 8;
+
+send host-name = gethostname();
+request subnet-mask, broadcast-address, time-offset, routers,
+        domain-name, domain-name-servers, domain-search, host-name,
+        dhcp6.name-servers, dhcp6.domain-search, dhcp6.fqdn, dhcp6.sntp-servers,
+        netbios-name-servers, netbios-scope, interface-mtu,
+        rfc3442-classless-static-routes, ntp-servers;
+
+prepend domain-name-servers 8.8.8.8, 8.8.4.4;
+EOL`, true)
+	if err != nil {
+		return errors.New("unable to configure dhclient: " + err.Error())
+	}
+
+	err = c.Exec("rc-service networking restart", true)
+	if err != nil {
+		return errors.New("unable to restart networking services: " + err.Error())
 	}
 
 	// Resize disk on an alpine guest
