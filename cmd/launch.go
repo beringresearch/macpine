@@ -27,6 +27,7 @@ var launchCmd = &cobra.Command{
 }
 
 var machineArch, imageVersion, machineCPU, machineMemory, machineDisk, machinePort, sshPort, machineName, machineMount string
+var expressStart bool
 
 func init() {
 	includeLaunchFlags(launchCmd)
@@ -42,6 +43,7 @@ func includeLaunchFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&sshPort, "ssh", "s", "22", "Host port to forward for SSH (required).")
 	cmd.Flags().StringVarP(&machinePort, "port", "p", "", "Forward additional host ports. Multiple ports can be separated by `,`.")
 	cmd.Flags().StringVarP(&machineName, "name", "n", "", "Instance name for use in `alpine` commands.")
+	cmd.Flags().BoolVarP(&expressStart, "express", "e", false, "Start instance in express mode. SSH connection and pre-flight checks are not carried out.")
 }
 
 func CorrectArguments(imageVersion string, machineArch string, machineCPU string,
@@ -149,19 +151,20 @@ func launch(cmd *cobra.Command, args []string) {
 	}
 
 	machineConfig := qemu.MachineConfig{
-		Alias:       machineName,
-		Image:       imageVersion + "-" + machineArch + ".qcow2",
-		Arch:        machineArch,
-		CPU:         machineCPU,
-		Memory:      machineMemory,
-		Disk:        machineDisk,
-		Mount:       machineMount,
-		Port:        machinePort,
-		SSHPort:     sshPort,
-		MACAddress:  macAddress,
-		SSHUser:     "root",
-		SSHPassword: "raw::root",
-		Tags:        []string{},
+		Alias:        machineName,
+		Image:        imageVersion + "-" + machineArch + ".qcow2",
+		Arch:         machineArch,
+		CPU:          machineCPU,
+		Memory:       machineMemory,
+		Disk:         machineDisk,
+		Mount:        machineMount,
+		Port:         machinePort,
+		SSHPort:      sshPort,
+		ExpressStart: expressStart,
+		MACAddress:   macAddress,
+		SSHUser:      "root",
+		SSHPassword:  "raw::root",
+		Tags:         []string{},
 	}
 	machineConfig.Location = filepath.Join(userHomeDir, ".macpine", machineConfig.Alias)
 

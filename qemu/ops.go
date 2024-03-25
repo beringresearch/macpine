@@ -29,6 +29,7 @@ type MachineConfig struct {
 	Disk         string   `yaml:"disk"`
 	Mount        string   `yaml:"mount"`
 	Port         string   `yaml:"port"`
+	ExpressStart bool     `yaml:"expressstart"`
 	SSHPort      string   `yaml:"sshport"`
 	SSHUser      string   `yaml:"sshuser"`
 	SSHPassword  string   `yaml:"sshpassword"`
@@ -434,12 +435,15 @@ func (c *MachineConfig) Start() error {
 		return err
 	}
 
-	log.Println("awaiting ssh server...")
-	err = c.Exec("hwclock -s", true) // root=true i.e. run as root
-	if err != nil {
-		c.Stop()
-		c.CleanPIDFile()
-		return err
+	if !c.ExpressStart {
+		log.Println("awaiting ssh server...")
+
+		err = c.Exec("hwclock -s", true) // root=true i.e. run as root
+		if err != nil {
+			c.Stop()
+			c.CleanPIDFile()
+			return err
+		}
 	}
 
 	if c.Mount != "" {
