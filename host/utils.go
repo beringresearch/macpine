@@ -24,8 +24,10 @@ func ListVMNames() []string {
 	}
 
 	for _, f := range dirList {
-		if f.Name() != "cache" {
-			vmList = append(vmList, f.Name())
+		if f.IsDir() {
+			if f.Name() != "cache" {
+				vmList = append(vmList, f.Name())
+			}
 		}
 	}
 
