@@ -43,7 +43,7 @@ func includeLaunchFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&sshPort, "ssh", "s", "22", "Host port to forward for SSH (required).")
 	cmd.Flags().StringVarP(&machinePort, "port", "p", "", "Forward additional host ports. Multiple ports can be separated by `,`.")
 	cmd.Flags().StringVarP(&machineName, "name", "n", "", "Instance name for use in `alpine` commands.")
-	cmd.Flags().BoolVarP(&vmnet, "share", "v", false, "Boolean value to toggle the use of mac's native vmnet-shared framework.")
+	cmd.Flags().BoolVarP(&vmnet, "shared", "v", false, "Toggle whether to use mac's native vmnet-shared mode.")
 }
 
 func CorrectArguments(imageVersion string, machineArch string, machineCPU string,
