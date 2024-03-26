@@ -505,9 +505,9 @@ func (c *MachineConfig) Start() error {
 func readDHCPLeases(filename string, output chan<- string) {
 	for {
 		// Open the dhcpd_leases file
-		file, err := os.Open(filename)
+		file, err := os.OpenFile(filename, os.O_RDWR, 0644)
 		if err != nil {
-			fmt.Println("Error opening file:", err)
+			fmt.Println("error opening file:", err)
 			return
 		}
 		defer file.Close()
@@ -523,7 +523,7 @@ func readDHCPLeases(filename string, output chan<- string) {
 
 		// Check for any errors during scanning
 		if err := scanner.Err(); err != nil {
-			fmt.Println("Error scanning file:", err)
+			fmt.Println("error scanning file:", err)
 			return
 		}
 
@@ -560,10 +560,6 @@ func (c *MachineConfig) GetIPAddressByMac() (string, error) {
 			if mac == c.MACAddress {
 				return ip, nil
 			}
-		}
-
-		if tries == 4 {
-			return "", errors.New("number of tries exceeded. Unable to extract IP address")
 		}
 	}
 
