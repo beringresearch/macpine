@@ -453,23 +453,31 @@ func (c *MachineConfig) Start() error {
 	// 	c.MachineIP = ip
 	// }
 
+	time.Sleep(8 * time.Second)
 	if c.VMNet {
 		log.Println("obtaining machine's IP address...")
 		ip := ""
-		for {
-			time.Sleep(2 * time.Second)
-			ip, err := c.GetIPAddressByMac()
-			if err != nil {
-				return errors.New("unable to obtain machine's IP address: " + err.Error())
-			}
-			if ip != "" {
-				break
-			}
+
+		ip, err := c.GetIPAddressByMac()
+		if err != nil {
+			return errors.New("unable to obtain machine's IP address: " + err.Error())
 		}
 
 		c.MachineIP = ip
-		fmt.Println(c.MachineIP)
+		config, err := yaml.Marshal(&c)
 
+		if err != nil {
+			c.Stop()
+			c.CleanPIDFile()
+			return err
+		}
+
+		err = os.WriteFile(filepath.Join(c.Location, "config.yaml"), config, 0644)
+		if err != nil {
+			c.Stop()
+			c.CleanPIDFile()
+			return err
+		}
 	}
 
 	log.Println("awaiting ssh server...")
@@ -528,15 +536,11 @@ func (c *MachineConfig) GetIPAddressByMac() (string, error) {
 		if strings.Contains(line, "hw_address") {
 			mac = strings.Split(strings.Fields(line)[0], "hw_address=1,")[1]
 		}
+
 		if ip != "" && mac != "" {
-
-			// if mac == c.MachineIP {
-			fmt.Printf("IP: %s, MAC: %s, HOST: %d\n", ip, mac, mac == c.MachineIP)
-			//return ip, nil
-			//}
-
-			// Reset variables for the next lease
-			ip, mac = "", ""
+			if mac == c.MACAddress {
+				return ip, nil
+			}
 		}
 
 	}
@@ -546,7 +550,7 @@ func (c *MachineConfig) GetIPAddressByMac() (string, error) {
 		return "", err
 	}
 
-	return ip, nil
+	return "", nil
 
 }
 
