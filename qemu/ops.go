@@ -50,6 +50,7 @@ func (c *MachineConfig) Exec(cmd string, root bool) error {
 	host := c.MachineIP + ":" + c.SSHPort
 	user := c.SSHUser
 	pwd := c.SSHPassword
+
 	if root && user != "root" {
 		user = "root"
 		if c.RootPassword == nil {
@@ -453,11 +454,8 @@ func (c *MachineConfig) Start() error {
 	// 	c.MachineIP = ip
 	// }
 
-	time.Sleep(8 * time.Second)
 	if c.VMNet {
-		log.Println("obtaining machine's IP address...")
-		ip := ""
-
+		log.Println("getting instance IP address from DHCP leases")
 		ip, err := c.GetIPAddressByMac()
 		if err != nil {
 			return errors.New("unable to obtain machine's IP address: " + err.Error())
@@ -478,14 +476,7 @@ func (c *MachineConfig) Start() error {
 			c.CleanPIDFile()
 			return err
 		}
-	}
 
-	log.Println("awaiting ssh server...")
-	err = c.Exec("hwclock -s", true) // root=true i.e. run as root
-	if err != nil {
-		c.Stop()
-		c.CleanPIDFile()
-		return err
 	}
 
 	if c.Mount != "" {
@@ -510,23 +501,48 @@ func (c *MachineConfig) Start() error {
 	return nil
 }
 
+func readDHCPLeases(filename string, output chan<- string) {
+	for {
+		// Open the dhcpd_leases file
+		file, err := os.Open(filename)
+		if err != nil {
+			fmt.Println("Error opening file:", err)
+			return
+		}
+		defer file.Close()
+
+		// Create a scanner to read the file line by line
+		scanner := bufio.NewScanner(file)
+
+		// Read each line of the file
+		for scanner.Scan() {
+			line := scanner.Text()
+			output <- line
+		}
+
+		// Check for any errors during scanning
+		if err := scanner.Err(); err != nil {
+			fmt.Println("Error scanning file:", err)
+			return
+		}
+
+		// Sleep for some time before reading the file again
+		time.Sleep(4 * time.Second)
+		fmt.Print(".")
+	}
+}
+
 // AssignIP obtains machine IP address from bootpd.plist. Only applicale to machines created on
 // VMNet
 func (c *MachineConfig) GetIPAddressByMac() (string, error) {
 	var ip, mac string
+	filename := "/var/db/dhcpd_leases"
 
-	file, err := os.Open("/var/db/dhcpd_leases")
-	if err != nil {
-		fmt.Println("error opening the /var/db/dhcpd_leases file:", err)
-		return "", err
-	}
-	defer file.Close()
+	output := make(chan string)
+	go readDHCPLeases(filename, output)
 
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-
+	for {
+		line := <-output
 		// Check if the line contains an IP address
 		if strings.Contains(line, "ip_address") {
 			ip = strings.Split(strings.Fields(line)[0], "ip_address=")[1]
@@ -536,21 +552,12 @@ func (c *MachineConfig) GetIPAddressByMac() (string, error) {
 		if strings.Contains(line, "hw_address") {
 			mac = strings.Split(strings.Fields(line)[0], "hw_address=1,")[1]
 		}
-
 		if ip != "" && mac != "" {
 			if mac == c.MACAddress {
 				return ip, nil
 			}
 		}
-
 	}
-
-	if err := scanner.Err(); err != nil {
-		fmt.Println("error reading the /var/db/dhcpd_leases file:", err)
-		return "", err
-	}
-
-	return "", nil
 
 }
 
