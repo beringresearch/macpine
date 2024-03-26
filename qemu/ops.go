@@ -456,6 +456,7 @@ func (c *MachineConfig) Start() error {
 
 	if c.VMNet {
 		log.Println("getting instance IP address from DHCP leases")
+		time.Sleep(4 * time.Second)
 		ip, err := c.GetIPAddressByMac()
 		if err != nil {
 			return errors.New("unable to obtain machine's IP address: " + err.Error())
@@ -536,12 +537,15 @@ func readDHCPLeases(filename string, output chan<- string) {
 // VMNet
 func (c *MachineConfig) GetIPAddressByMac() (string, error) {
 	var ip, mac string
+
+	tries := 0
 	filename := "/var/db/dhcpd_leases"
 
 	output := make(chan string)
 	go readDHCPLeases(filename, output)
 
 	for {
+		tries += 1
 		line := <-output
 		// Check if the line contains an IP address
 		if strings.Contains(line, "ip_address") {
@@ -556,6 +560,10 @@ func (c *MachineConfig) GetIPAddressByMac() (string, error) {
 			if mac == c.MACAddress {
 				return ip, nil
 			}
+		}
+
+		if tries == 4 {
+			return "", errors.New("number of tries exceeded. Unable to extract IP address")
 		}
 	}
 
