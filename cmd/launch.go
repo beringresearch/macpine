@@ -27,6 +27,7 @@ var launchCmd = &cobra.Command{
 }
 
 var machineArch, imageVersion, machineCPU, machineMemory, machineDisk, machinePort, sshPort, machineName, machineMount string
+var vmnet bool
 
 func init() {
 	includeLaunchFlags(launchCmd)
@@ -42,6 +43,7 @@ func includeLaunchFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&sshPort, "ssh", "s", "22", "Host port to forward for SSH (required).")
 	cmd.Flags().StringVarP(&machinePort, "port", "p", "", "Forward additional host ports. Multiple ports can be separated by `,`.")
 	cmd.Flags().StringVarP(&machineName, "name", "n", "", "Instance name for use in `alpine` commands.")
+	cmd.Flags().BoolVarP(&vmnet, "shared", "v", false, "Toggle whether to use mac's native vmnet-shared mode.")
 }
 
 func CorrectArguments(imageVersion string, machineArch string, machineCPU string,
@@ -148,6 +150,8 @@ func launch(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
+	machineIP := "localhost"
+
 	machineConfig := qemu.MachineConfig{
 		Alias:       machineName,
 		Image:       imageVersion + "-" + machineArch + ".qcow2",
@@ -156,9 +160,11 @@ func launch(cmd *cobra.Command, args []string) {
 		Memory:      machineMemory,
 		Disk:        machineDisk,
 		Mount:       machineMount,
+		MachineIP:   machineIP,
 		Port:        machinePort,
 		SSHPort:     sshPort,
 		MACAddress:  macAddress,
+		VMNet:       vmnet,
 		SSHUser:     "root",
 		SSHPassword: "raw::root",
 		Tags:        []string{},

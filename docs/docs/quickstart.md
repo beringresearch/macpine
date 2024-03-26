@@ -1,5 +1,10 @@
 # Quickstart
 
+## SLIRP network mode
+
+This is the simplest networking mode. Machines in this mode do not require sudo priveledges, but do require individual ports to be forwarded to host in order to be useful.
+
+
 To launch a brand new instance:
 
 ```bash
@@ -40,4 +45,11 @@ This will create a file hot-cow.tar.gz which can be imported as:
 
 ```bash
 alpine import hot-cow.tar.gz
+```
+
+## VMNet-shared mode
+The instance requires to be launched as sudu. This mode uses Apple's VMNet-Shared mode, which provides every machine a dynamic IP address. All ports are automatically accessible through host.
+
+```bash
+sudo alpine launch --shared
 ```

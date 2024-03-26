@@ -56,7 +56,11 @@ func delete(cmd *cobra.Command, args []string) {
 			continue
 		}
 
-		os.RemoveAll(machineConfig.Location)
+		err = os.RemoveAll(machineConfig.Location)
+		if err != nil {
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
+			continue
+		}
 		log.Printf("instance %s deleted\n", vmName)
 	}
 	wasErr := false

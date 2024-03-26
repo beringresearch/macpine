@@ -100,7 +100,7 @@ func edit(cmd *cobra.Command, args []string) {
 		log.Fatalf("error while editing: %v\n", err)
 	}
 
-	errs := validateConfig(args, targetFiles)
+	errs := validateConfig(args)
 	wasErr := false
 	for i, res := range errs {
 		if res.Err != nil {
@@ -116,7 +116,7 @@ func edit(cmd *cobra.Command, args []string) {
 	}
 }
 
-func validateConfig(args []string, targetFiles []string) []utils.CmdResult {
+func validateConfig(args []string) []utils.CmdResult {
 	errs := make([]utils.CmdResult, len(args))
 	for i := 0; i < len(args); i++ {
 		vmName := args[i]
