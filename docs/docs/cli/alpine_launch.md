@@ -22,6 +22,7 @@ Create and start an instance.
       --mount string    Path to a host directory to be shared with the instance.
   -n, --name alpine     Instance name for use in alpine commands.
   -p, --port ,          Forward additional host ports. Multiple ports can be separated by ,.
+  -v, --shared          Toggle whether to use mac's native vmnet-shared mode.
   -s, --ssh string      Host port to forward for SSH (required). (default "22")
 ```
 
