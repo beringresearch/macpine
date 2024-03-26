@@ -1,6 +1,7 @@
 package qemu
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"log"
@@ -12,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/beringresearch/macpine/utils"
 	"golang.org/x/crypto/ssh"
@@ -28,7 +30,9 @@ type MachineConfig struct {
 	Memory       string   `yaml:"memory"`
 	Disk         string   `yaml:"disk"`
 	Mount        string   `yaml:"mount"`
+	MachineIP    string   `yaml:"machineip"`
 	Port         string   `yaml:"port"`
+	VMNet        bool     `yaml:"vmnet"`
 	SSHPort      string   `yaml:"sshport"`
 	SSHUser      string   `yaml:"sshuser"`
 	SSHPassword  string   `yaml:"sshpassword"`
@@ -43,7 +47,7 @@ func (c *MachineConfig) Exec(cmd string, root bool) error {
 	if cmd == "" {
 		return nil
 	}
-	host := "localhost:" + c.SSHPort
+	host := c.MachineIP + ":" + c.SSHPort
 	user := c.SSHUser
 	pwd := c.SSHPassword
 	if root && user != "root" {
@@ -181,7 +185,11 @@ func (c *MachineConfig) Status() (string, int) {
 		pid, _ = c.GetInstancePID()
 
 		// check if stopped and return "Paused"
-		cmd := exec.Command("ps", "-o", "stat=", "-p", strconv.Itoa(pid))
+		execArgs := []string{"-o", "stat=", "-p", strconv.Itoa(pid)}
+		execCmd := "ps"
+
+		cmd := exec.Command(execCmd, execArgs...)
+
 		out, err := cmd.Output()
 		if err != nil {
 			log.Fatalf("error checking status of qemu process: %v\n", err)
@@ -316,19 +324,26 @@ func (c *MachineConfig) GetAccel() string {
 // Start starts up an Alpine VM
 func (c *MachineConfig) Start() error {
 
-	exposedPorts := "user,id=net0,hostfwd=tcp::" + c.SSHPort + "-:22"
+	networkDevice := "user,id=net0,hostfwd=tcp::" + c.SSHPort + "-:22"
 
-	ports, err := utils.ParsePort(c.Port)
-	if err != nil {
-		log.Fatalf("Error configuring ports: %v\n", err)
+	if c.VMNet {
+		networkDevice = "vmnet-shared,id=net0"
 	}
-	for _, p := range ports {
-		hostp := strconv.Itoa(p.Host)
-		guestp := strconv.Itoa(p.Guest)
-		if p.Proto == utils.Tcp {
-			exposedPorts += ",hostfwd=tcp::" + hostp + "-:" + guestp
-		} else { // Udp
-			exposedPorts += ",hostfwd=udp::" + hostp + "-:" + guestp
+
+	// Only parse ports of using qemu's default slirp network
+	if !c.VMNet {
+		ports, err := utils.ParsePort(c.Port)
+		if err != nil {
+			log.Fatalf("Error configuring ports: %v\n", err)
+		}
+		for _, p := range ports {
+			hostp := strconv.Itoa(p.Host)
+			guestp := strconv.Itoa(p.Guest)
+			if p.Proto == utils.Tcp {
+				networkDevice += ",hostfwd=tcp::" + hostp + "-:" + guestp
+			} else { // Udp
+				networkDevice += ",hostfwd=udp::" + hostp + "-:" + guestp
+			}
 		}
 	}
 
@@ -394,8 +409,8 @@ func (c *MachineConfig) Start() error {
 		"-smp", "cpus=" + c.CPU + ",sockets=1,cores=" + c.CPU + ",threads=1",
 		"-drive", "if=virtio,file=" + filepath.Join(c.Location, c.Image),
 		"-nographic",
-		"-device", "e1000,netdev=net0,mac=" + c.MACAddress,
-		"-netdev", exposedPorts,
+		"-device", "virtio-net-pci,netdev=net0,mac=" + c.MACAddress,
+		"-netdev", networkDevice,
 		"-pidfile", filepath.Join(c.Location, "alpine.pid"),
 		"-chardev", "socket,id=char-serial,path=" + filepath.Join(c.Location,
 			"alpine.sock") + ",server=on,wait=off,logfile=" + filepath.Join(c.Location, "alpine.log"),
@@ -434,6 +449,29 @@ func (c *MachineConfig) Start() error {
 		return err
 	}
 
+	// 	fmt.Println(ip)
+	// 	c.MachineIP = ip
+	// }
+
+	if c.VMNet {
+		log.Println("obtaining machine's IP address...")
+		ip := ""
+		for {
+			time.Sleep(2 * time.Second)
+			ip, err := c.GetIPAddressByMac()
+			if err != nil {
+				return errors.New("unable to obtain machine's IP address: " + err.Error())
+			}
+			if ip != "" {
+				break
+			}
+		}
+
+		c.MachineIP = ip
+		fmt.Println(c.MachineIP)
+
+	}
+
 	log.Println("awaiting ssh server...")
 	err = c.Exec("hwclock -s", true) // root=true i.e. run as root
 	if err != nil {
@@ -462,6 +500,54 @@ func (c *MachineConfig) Start() error {
 
 	log.Println(c.Alias + " started (" + strconv.Itoa(pid) + ")")
 	return nil
+}
+
+// AssignIP obtains machine IP address from bootpd.plist. Only applicale to machines created on
+// VMNet
+func (c *MachineConfig) GetIPAddressByMac() (string, error) {
+	var ip, mac string
+
+	file, err := os.Open("/var/db/dhcpd_leases")
+	if err != nil {
+		fmt.Println("error opening the /var/db/dhcpd_leases file:", err)
+		return "", err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Check if the line contains an IP address
+		if strings.Contains(line, "ip_address") {
+			ip = strings.Split(strings.Fields(line)[0], "ip_address=")[1]
+		}
+
+		// Check if the line contains a MAC address
+		if strings.Contains(line, "hw_address") {
+			mac = strings.Split(strings.Fields(line)[0], "hw_address=1,")[1]
+		}
+		if ip != "" && mac != "" {
+
+			// if mac == c.MachineIP {
+			fmt.Printf("IP: %s, MAC: %s, HOST: %d\n", ip, mac, mac == c.MachineIP)
+			//return ip, nil
+			//}
+
+			// Reset variables for the next lease
+			ip, mac = "", ""
+		}
+
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println("error reading the /var/db/dhcpd_leases file:", err)
+		return "", err
+	}
+
+	return ip, nil
+
 }
 
 // Launch macpine downloads a fresh image and creates a VM directory
@@ -538,7 +624,7 @@ func (c *MachineConfig) Launch() error {
 
 	err = c.Start()
 	if err != nil {
-		return errors.New("unable launch a new machine. " + err.Error())
+		return errors.New("unable to launch a new machine. " + err.Error())
 	}
 
 	// Make sure DNS is set up correctly
@@ -553,17 +639,17 @@ func (c *MachineConfig) Launch() error {
 	}
 
 	err = c.Exec(`cat >/etc/dhcp/dhclient.conf <<EOL
-option rfc3442-classless-static-routes code 121 = array of unsigned integer 8;
+	option rfc3442-classless-static-routes code 121 = array of unsigned integer 8;
 
-send host-name = gethostname();
-request subnet-mask, broadcast-address, time-offset, routers,
-        domain-name, domain-name-servers, domain-search, host-name,
-        dhcp6.name-servers, dhcp6.domain-search, dhcp6.fqdn, dhcp6.sntp-servers,
-        netbios-name-servers, netbios-scope, interface-mtu,
-        rfc3442-classless-static-routes, ntp-servers;
+	send host-name = gethostname();
+	request subnet-mask, broadcast-address, time-offset, routers,
+	        domain-name, domain-name-servers, domain-search, host-name,
+	        dhcp6.name-servers, dhcp6.domain-search, dhcp6.fqdn, dhcp6.sntp-servers,
+	        netbios-name-servers, netbios-scope, interface-mtu,
+	        rfc3442-classless-static-routes, ntp-servers;
 
-prepend domain-name-servers 8.8.8.8, 8.8.4.4;
-EOL`, true)
+	prepend domain-name-servers 8.8.8.8, 8.8.4.4;
+	EOL`, true)
 	if err != nil {
 		return errors.New("unable to configure dhclient: " + err.Error())
 	}
@@ -581,8 +667,8 @@ EOL`, true)
 			return errors.New("unable to install dependencies: " + err.Error())
 		}
 
-		// send sfdisk command ,+ (<start>,<size>,<type>,<bootable>)
-		// default start (0), size + (all available), default type (linux data), default bootable (false)
+		//send sfdisk command ,+ (<start>,<size>,<type>,<bootable>)
+		//default start (0), size + (all available), default type (linux data), default bootable (false)
 		err = c.Exec(`echo ",+" | sfdisk --no-reread --partno 3 /dev/vda && partx -u /dev/vda`, true)
 		if err != nil {
 			return errors.New("error updating partition table: " + err.Error())

@@ -18,23 +18,26 @@ func Start(config qemu.MachineConfig) error {
 		return nil
 	}
 
-	ports, err := utils.ParsePort(config.Port)
-	if err != nil {
-		return err
-	}
-	hostports := make([]string, len(ports))
-	for i, p := range ports {
-		hostports[i] = strconv.Itoa(p.Host)
-	}
-	allPorts := append([]string{config.SSHPort}, hostports...)
-
-	for _, p := range allPorts {
-		if strings.Contains(p, ":") {
-			p = strings.Split(p, ":")[0]
-		}
-		err := utils.Ping("localhost", p)
+	// Only parse ports of using qemu's default slirp network
+	if !config.VMNet {
+		ports, err := utils.ParsePort(config.Port)
 		if err != nil {
 			return err
+		}
+		hostports := make([]string, len(ports))
+		for i, p := range ports {
+			hostports[i] = strconv.Itoa(p.Host)
+		}
+		allPorts := append([]string{config.SSHPort}, hostports...)
+
+		for _, p := range allPorts {
+			if strings.Contains(p, ":") {
+				p = strings.Split(p, ":")[0]
+			}
+			err := utils.Ping("localhost", p)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
