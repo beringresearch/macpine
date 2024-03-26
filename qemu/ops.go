@@ -190,10 +190,10 @@ func (c *MachineConfig) Status() (string, int) {
 
 		cmd := exec.Command(execCmd, execArgs...)
 
-		out, err := cmd.Output()
-		if err != nil {
-			log.Fatalf("error checking status of qemu process: %v\n", err)
-		}
+		out, _ := cmd.Output()
+		// if err != nil {
+		// 	log.Fatalf("error checking status of qemu process: %v\n", err)
+		// }
 		if strings.TrimSpace(string(out)) == "T" {
 			status = "Paused"
 		}
@@ -225,8 +225,8 @@ func (c *MachineConfig) Stop() error {
 			log.Println(c.Alias + " stopped")
 			return nil
 		} else {
-			pidFile := filepath.Join(c.Location, "alpine.pid")
-			return errors.New("error stopping, incorrect PID in " + pidFile + "?")
+			//pidFile := filepath.Join(c.Location, "alpine.pid")
+			return errors.New("failed to stop instance `" + c.Alias + "` due to inadequate preiveledges")
 		}
 	}
 	return nil
@@ -743,6 +743,12 @@ func (c *MachineConfig) CleanPIDFile() {
 
 func (c *MachineConfig) GetInstancePID() (int, error) {
 	pidFile := filepath.Join(c.Location, "alpine.pid")
+
+	_, err := os.Open(pidFile)
+	if err != nil {
+		return 0, errors.New("you don't have enough priveledges to view " + c.Alias + ". run sudo alpine list")
+	}
+
 	vmPID, err := os.ReadFile(pidFile)
 	if err != nil {
 		return 0, err
