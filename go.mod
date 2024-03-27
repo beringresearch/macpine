@@ -4,7 +4,6 @@ go 1.18
 
 require (
 	filippo.io/age v1.1.1
-	github.com/fsnotify/fsnotify v1.7.0
 	github.com/spf13/cobra v1.4.0
 	golang.org/x/crypto v0.4.0
 	golang.org/x/term v0.3.0

@@ -50,7 +50,7 @@ func (c *MachineConfig) Exec(cmd string, root bool) error {
 	ip := c.MachineIP
 
 	if c.VMNet {
-		if ip == "localhost" {
+		if ip == "localhost" || ip == "" {
 			log.Println("getting instance IP address from DHCP leases")
 
 			for {
