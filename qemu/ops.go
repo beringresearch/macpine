@@ -47,7 +47,42 @@ func (c *MachineConfig) Exec(cmd string, root bool) error {
 	if cmd == "" {
 		return nil
 	}
-	host := c.MachineIP + ":" + c.SSHPort
+	ip := c.MachineIP
+
+	if c.VMNet {
+		if ip == "localhost" {
+			log.Println("getting instance IP address from DHCP leases")
+
+			for {
+				ip = c.GetIPAddressByMac()
+
+				if ip != "" {
+					break
+				}
+				fmt.Print(".")
+				time.Sleep(4 * time.Second)
+			}
+
+			c.MachineIP = ip
+			config, err := yaml.Marshal(&c)
+
+			if err != nil {
+				c.Stop()
+				c.CleanPIDFile()
+				return err
+			}
+
+			err = os.WriteFile(filepath.Join(c.Location, "config.yaml"), config, 0644)
+			if err != nil {
+				c.Stop()
+				c.CleanPIDFile()
+				return err
+			}
+		}
+
+	}
+
+	host := ip + ":" + c.SSHPort
 	user := c.SSHUser
 	pwd := c.SSHPassword
 
@@ -450,36 +485,6 @@ func (c *MachineConfig) Start() error {
 		return err
 	}
 
-	// 	fmt.Println(ip)
-	// 	c.MachineIP = ip
-	// }
-
-	if c.VMNet {
-		log.Println("getting instance IP address from DHCP leases")
-		time.Sleep(4 * time.Second)
-		ip, err := c.GetIPAddressByMac()
-		if err != nil {
-			return errors.New("unable to obtain machine's IP address: " + err.Error())
-		}
-
-		c.MachineIP = ip
-		config, err := yaml.Marshal(&c)
-
-		if err != nil {
-			c.Stop()
-			c.CleanPIDFile()
-			return err
-		}
-
-		err = os.WriteFile(filepath.Join(c.Location, "config.yaml"), config, 0644)
-		if err != nil {
-			c.Stop()
-			c.CleanPIDFile()
-			return err
-		}
-
-	}
-
 	if c.Mount != "" {
 		basename := filepath.Base(c.Mount)
 		mntcmd := make([]string, 3)
@@ -502,51 +507,24 @@ func (c *MachineConfig) Start() error {
 	return nil
 }
 
-func readDHCPLeases(filename string, output chan<- string) {
-	for {
-		// Open the dhcpd_leases file
-		file, err := os.OpenFile(filename, os.O_RDWR, 0644)
-		if err != nil {
-			fmt.Println("error opening file:", err)
-			return
-		}
-		defer file.Close()
-
-		// Create a scanner to read the file line by line
-		scanner := bufio.NewScanner(file)
-
-		// Read each line of the file
-		for scanner.Scan() {
-			line := scanner.Text()
-			output <- line
-		}
-
-		// Check for any errors during scanning
-		if err := scanner.Err(); err != nil {
-			fmt.Println("error scanning file:", err)
-			return
-		}
-
-		// Sleep for some time before reading the file again
-		time.Sleep(4 * time.Second)
-		fmt.Print(".")
-	}
-}
-
 // AssignIP obtains machine IP address from bootpd.plist. Only applicale to machines created on
 // VMNet
-func (c *MachineConfig) GetIPAddressByMac() (string, error) {
-	var ip, mac string
+func (c *MachineConfig) GetIPAddressByMac() string {
+	ip := ""
+	mac := ""
 
-	tries := 0
-	filename := "/var/db/dhcpd_leases"
+	file, err := os.Open("/var/db/dhcpd_leases")
 
-	output := make(chan string)
-	go readDHCPLeases(filename, output)
+	if err != nil {
+		log.Fatalf("Error opening file: %v", err)
+	}
 
-	for {
-		tries += 1
-		line := <-output
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+
+		// Process each line in the dhcpd_leases file
+		line := scanner.Text()
+
 		// Check if the line contains an IP address
 		if strings.Contains(line, "ip_address") {
 			ip = strings.Split(strings.Fields(line)[0], "ip_address=")[1]
@@ -556,13 +534,18 @@ func (c *MachineConfig) GetIPAddressByMac() (string, error) {
 		if strings.Contains(line, "hw_address") {
 			mac = strings.Split(strings.Fields(line)[0], "hw_address=1,")[1]
 		}
-		if ip != "" && mac != "" {
-			if mac == c.MACAddress {
-				return ip, nil
-			}
+
+		if mac == c.MACAddress {
+			return ip
 		}
+
 	}
 
+	// Check for any errors during scanning
+	if err := scanner.Err(); err != nil {
+		fmt.Println("error scanning /var/db/dhcpd_lease:", err)
+	}
+	return ""
 }
 
 // Launch macpine downloads a fresh image and creates a VM directory
