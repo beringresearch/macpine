@@ -12,8 +12,9 @@ func Info(vmName string) (string, error) {
 		return "", err
 	}
 
-	info := fmt.Sprintf("Name: %s\nImage: %s\nArch: %s\nDisk size: %s\nMemory size: %s\nCPUs: %s\nMount: %s\nTags: %s\n",
+	info := fmt.Sprintf("Name: %s\nIP: %s\nImage: %s\nArch: %s\nDisk size: %s\nMemory size: %s\nCPUs: %s\nMount: %s\nTags: %s\n",
 		machineConfig.Alias,
+		machineConfig.MachineIP,
 		machineConfig.Image,
 		machineConfig.Arch,
 		machineConfig.Disk,
