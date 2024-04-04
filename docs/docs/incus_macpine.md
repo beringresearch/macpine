@@ -4,7 +4,7 @@
 
 [Incus](https://linuxcontainers.org/incus/) is a next generation system container manager with support for [a wide number of Linux distributions](https://images.linuxcontainers.org). It provides a simple way to build, test, and run multiple Linux environments across a single machine or multiple compute clusters.
 
-Under the hood, LXD uses [LXC](https://linuxcontainers.org/lxc/introduction/), through liblxc and its Go binding, to create and manage the containers. However, incus relies on a number of Linux kernel features, such as CGroups and kernel namespaces, which aren't natively available on MacOS.
+Under the hood, incus uses [LXC](https://linuxcontainers.org/lxc/introduction/), through liblxc and its Go binding, to create and manage the containers. However, incus relies on a number of Linux kernel features, such as CGroups and kernel namespaces, which aren't natively available on MacOS.
 
 [Macpine](https://github.com/beringresearch/macpine) makes it possible to run Incus/LXC containers on MacOS with support for both amd64 and arm64 processors, through its lightweight virtualisation layer. This workflow makes it easy to develop and test incus containers locally.
 
@@ -29,7 +29,7 @@ Now that that the system is ready, we can create a lightweight Macpine instance,
 alpine launch --name incus --ssh 223 --port 8443
 ```
 
-This will create a new instance called `incus` and forward port `8443` (the default port that LXD client uses to communicate with the LXD server) of the instance to host. Macpine will attempt to match the native CPU architecture of your host to the correct instance image. However, if you can explicitly specify the architecture by adding either `--arch aarch64` or `--arch x86_64` to the above command.
+This will create a new instance called `incus` and forward port `8443` (the default port that the incus client uses to communicate with the incus server) of the instance to host. Macpine will attempt to match the native CPU architecture of your host to the correct instance image. However, if you can explicitly specify the architecture by adding either `--arch aarch64` or `--arch x86_64` to the above command.
 
 Now lets install the incus daemon.
 
@@ -94,7 +94,7 @@ incus launch images:debian/bullseye debian
 ```
 
 
-## Connecting to your first LXD container
+## Connecting to your first incus container
 
 ```bash
 incus exec debian -- bash
