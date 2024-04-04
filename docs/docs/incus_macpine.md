@@ -1,4 +1,4 @@
-# Running LXD containers in Macpine
+# Running Incus containers in Macpine
 
 ## Overview
 
