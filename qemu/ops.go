@@ -687,6 +687,62 @@ func (c *MachineConfig) Launch() error {
 	return nil
 }
 
+// CompressQemuDiskImage compresses the QEMU Disk image and overwrites it
+func (c *MachineConfig) CompressQemuDiskImage() error {
+	if !utils.CommandExists("qemu-img") {
+		return errors.New("qemu-img is not available on $PATH. ensure qemu is installed")
+	}
+
+	cmd := exec.Command("qemu-img", "convert", "-c", "-O", "qcow2", filepath.Join(c.Location, c.Image),
+		filepath.Join(c.Location, c.Image+"_compressed.qcow2"))
+
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	err = os.Remove(filepath.Join(c.Location, c.Image))
+	if err != nil {
+		return err
+	}
+
+	err = os.Rename(filepath.Join(c.Location, c.Image+"_compressed.qcow2"),
+		filepath.Join(c.Location, c.Image))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DecompressQemuDiskImage decompresses the QEMU Disk image and overwrites it
+func (c *MachineConfig) DecompressQemuDiskImage() error {
+	if !utils.CommandExists("qemu-img") {
+		return errors.New("qemu-img is not available on $PATH. ensure qemu is installed")
+	}
+
+	cmd := exec.Command("qemu-img", "convert", "-O", "qcow2", "-p", filepath.Join(c.Location, c.Image),
+		filepath.Join(c.Location, c.Image+"_decompressed.qcow2"))
+
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+
+	err = os.Remove(filepath.Join(c.Location, c.Image))
+	if err != nil {
+		return err
+	}
+
+	err = os.Rename(filepath.Join(c.Location, c.Image+"_decompressed.qcow2"),
+		filepath.Join(c.Location, c.Image))
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // ResizeQemuDiskImage resizes a qcow2 disk image
 func (c *MachineConfig) ResizeQemuDiskImage() error {
 	if !utils.CommandExists("qemu-img") {

@@ -87,6 +87,12 @@ func publish(cmd *cobra.Command, args []string) {
 			continue
 		}
 
+		err = machineConfig.CompressQemuDiskImage()
+		if err != nil {
+			errs[i] = utils.CmdResult{Name: vmName, Err: err}
+			continue
+		}
+
 		files := []string{}
 		for _, f := range fileInfo {
 			if !utils.StringSliceContains([]string{"alpine.qmp", "alpine.sock", "alpine.pid"}, f.Name()) {
