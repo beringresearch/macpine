@@ -93,6 +93,13 @@ func importMachine(cmd *cobra.Command, args []string) {
 		os.RemoveAll(tempArchive)
 		log.Fatal("unable to import: " + err.Error())
 	}
+
+	err = machineConfig.DecompressQemuDiskImage()
+	if err != nil {
+		os.RemoveAll(targetDir)
+		os.RemoveAll(tempArchive)
+		log.Fatal("unable to import: " + err.Error())
+	}
 }
 
 func decryptArchive(archive string) error {
