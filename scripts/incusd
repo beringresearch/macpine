@@ -1,0 +1,43 @@
+#!/sbin/openrc-run
+
+command="/usr/sbin/incusd"
+command_args="${INCUSD_OPTIONS}"
+command_background="true"
+pidfile="/run/incus/${RC_SVCNAME}.pid"
+retry="${INCUSD_STOP_TIMEOUT:-60}"
+extra_started_commands="quit"
+description_quit="Daemon quits and leaves the instances running"
+
+: ${INCUSD_FORCE_STOP:="no"}
+
+depend() {
+        need net cgroups dbus
+        use lxcfs
+        after firewall
+}
+
+start_pre() {
+        checkpath --directory "${pidfile%/*}" --mode 0750
+        # Required for running systemd containers
+        #if [ -d /sys/fs/cgroup/unified ] && ! [ -d /sys/fs/cgroup/systemd ]; then
+        #       checkpath --directory --owner root:lxd /sys/fs/cgroup/systemd
+        #       mount -t cgroup \
+        #               -o rw,nosuid,nodev,noexec,relatime,none,name=systemd \
+        #               cgroup /sys/fs/cgroup/systemd
+        #fi
+}
+
+stop() {
+        ebegin "Stopping ${RC_SVCNAME}"
+        if [ "$INCUSD_FORCE_STOP" = "no" ]; then
+                $command shutdown --timeout ${INCUSD_STOP_TIMEOUT:-60}
+        elif [ "$INCUSD_FORCE_STOP" = "yes" ]; then
+                $command shutdown --force
+        fi
+}
+
+quit() {
+        ebegin "Quitting ${RC_SVCNAME}"
+        start-stop-daemon --signal SIGQUIT --pidfile $pidfile --quiet
+        rm /run/openrc/started/incusd
+}
