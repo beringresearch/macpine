@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -17,7 +18,7 @@ import (
 // importCmd iports an Alpine VM from file
 var importCmd = &cobra.Command{
 	Use:     "import <archive>",
-	Short:   "Imports an instance archived with `alpine publish`.",
+	Short:   "Imports an instance archived with `alpine publish`. Can be a local import or a URL.",
 	Run:     importMachine,
 	Aliases: []string{"unarchive"},
 
@@ -37,6 +38,28 @@ func importMachine(cmd *cobra.Command, args []string) {
 
 	archive := args[0]
 
+	if strings.HasPrefix(archive, "http") {
+		//cachePath := filepath.Join(userHomeDir, ".macpine", "cache")
+		archiveString := path.Base(archive)
+
+		// Handle a specific case for a Dropbox URL
+		archiveString = strings.Split(archiveString, "?rlkey")[0]
+
+		archiveFile, err := os.Create(filepath.Join("/tmp/", archiveString))
+
+		if err != nil {
+			log.Fatal("unable to download macpine image: " + err.Error())
+		}
+
+		err = utils.DownloadFile(archiveFile.Name(), archive)
+		if err != nil {
+			log.Fatal("unable to download macpine image: " + err.Error())
+		}
+
+		archive = archiveFile.Name()
+
+	}
+
 	if strings.HasSuffix(archive, ".age") {
 		err = decryptArchive(archive)
 		if err != nil {
@@ -50,15 +73,18 @@ func importMachine(cmd *cobra.Command, args []string) {
 		log.Fatal("unable to import: instance must be .age or .tar.gz file")
 	}
 
-	importName := strings.TrimSuffix(archive, ".tar.gz")
-	tempArchive := filepath.Join(userHomeDir, ".macpine", archive)
+	importName := strings.TrimSuffix(filepath.Base(archive), ".tar.gz")
+	tempArchive := filepath.Join(userHomeDir, ".macpine", filepath.Base(archive))
 
 	targetDir := strings.TrimSuffix(tempArchive, ".tar.gz")
+
 	exists, err := utils.DirExists(targetDir)
 	if err != nil {
+		os.RemoveAll(tempArchive)
 		log.Fatal("unable to import: " + err.Error())
 	}
 	if exists {
+		os.RemoveAll(tempArchive)
 		log.Fatalf("unable to import: instance %s already exists\n", importName)
 	}
 
