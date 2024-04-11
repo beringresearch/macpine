@@ -262,7 +262,7 @@ func (c *MachineConfig) Stop() error {
 			return nil
 		} else {
 			//pidFile := filepath.Join(c.Location, "alpine.pid")
-			return errors.New("failed to stop instance `" + c.Alias + "` due to inadequate preiveledges")
+			return errors.New("failed to stop instance `" + c.Alias + "` due to inadequate privileges")
 		}
 	}
 	return nil
