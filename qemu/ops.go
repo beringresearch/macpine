@@ -514,10 +514,10 @@ func (c *MachineConfig) GetIPAddressByMac() string {
 	mac := ""
 
 	file, err := os.Open("/var/db/dhcpd_leases")
-
 	if err != nil {
 		log.Fatalf("Error opening file: %v", err)
 	}
+	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
