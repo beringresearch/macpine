@@ -34,7 +34,7 @@ func init() {
 }
 
 func includeLaunchFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&imageVersion, "image", "i", "alpine_3.16.0", "Image to be launched. Supported images - alpine_3.16.0, alpine_3.18.6")
+	cmd.Flags().StringVarP(&imageVersion, "image", "i", "alpine_3.16.0", "Image to be launched. Supported images - alpine_3.16.0, alpine_3.18.0")
 	cmd.Flags().StringVarP(&machineArch, "arch", "a", "", "Machine architecture. Defaults to host architecture.")
 	cmd.Flags().StringVarP(&machineCPU, "cpu", "c", "2", "Number of CPUs to allocate.")
 	cmd.Flags().StringVarP(&machineMemory, "memory", "m", "2048", "Amount of memory (in kB) to allocate.")
@@ -49,8 +49,8 @@ func includeLaunchFlags(cmd *cobra.Command) {
 func CorrectArguments(imageVersion string, machineArch string, machineCPU string,
 	machineMemory string, machineDisk string, sshPort string, machinePort string) error {
 
-	if !utils.StringSliceContains([]string{"alpine_3.16.0", "alpine_3.18.6", "alpine_3.16.0_lxd", "debian_11.3.0"}, imageVersion) {
-		return errors.New("unsupported image. only -i alpine_3.16.0 | alpine_3.18.6 | debian_11.3.0 are currently available")
+	if !utils.StringSliceContains([]string{"alpine_3.16.0", "alpine_3.18.0", "alpine_3.16.0_lxd", "debian_11.3.0"}, imageVersion) {
+		return errors.New("unsupported image. only -i alpine_3.16.0 | alpine_3.18.0 | debian_11.3.0 are currently available")
 	}
 
 	if machineArch != "" {
