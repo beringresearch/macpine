@@ -36,6 +36,14 @@ func importMachine(cmd *cobra.Command, args []string) {
 		log.Fatal("unable to import: " + err.Error())
 	}
 
+	macpineHomeDir := filepath.Join(userHomeDir, ".macpine")
+	if _, err := os.Stat(macpineHomeDir); os.IsNotExist(err) {
+		err := os.Mkdir(macpineHomeDir, 0700)
+		if err != nil {
+			log.Fatal("$HOME/.macpine directory does not exist and unable to create it: " + err.Error())
+		}
+	}
+
 	archive := args[0]
 
 	if strings.HasPrefix(archive, "http") {
