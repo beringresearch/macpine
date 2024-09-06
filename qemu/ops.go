@@ -503,6 +503,13 @@ func (c *MachineConfig) Start() error {
 		return errors.New("unable to start instance")
 	}
 
+	err = c.Exec("hwclock -s", true)
+	if err != nil {
+		c.Stop()
+		c.CleanPIDFile()
+		return err
+	}
+
 	log.Println(c.Alias + " started (" + strconv.Itoa(pid) + ")")
 	return nil
 }
