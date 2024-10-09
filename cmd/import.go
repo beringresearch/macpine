@@ -120,6 +120,7 @@ func importMachine(cmd *cobra.Command, args []string) {
 	machineConfig.Alias = importName
 	machineConfig.Location = targetDir
 	machineConfig.MachineIP = "localhost"
+	machineConfig.MACAddress = ""
 
 	err = qemu.SaveMachineConfig(machineConfig)
 	if err != nil {

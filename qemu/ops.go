@@ -364,6 +364,15 @@ func (c *MachineConfig) Start() error {
 
 	if c.VMNet {
 		networkDevice = "vmnet-shared,id=net0"
+
+		if c.MACAddress == "" {
+			macAddress, err := utils.GenerateMACAddress()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			c.MACAddress = macAddress
+		}
 	}
 
 	// Only parse ports of using qemu's default slirp network
@@ -510,7 +519,22 @@ func (c *MachineConfig) Start() error {
 		return err
 	}
 
+	config, err := yaml.Marshal(&c)
+	if err != nil {
+		c.Stop()
+		c.CleanPIDFile()
+		return err
+	}
+
+	err = os.WriteFile(filepath.Join(c.Location, "config.yaml"), config, 0644)
+	if err != nil {
+		c.Stop()
+		c.CleanPIDFile()
+		return err
+	}
+
 	log.Println(c.Alias + " started (" + strconv.Itoa(pid) + ")")
+
 	return nil
 }
 
