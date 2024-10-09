@@ -27,10 +27,12 @@ brew install lxc
 Now that that the system is ready, we can create a lightweight Macpine instance, which has been pre-configured to run LXD. In your terminal run:
 
 ```bash
-alpine launch --image alpine_3.16.0_lxd --name lxd --port 8443 --ssh 2222 --mount $(pwd)
+alpine import https://www.dropbox.com/scl/fi/jtlp1wb03obprsq6v60qu/lxd-aarch64.tar.gz?rlkey=gqny4kw40wxw5gor22g5ovlbe&st=3o97khpo&dl=1
+
+sudo alpine start lxd-aarch64
 ```
 
-This will create a new instance called `lxd` and forward port `8443` (the default port that LXD client uses to communicate with the LXD server) of the instance to host. Macpine will attempt to match the native CPU architecture of your host to the correct instance image. However, if you can explicitly specify the architecture by adding either `--arch aarch64` or `--arch x86_64` to the above command. This will mount your current working directory to `/root/mnt` inside of the `lxd` instance.
+This will create a new instance called `lxd-aarch64`.
 
 ## Configure LXD
 
@@ -39,20 +41,20 @@ Before you can create an instance, you need to configure LXD.
 Run the following command to accept all automatic defaults:
 
 ```bash
-alpine exec lxd "lxd init --auto"
+alpine exec lxd-aarch64 "lxd init --auto"
 ```
 
 For the purposes of this tutorial, it is recommended to accept default settings.
 
->> NOTE: the above command is executed inside your `lxd` instance and is sandboxed from your host.
+>> NOTE: the above command is executed inside your `lxd-aarch64` instance and is sandboxed from your host.
 
 ## Configure LXD remote
 
 Set up your LXD remote to communicate with the LXD client on your host.
 
 ```bash
-alpine exec lxd "lxc config set core.https_address 0.0.0.0"
-alpine exec lxd "lxc config set core.trust_password root"
+alpine exec lxd-aarch64 "lxc config set core.https_address 0.0.0.0"
+alpine exec lxd-aarch64 "lxc config set core.trust_password root"
 ```
 
 >> NOTE: for the purposes of this demonstration, the remote password is configured as `root`. This password can be configured with `lxc config set core.trust_password` above
@@ -60,10 +62,12 @@ alpine exec lxd "lxc config set core.trust_password root"
 ## Add the remote to your LXD host:
 
 ```bash
-lxc remote add macpine 127.0.0.1 --accept-certificate --password root
+lxc remote add macpine [machineip] --accept-certificate --password root
 ```
 
->> NOTE: if you create an alpine lxd instance, then destroy it, then try to reconfigure another on later on your host, you may need to delete `macpine` remote from `~/.config/lxc/config.yml` due to new certificates each time?
+You VM's IP address is obtained by running `alpine info lxd-aarch64`.
+
+>> NOTE: if you create an alpine lxd instance, then destroy it, then try to reconfigure another on later on your host, you may need to delete `macpine` remote from `~/.config/lxc/config.yml` due to new certificates each time.
 
 Finally, set this remote as the default:
 
@@ -78,26 +82,25 @@ That's it - you can now run LXD containers through Macpine at nearly-native spee
 LXD containers can now be launched and manipulated through the `lxc` client:
 
 ```bash
-lxc launch images:debian/bullseye debian
+lxc launch ubuntu:24.04 ubuntu
 ```
 
 ## Mounting host directory -> lxd Macpine instance -> lxd container
 
 ```bash
-lxc config device add debian share disk source=/root/mnt path=/root/mnt
+lxc config device add ubuntu share disk source=/root/mnt path=/root/mnt
 ```
 
 ## Connecting to your first LXD container
 
 ```bash
-lxc exec debian -- bash
+lxc exec ubuntu -- bash
 ```
 
 ## Cleanup
 
 ```bash
-lxc stop debian
+lxc stop ubuntu
 lxc delete debian
-alpine stop lxd
-alpine delete lxd
+alpine delete lxd-aarch64
 ```
