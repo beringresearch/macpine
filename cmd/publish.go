@@ -66,7 +66,7 @@ func publish(cmd *cobra.Command, args []string) {
 
 		vmStatus, _ := host.Status(machineConfig)
 		if vmStatus == "Running" {
-			err = machineConfig.Exec("sync", true)
+			_, err = machineConfig.Exec("sync", true)
 			if err != nil {
 				errs[i] = utils.CmdResult{
 					Name: vmName, Err: errors.New("error synchonizing filesystem before publish, stop instance and retry")}
