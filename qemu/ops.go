@@ -55,7 +55,6 @@ func (c *MachineConfig) Exec(cmd string, root bool) error {
 
 			for {
 				ip = c.GetIPAddressByMac()
-
 				if ip != "" {
 					break
 				}
@@ -127,9 +126,20 @@ func (c *MachineConfig) Exec(cmd string, root bool) error {
 
 	var conn *ssh.Client
 
-	conn, err = ssh.Dial("tcp", host, conf)
-	if err != nil {
-		return err
+	log.Println("waiting for TCP")
+	for i := 0; i < 11; i++ {
+		conn, err = ssh.Dial("tcp", host, conf)
+
+		if err == nil {
+			break
+		}
+		if i == 10 {
+			return err
+		}
+
+		fmt.Print(".")
+		time.Sleep(4 * time.Second)
+
 	}
 	defer conn.Close()
 
@@ -150,9 +160,17 @@ func (c *MachineConfig) Exec(cmd string, root bool) error {
 		session.Stderr = os.Stdout
 		session.Stdin = os.Stdin
 
-		if err := session.Run(cmd); err != nil {
-			return err
+		for i := 0; i < 5; i++ {
+			err := session.Run(cmd)
+			if err == nil {
+				break
+			}
+			if i == 4 {
+				return err
+			}
+
 		}
+
 	}
 	return nil
 }
@@ -437,7 +455,8 @@ func (c *MachineConfig) Start() error {
 
 	aarch64Args := []string{
 		"-M", "virt,highmem=" + highmem,
-		"-bios", filepath.Join(c.Location, "qemu_efi.fd")}
+		"-bios", filepath.Join(c.Location, "qemu_efi.fd"),
+	}
 
 	x86Args := []string{
 		"-global", "PIIX4_PM.disable_s3=1",
@@ -512,12 +531,12 @@ func (c *MachineConfig) Start() error {
 		return errors.New("unable to start instance")
 	}
 
-	err = c.Exec("hwclock -s", true)
-	if err != nil {
-		c.Stop()
-		c.CleanPIDFile()
-		return err
-	}
+	// err = c.Exec("hwclock -s", true)
+	// if err != nil {
+	// 	c.Stop()
+	// 	c.CleanPIDFile()
+	// 	return err
+	// }
 
 	config, err := yaml.Marshal(&c)
 	if err != nil {

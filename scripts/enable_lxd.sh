@@ -1,8 +1,8 @@
 apk update
-apk add zfs
+apk add zfs zfs-lts
+
 reboot
 
-# ssh back into the vm
 /sbin/modprobe zfs
 
 #echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories

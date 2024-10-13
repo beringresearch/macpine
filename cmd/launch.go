@@ -34,11 +34,11 @@ func init() {
 }
 
 func includeLaunchFlags(cmd *cobra.Command) {
-	cmd.Flags().StringVarP(&imageVersion, "image", "i", "alpine_3.16.0", "Image to be launched.")
+	cmd.Flags().StringVarP(&imageVersion, "image", "i", "alpine_3.20.3", "Image to be launched.")
 	cmd.Flags().StringVarP(&machineArch, "arch", "a", "", "Machine architecture. Defaults to host architecture.")
 	cmd.Flags().StringVarP(&machineCPU, "cpu", "c", "2", "Number of CPUs to allocate.")
 	cmd.Flags().StringVarP(&machineMemory, "memory", "m", "2048", "Amount of memory (in kB) to allocate.")
-	cmd.Flags().StringVarP(&machineDisk, "disk", "d", "10G", "Disk space (in bytes) to allocate. K, M, G suffixes are supported.")
+	cmd.Flags().StringVarP(&machineDisk, "disk", "d", "5G", "Disk space (in bytes) to allocate. K, M, G suffixes are supported.")
 	cmd.Flags().StringVar(&machineMount, "mount", "", "Path to a host directory to be shared with the instance.")
 	cmd.Flags().StringVarP(&sshPort, "ssh", "s", "22", "Host port to forward for SSH (required).")
 	cmd.Flags().StringVarP(&machinePort, "port", "p", "", "Forward additional host ports. Multiple ports can be separated by `,`.")
@@ -49,8 +49,8 @@ func includeLaunchFlags(cmd *cobra.Command) {
 func CorrectArguments(imageVersion string, machineArch string, machineCPU string,
 	machineMemory string, machineDisk string, sshPort string, machinePort string) error {
 
-	if !utils.StringSliceContains([]string{"alpine_3.16.0", "alpine_3.16.0_lxd"}, imageVersion) {
-		return errors.New("unsupported image. only -i alpine_3.16.0 is currently available")
+	if !utils.StringSliceContains([]string{"alpine_3.20.3"}, imageVersion) {
+		return errors.New("unsupported image. only -i alpine_3.20.3 are currently available")
 	}
 
 	if machineArch != "" {
