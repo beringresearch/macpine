@@ -1,17 +1,12 @@
 hwclock -s
 apk update
-apk add zfs zfs-lts
+apk add --no-cache zfs zfs-lts
 
 /sbin/modprobe zfs
 
-#echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories
-#echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
-#echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
-
-echo "http://dl-cdn.alpinelinux.org/alpine/v3.20/community" >> /etc/apk/repositories
+echo "https://dl-cdn.alpinelinux.org/alpine/v3.16/community/" >> /etc/apk/repositories
 
 apk update
-#apk upgrade
 
 apk add --no-cache lxd lxd-client dbus
 
