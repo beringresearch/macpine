@@ -24,12 +24,10 @@ brew install lxc
 
 ## Launch an LXD instance
 
-Now that that the system is ready, we can create a lightweight Macpine instance, which has been pre-configured to run LXD. In your terminal run:
+Now that that the system is ready, we can create a lightweight Macpine instance. In your terminal run:
 
 ```bash
-alpine import https://www.dropbox.com/scl/fi/jtlp1wb03obprsq6v60qu/lxd-aarch64.tar.gz?rlkey=gqny4kw40wxw5gor22g5ovlbe&st=3o97khpo&dl=1
-
-sudo alpine start lxd-aarch64
+sudo alpine launch --name lxd-aarch64 --shared
 ```
 
 This will create a new instance called `lxd-aarch64`.
@@ -41,6 +39,8 @@ Before you can create an instance, you need to configure LXD.
 Run the following command to accept all automatic defaults:
 
 ```bash
+alpine exec lxd-aarch64 "wget https://raw.githubusercontent.com/beringresearch/macpine/refs/heads/main/scripts/enable_lxd.sh"
+alpine exec lxd-aarch64 "ash enable_lxd.sh"
 alpine exec lxd-aarch64 "lxd init --auto"
 ```
 

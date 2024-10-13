@@ -180,7 +180,8 @@ func launch(cmd *cobra.Command, args []string) {
 		log.Fatal(err)
 	}
 
-	fmt.Println("launched: " + machineName)
+	fmt.Println("")
+	log.Println("launched: " + machineName)
 }
 
 func flagsLaunch(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
