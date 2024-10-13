@@ -1,15 +1,14 @@
+hwclock -s
 apk update
-apk add zfs
-reboot
+apk add zfs zfs-lts
 
-# ssh back into the vm
 /sbin/modprobe zfs
 
 #echo "http://dl-cdn.alpinelinux.org/alpine/edge/main" > /etc/apk/repositories
 #echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
 #echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
 
-echo "http://dl-cdn.alpinelinux.org/alpine/v3.16/community" >> /etc/apk/repositories
+echo "http://dl-cdn.alpinelinux.org/alpine/v3.20/community" >> /etc/apk/repositories
 
 apk update
 #apk upgrade

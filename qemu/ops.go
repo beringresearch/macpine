@@ -2,6 +2,7 @@ package qemu
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"log"
@@ -43,9 +44,9 @@ type MachineConfig struct {
 }
 
 // Exec starts an interactive shell terminal in VM
-func (c *MachineConfig) Exec(cmd string, root bool) error {
+func (c *MachineConfig) Exec(cmd string, root bool) (string, error) {
 	if cmd == "" {
-		return nil
+		return "", nil
 	}
 	ip := c.MachineIP
 
@@ -55,7 +56,7 @@ func (c *MachineConfig) Exec(cmd string, root bool) error {
 
 			for {
 				ip = c.GetIPAddressByMac()
-
+				//ip = c.GetIPAddressFromMachine()
 				if ip != "" {
 					break
 				}
@@ -69,14 +70,14 @@ func (c *MachineConfig) Exec(cmd string, root bool) error {
 			if err != nil {
 				c.Stop()
 				c.CleanPIDFile()
-				return err
+				return "", err
 			}
 
 			err = os.WriteFile(filepath.Join(c.Location, "config.yaml"), config, 0644)
 			if err != nil {
 				c.Stop()
 				c.CleanPIDFile()
-				return err
+				return "", err
 			}
 		}
 
@@ -96,7 +97,7 @@ func (c *MachineConfig) Exec(cmd string, root bool) error {
 	}
 	cred, err := utils.GetCredential(pwd)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	var conf *ssh.ClientConfig
@@ -127,34 +128,59 @@ func (c *MachineConfig) Exec(cmd string, root bool) error {
 
 	var conn *ssh.Client
 
-	conn, err = ssh.Dial("tcp", host, conf)
-	if err != nil {
-		return err
+	for i := 0; i < 11; i++ {
+		conn, err = ssh.Dial("tcp", host, conf)
+
+		if err == nil {
+			break
+		}
+		if i == 10 {
+			return "", err
+		}
+
+		fmt.Print(".")
+		time.Sleep(4 * time.Second)
+
 	}
 	defer conn.Close()
 
 	session, err := conn.NewSession()
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer session.Close()
+
+	var stdoutBuf bytes.Buffer
+	var stderrBuf bytes.Buffer
+	var stdinBuf bytes.Buffer
 
 	// XXX get shells from /etc/shells instead?
 	if (cmd == "ash") || (cmd == "bash") {
 		err := attachShell(session)
 		if err != nil {
-			return err
+			return "", err
 		}
 	} else {
-		session.Stdout = os.Stdout
-		session.Stderr = os.Stdout
-		session.Stdin = os.Stdin
 
-		if err := session.Run(cmd); err != nil {
-			return err
+		session.Stdout = &stdoutBuf
+		session.Stderr = &stderrBuf
+		session.Stdin = &stdinBuf
+
+		for i := 0; i < 5; i++ {
+			err := session.Run(cmd)
+			if err == nil {
+				break
+			}
+			if i == 4 {
+				return "", err
+			}
+
 		}
+
 	}
-	return nil
+
+	output := stdoutBuf.String()
+	return output, nil
 }
 
 func attachShell(session *ssh.Session) error {
@@ -300,7 +326,7 @@ func (c *MachineConfig) Resume() error {
 			if err := p.Signal(syscall.SIGCONT); err != nil {
 				return err
 			}
-			err := c.Exec("hwclock -s", true)
+			_, err := c.Exec("hwclock -s", true)
 			if err != nil {
 				log.Println("failed to synchonrize clock, instance system clock may be skewed")
 				return err
@@ -437,7 +463,8 @@ func (c *MachineConfig) Start() error {
 
 	aarch64Args := []string{
 		"-M", "virt,highmem=" + highmem,
-		"-bios", filepath.Join(c.Location, "qemu_efi.fd")}
+		"-bios", filepath.Join(c.Location, "qemu_efi.fd"),
+	}
 
 	x86Args := []string{
 		"-global", "PIIX4_PM.disable_s3=1",
@@ -500,7 +527,7 @@ func (c *MachineConfig) Start() error {
 		mntcmd[0] = "mkdir -p /mnt/" + basename
 		mntcmd[1] = "chmod 777 /mnt/" + basename
 		mntcmd[2] = "mount -t 9p -o trans=virtio,version=9p2000.L,msize=104857600 host0 /mnt/" + basename
-		if err := c.Exec(strings.Join(mntcmd, " && "), true); err != nil {
+		if _, err := c.Exec(strings.Join(mntcmd, " && "), true); err != nil {
 			log.Println("error mounting directory: " + err.Error())
 		} else {
 			log.Println("mounted " + c.Mount + " on /mnt/" + basename)
@@ -512,12 +539,12 @@ func (c *MachineConfig) Start() error {
 		return errors.New("unable to start instance")
 	}
 
-	err = c.Exec("hwclock -s", true)
-	if err != nil {
-		c.Stop()
-		c.CleanPIDFile()
-		return err
-	}
+	// err = c.Exec("hwclock -s", true)
+	// if err != nil {
+	// 	c.Stop()
+	// 	c.CleanPIDFile()
+	// 	return err
+	// }
 
 	config, err := yaml.Marshal(&c)
 	if err != nil {
@@ -537,6 +564,20 @@ func (c *MachineConfig) Start() error {
 
 	return nil
 }
+
+// func (c *MachineConfig) GetIPAddressFromMachine() string {
+// 	ip := ""
+
+// 	cmd := "ip route get 1.2.3.4 | awk '{print $7}'"
+// 	ip, err := c.Exec(cmd, false)
+// 	if err != nil {
+// 		return ""
+// 	}
+
+// 	fmt.Println(ip)
+
+// 	return ip
+// }
 
 // AssignIP obtains machine IP address from bootpd.plist. Only applicale to machines created on
 // VMNet
@@ -657,17 +698,17 @@ func (c *MachineConfig) Launch() error {
 	}
 
 	// Make sure DNS is set up correctly
-	err = c.Exec("echo 'nameserver 8.8.8.8' > /etc/resolv.conf", true)
+	_, err = c.Exec("echo 'nameserver 8.8.8.8' > /etc/resolv.conf", true)
 	if err != nil {
 		return errors.New("unable to set up DNS: " + err.Error())
 	}
 
-	err = c.Exec("apk update && apk add --no-cache dhclient", true)
+	_, err = c.Exec("apk update && apk add --no-cache dhclient", true)
 	if err != nil {
 		return errors.New("unable to install dhclient: " + err.Error())
 	}
 
-	err = c.Exec(`cat >/etc/dhcp/dhclient.conf <<EOL
+	_, err = c.Exec(`cat >/etc/dhcp/dhclient.conf <<EOL
 	option rfc3442-classless-static-routes code 121 = array of unsigned integer 8;
 
 	send host-name = gethostname();
@@ -683,7 +724,7 @@ func (c *MachineConfig) Launch() error {
 		return errors.New("unable to configure dhclient: " + err.Error())
 	}
 
-	err = c.Exec("rc-service networking restart", true)
+	_, err = c.Exec("rc-service networking restart", true)
 	if err != nil {
 		return errors.New("unable to restart networking services: " + err.Error())
 	}
@@ -691,24 +732,24 @@ func (c *MachineConfig) Launch() error {
 	// Resize disk on an alpine guest
 	if strings.Split(c.Image, "_")[0] == "alpine" {
 		//TODO add these dependencies into pre-baked macpine image
-		err := c.Exec("apk add --no-cache e2fsprogs-extra sfdisk partx", true) // root=true i.e. run as root
+		_, err := c.Exec("apk add --no-cache e2fsprogs-extra sfdisk partx", true) // root=true i.e. run as root
 		if err != nil {
 			return errors.New("unable to install dependencies: " + err.Error())
 		}
 
 		//send sfdisk command ,+ (<start>,<size>,<type>,<bootable>)
 		//default start (0), size + (all available), default type (linux data), default bootable (false)
-		err = c.Exec(`echo ",+" | sfdisk --no-reread --partno 3 /dev/vda && partx -u /dev/vda`, true)
+		_, err = c.Exec(`echo ",+" | sfdisk --no-reread --partno 3 /dev/vda && partx -u /dev/vda`, true)
 		if err != nil {
 			return errors.New("error updating partition table: " + err.Error())
 		}
 
-		err = c.Exec("resize2fs /dev/vda3", true)
+		_, err = c.Exec("resize2fs /dev/vda3", true)
 		if err != nil {
 			return errors.New("error expanding filesystem: " + err.Error())
 		}
 
-		err = c.Exec("df -h", true)
+		_, err = c.Exec("df -h", true)
 		if err != nil {
 
 			return err
