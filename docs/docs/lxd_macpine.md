@@ -53,9 +53,11 @@ For the purposes of this tutorial, it is recommended to accept default settings.
 Set up your LXD remote to communicate with the LXD client on your host.
 
 ```bash
-alpine exec lxd-aarch64 "lxc config set core.https_address 0.0.0.0"
+alpine exec lxd-aarch64 "lxc config set core.https_address [machineip]"
 alpine exec lxd-aarch64 "lxc config set core.trust_password root"
 ```
+
+Your VM's IP address is obtained by running `alpine info lxd-aarch64`.
 
 >> NOTE: for the purposes of this demonstration, the remote password is configured as `root`. This password can be configured with `lxc config set core.trust_password` above
 
@@ -65,7 +67,7 @@ alpine exec lxd-aarch64 "lxc config set core.trust_password root"
 lxc remote add macpine [machineip] --accept-certificate --password root
 ```
 
-You VM's IP address is obtained by running `alpine info lxd-aarch64`.
+Your VM's IP address is obtained by running `alpine info lxd-aarch64`.
 
 >> NOTE: if you create an alpine lxd instance, then destroy it, then try to reconfigure another on later on your host, you may need to delete `macpine` remote from `~/.config/lxc/config.yml` due to new certificates each time.
 
