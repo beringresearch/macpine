@@ -37,7 +37,7 @@ func includeLaunchFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&imageVersion, "image", "i", "alpine_3.20.3", "Image to be launched.")
 	cmd.Flags().StringVarP(&machineArch, "arch", "a", "", "Machine architecture. Defaults to host architecture.")
 	cmd.Flags().StringVarP(&machineCPU, "cpu", "c", "2", "Number of CPUs to allocate.")
-	cmd.Flags().StringVarP(&machineMemory, "memory", "m", "2048", "Amount of memory (in kB) to allocate.")
+	cmd.Flags().StringVarP(&machineMemory, "memory", "m", "2048", "Amount of memory (in MB) to allocate.")
 	cmd.Flags().StringVarP(&machineDisk, "disk", "d", "5G", "Disk space (in bytes) to allocate. K, M, G suffixes are supported.")
 	cmd.Flags().StringVar(&machineMount, "mount", "", "Path to a host directory to be shared with the instance.")
 	cmd.Flags().StringVarP(&sshPort, "ssh", "s", "22", "Host port to forward for SSH (required).")
