@@ -1,7 +1,6 @@
 package qemu
 
 import (
-	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
@@ -53,18 +52,21 @@ func (c *MachineConfig) Exec(cmd string, root bool) (string, error) {
 	if c.VMNet {
 		if ip == "localhost" || ip == "" {
 			log.Println("getting instance IP address from DHCP leases")
-
 			for {
-				ip = c.GetIPAddressByMac()
+				dhcpLeasesContent, err := os.ReadFile("/var/db/dhcpd_leases")
+				if err != nil {
+					return "", err
+				}
+				lip, _ := c.GetIPAddressByMac(dhcpLeasesContent)
 				//ip = c.GetIPAddressFromMachine()
-				if ip != "" {
+				if lip != "" {
+					c.MachineIP = lip
 					break
 				}
 				fmt.Print(".")
 				time.Sleep(4 * time.Second)
 			}
 
-			c.MachineIP = ip
 			config, err := yaml.Marshal(&c)
 
 			if err != nil {
@@ -83,7 +85,7 @@ func (c *MachineConfig) Exec(cmd string, root bool) (string, error) {
 
 	}
 
-	host := ip + ":" + c.SSHPort
+	host := c.MachineIP + ":" + c.SSHPort
 	user := c.SSHUser
 	pwd := c.SSHPassword
 
@@ -130,7 +132,6 @@ func (c *MachineConfig) Exec(cmd string, root bool) (string, error) {
 
 	for i := 0; i < 11; i++ {
 		conn, err = ssh.Dial("tcp", host, conf)
-
 		if err == nil {
 			break
 		}
@@ -140,8 +141,8 @@ func (c *MachineConfig) Exec(cmd string, root bool) (string, error) {
 
 		fmt.Print(".")
 		time.Sleep(4 * time.Second)
-
 	}
+
 	defer conn.Close()
 
 	session, err := conn.NewSession()
@@ -174,9 +175,7 @@ func (c *MachineConfig) Exec(cmd string, root bool) (string, error) {
 			if i == 4 {
 				return "", err
 			}
-
 		}
-
 	}
 
 	output := stdoutBuf.String()
@@ -260,6 +259,7 @@ func (c *MachineConfig) Status() (string, int) {
 			status = "Paused"
 		}
 	}
+
 	return status, pid
 }
 
@@ -581,43 +581,16 @@ func (c *MachineConfig) Start() error {
 
 // AssignIP obtains machine IP address from bootpd.plist. Only applicale to machines created on
 // VMNet
-func (c *MachineConfig) GetIPAddressByMac() string {
-	ip := ""
-	mac := ""
+func (c *MachineConfig) GetIPAddressByMac(dhcpLeasesContent []byte) (string, error) {
+	result := utils.ParseDhcpLeasesFile(string(dhcpLeasesContent))
+	dhcpData := utils.ConvertStringArrayToDhcpDataArray(result)
+	dhcpConfig := utils.MatchHwAddress(dhcpData, c.MACAddress)
 
-	file, err := os.Open("/var/db/dhcpd_leases")
-
-	if err != nil {
-		log.Fatalf("Error opening file: %v", err)
+	if dhcpConfig != nil {
+		return dhcpConfig.IpAddress, nil
+	} else {
+		return "", errors.New("no machine dhcp configuration found")
 	}
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-
-		// Process each line in the dhcpd_leases file
-		line := scanner.Text()
-
-		// Check if the line contains an IP address
-		if strings.Contains(line, "ip_address") {
-			ip = strings.Split(strings.Fields(line)[0], "ip_address=")[1]
-		}
-
-		// Check if the line contains a MAC address
-		if strings.Contains(line, "hw_address") {
-			mac = strings.Split(strings.Fields(line)[0], "hw_address=1,")[1]
-		}
-
-		if mac == c.MACAddress {
-			return ip
-		}
-
-	}
-
-	// Check for any errors during scanning
-	if err := scanner.Err(); err != nil {
-		fmt.Println("error scanning /var/db/dhcpd_lease:", err)
-	}
-	return ""
 }
 
 // Launch macpine downloads a fresh image and creates a VM directory
@@ -696,6 +669,9 @@ func (c *MachineConfig) Launch() error {
 	if err != nil {
 		return errors.New("unable to launch a new machine. " + err.Error())
 	}
+
+	log.Println("waiting for machine...")
+	time.Sleep(10 * time.Second)
 
 	// Make sure DNS is set up correctly
 	_, err = c.Exec("echo 'nameserver 8.8.8.8' > /etc/resolv.conf", true)
