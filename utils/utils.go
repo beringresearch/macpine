@@ -470,6 +470,10 @@ func ConvertStringArrayToDhcpDataArray(dataArray [][]string) []DhcpData {
 	var data []DhcpData
 
 	for _, entry := range dataArray {
+		if len(entry) < 5 {
+			//if dhcp lease entry has less than 5 elements skip it
+			continue
+		}
 		hwAddressParts := strings.SplitN(entry[2], ",", 2)
 		hAddress := hwAddressParts[1]
 
