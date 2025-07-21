@@ -472,15 +472,16 @@ func ConvertStringArrayToDhcpDataArray(dataArray [][]string) []DhcpData {
 	for _, entry := range dataArray {
 		hwAddressParts := strings.SplitN(entry[2], ",", 2)
 		hAddress := hwAddressParts[1]
-
-		dataItem := DhcpData{
-			Name:       entry[0],
-			IpAddress:  entry[1],
-			HwAddress:  hAddress,
-			Identifier: entry[3],
-			Lease:      entry[4],
+		if len(entry) == 5 {
+			dataItem := DhcpData{
+				Name:       entry[0],
+				IpAddress:  entry[1],
+				HwAddress:  hAddress,
+				Identifier: entry[3],
+				Lease:      entry[4],
+			}
+			data = append(data, dataItem)
 		}
-		data = append(data, dataItem)
 	}
 	return data
 }
