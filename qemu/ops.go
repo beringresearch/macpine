@@ -388,17 +388,17 @@ func (c *MachineConfig) Start() error {
 
 	networkDevice := "user,id=net0,hostfwd=tcp::" + c.SSHPort + "-:22"
 
+	if c.MACAddress == "" {
+		macAddress, err := utils.GenerateMACAddress()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		c.MACAddress = macAddress
+	}
+
 	if c.VMNet {
 		networkDevice = "vmnet-shared,id=net0"
-
-		if c.MACAddress == "" {
-			macAddress, err := utils.GenerateMACAddress()
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			c.MACAddress = macAddress
-		}
 	}
 
 	// Only parse ports of using qemu's default slirp network
