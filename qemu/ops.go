@@ -746,6 +746,7 @@ func (c *MachineConfig) CompressQemuDiskImage() error {
 
 	err := cmd.Run()
 	if err != nil {
+		fmt.Println(err.Error())
 		return err
 	}
 
