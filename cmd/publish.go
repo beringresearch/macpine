@@ -65,6 +65,12 @@ func publish(cmd *cobra.Command, args []string) {
 		}
 
 		vmStatus, _ := host.Status(machineConfig)
+		if vmStatus == "Paused" {
+			errs[i] = utils.CmdResult{
+				Name: vmName, Err: errors.New("error publishing paused instance due to possible data loss. start instance, sync data to disc and try again")}
+			continue
+		}
+
 		if vmStatus == "Running" {
 			_, err = machineConfig.Exec("sync", true)
 			if err != nil {
@@ -72,7 +78,7 @@ func publish(cmd *cobra.Command, args []string) {
 					Name: vmName, Err: errors.New("error synchonizing filesystem before publish, stop instance and retry")}
 				continue
 			}
-			err = host.Pause(machineConfig)
+			err = host.Stop(machineConfig)
 			if err != nil {
 				errs[i] = utils.CmdResult{
 					Name: vmName, Err: errors.New("error pausing instance before publish, stop instance and retry")}
@@ -129,7 +135,15 @@ func publish(cmd *cobra.Command, args []string) {
 		}
 
 		if vmStatus == "Running" {
-			err = host.Resume(machineConfig)
+			err = host.Start(machineConfig)
+			if err != nil {
+				errs[i] = utils.CmdResult{Name: vmName, Err: err}
+				continue
+			}
+		}
+
+		if vmStatus == "Paused" {
+			err = host.Pause(machineConfig)
 			if err != nil {
 				errs[i] = utils.CmdResult{Name: vmName, Err: err}
 				continue
