@@ -1,6 +1,6 @@
 module github.com/beringresearch/macpine
 
-go 1.23.0
+go 1.23
 
 require (
 	filippo.io/age v1.2.1
