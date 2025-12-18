@@ -380,7 +380,7 @@ func (c *MachineConfig) GetAccel() string {
 		}
 	}
 	log.Println("Note: defaulting to QEMU tiny codegen. Emulation overhead may be significant.")
-	return "tcg,tb-size=1024,thread=multi"
+	return "tcg,tb-size=2048,thread=multi"
 }
 
 // Start starts up an Alpine VM
