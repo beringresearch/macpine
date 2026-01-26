@@ -33,6 +33,7 @@ type MachineConfig struct {
 	MachineIP    string   `yaml:"machineip"`
 	Port         string   `yaml:"port"`
 	VMNet        bool     `yaml:"vmnet"`
+	DnsAddress   string   `yaml:"dns"`
 	SSHPort      string   `yaml:"sshport"`
 	SSHUser      string   `yaml:"sshuser"`
 	SSHPassword  string   `yaml:"sshpassword"`
@@ -674,7 +675,8 @@ func (c *MachineConfig) Launch() error {
 	time.Sleep(10 * time.Second)
 
 	// Make sure DNS is set up correctly
-	_, err = c.Exec("echo 'nameserver 8.8.8.8' > /etc/resolv.conf", true)
+	cmd := fmt.Sprintf("echo 'nameserver %s' > /etc/resolv.conf", c.DnsAddress)
+	_, err = c.Exec(cmd, true)
 	if err != nil {
 		return errors.New("unable to set up DNS: " + err.Error())
 	}
@@ -684,18 +686,22 @@ func (c *MachineConfig) Launch() error {
 		return errors.New("unable to install dhclient: " + err.Error())
 	}
 
-	_, err = c.Exec(`cat >/etc/dhcp/dhclient.conf <<EOL
-	option rfc3442-classless-static-routes code 121 = array of unsigned integer 8;
+	cmd = fmt.Sprintf(`
+cat >/etc/dhcp/dhclient.conf <<EOL
+option rfc3442-classless-static-routes code 121 = array of unsigned integer 8;
 
-	send host-name = gethostname();
-	request subnet-mask, broadcast-address, time-offset, routers,
-	        domain-name, domain-name-servers, domain-search, host-name,
-	        dhcp6.name-servers, dhcp6.domain-search, dhcp6.fqdn, dhcp6.sntp-servers,
-	        netbios-name-servers, netbios-scope, interface-mtu,
-	        rfc3442-classless-static-routes, ntp-servers;
+send host-name = gethostname();
+request subnet-mask, broadcast-address, time-offset, routers,
+        domain-name, domain-name-servers, domain-search, host-name,
+        dhcp6.name-servers, dhcp6.domain-search, dhcp6.fqdn, dhcp6.sntp-servers,
+        netbios-name-servers, netbios-scope, interface-mtu,
+        rfc3442-classless-static-routes, ntp-servers;
 
-	prepend domain-name-servers 8.8.8.8, 8.8.4.4;
-	EOL`, true)
+prepend domain-name-servers %s, %s;
+EOL
+`, c.DnsAddress, "8.8.4.4")
+
+	_, err = c.Exec(cmd, true)
 	if err != nil {
 		return errors.New("unable to configure dhclient: " + err.Error())
 	}
