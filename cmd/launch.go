@@ -26,7 +26,7 @@ var launchCmd = &cobra.Command{
 	ValidArgsFunction: flagsLaunch,
 }
 
-var machineArch, imageVersion, machineCPU, machineMemory, machineDisk, machinePort, sshPort, machineName, machineMount string
+var machineArch, dnsAddress, imageVersion, machineCPU, machineMemory, machineDisk, machinePort, sshPort, machineName, machineMount string
 var vmnet bool
 
 func init() {
@@ -43,6 +43,7 @@ func includeLaunchFlags(cmd *cobra.Command) {
 	cmd.Flags().StringVarP(&sshPort, "ssh", "s", "22", "Host port to forward for SSH (required).")
 	cmd.Flags().StringVarP(&machinePort, "port", "p", "", "Forward additional host ports. Multiple ports can be separated by `,`.")
 	cmd.Flags().StringVarP(&machineName, "name", "n", "", "Instance name for use in `alpine` commands.")
+	cmd.Flags().StringVarP(&dnsAddress, "dns", "", "8.8.8.8", "Preferred DNS address to be used inside the VM.")
 	cmd.Flags().BoolVarP(&vmnet, "shared", "v", false, "Toggle whether to use mac's native vmnet-shared mode.")
 }
 
@@ -168,6 +169,7 @@ func launch(cmd *cobra.Command, args []string) {
 		SSHUser:     "root",
 		SSHPassword: "raw::root",
 		Tags:        []string{},
+		DnsAddress:  dnsAddress,
 	}
 	machineConfig.Location = filepath.Join(userHomeDir, ".macpine", machineConfig.Alias)
 
