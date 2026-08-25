@@ -50,13 +50,19 @@ endmsg
 
 chmod +x /etc/init.d/incusd
 
+# PAM cgroup session support
 echo "session optional pam_cgfs.so -c freezer,memory,name=systemd,unified" >> /etc/pam.d/system-login
-echo "lxc.idmap = u 0 100000 65536" >> /etc/lxc/default.conf
-echo "lxc.idmap = g 0 100000 65536" >> /etc/lxc/default.conf
-echo "root:100000:65536" >> /etc/subuid
-echo "root:100000:65536" >> /etc/subgid
+
+# Standard Incus unprivileged idmap range (must match what Incus itself
+# expects — a small/custom range here causes "newuidmap ... not allowed"
+# errors when starting containers)
+echo "root:1000000:1000000000" > /etc/subuid
+echo "root:1000000:1000000000" > /etc/subgid
+
+# If you plan to run systemd based Linux distributions (Debian, Ubuntu, etc.)
 echo "systemd_container=yes" >> /etc/conf.d/lxc
 
+# newuidmap/newgidmap must be setuid + executable for unprivileged mapping to work
 chmod u+s /usr/bin/newuidmap /usr/bin/newgidmap
 
 # Ensure DNS resolution works before incusd starts — it fetches instance-type
