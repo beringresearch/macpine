@@ -9,6 +9,11 @@ echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositor
 
 apk update
 apk upgrade
+
+modprobe squashfs zfs
+echo "squashfs" >> /etc/modules
+echo "zfs" >> /etc/modules
+
 apk add --no-cache zfs incus incus-client ip6tables lxc linux-pam shadow-uidmap
 
 # Make sure config directories exist before writing into them
