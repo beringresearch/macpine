@@ -43,7 +43,7 @@ jobs:
             bin/alpine_darwin_amd64
 
       - name: "Update Homebrew Formula"
-        uses: dawidd6/action-homebrew-bump-formula@v3
+        uses: dawidd6/action-homebrew-bump-formula@v10
         with:
           token: ${{ secrets.PUBLIC_RW_TOKEN }} # requires token with 'public_repo' scope
           formula: macpine
