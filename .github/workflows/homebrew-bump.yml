@@ -1,0 +1,31 @@
+name: "bump homebrew formula"
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: "Git tag to bump the macpine Homebrew formula to (e.g. v1.2.3)"
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Git tag to bump the macpine Homebrew formula to (e.g. v1.2.3). Use this to retry the bump in isolation without cutting a new release."
+        required: true
+        type: string
+
+jobs:
+  bump-formula:
+    name: "Update Homebrew Formula"
+    runs-on: "macos-latest"
+    steps:
+      - name: "Update Homebrew Formula"
+        uses: dawidd6/action-homebrew-bump-formula@v10
+        with:
+          token: ${{ secrets.PUBLIC_RW_TOKEN }} # requires token with 'public_repo' scope
+          formula: macpine
+          tag: ${{ inputs.tag }}
+          # No livecheck: we already know the exact tag to bump to, so this
+          # bumps directly to it (via `brew bump-formula-pr --version=...`)
+          # instead of shelling out to `brew livecheck`, which can silently
+          # produce empty output and crash the action's JSON parsing.
