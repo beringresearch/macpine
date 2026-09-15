@@ -15,6 +15,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -536,14 +537,15 @@ func (d DhcpData) ExpiresAt() (time.Time, error) {
 	return time.Unix(sec, 0), nil
 }
 
-// MatchHwAddress returns the most recently issued, still-valid lease for the
-// given hardware address, or nil if none is found. dhcpd_leases can retain
-// entries for a MAC address long after they've expired (e.g. from a previous
-// boot of the same VM with a static MAC), so expired entries are ignored
-// rather than treated as the instance's current address.
-func MatchHwAddress(data []DhcpData, targetHwAddress string) *DhcpData {
-	var best *DhcpData
-	var bestExpiry time.Time
+// MatchHwAddressCandidates returns every still-valid (unexpired) lease for
+// the given hardware address, most recently issued first. dhcpd_leases can
+// retain more than one entry for a MAC address - e.g. a leftover,
+// not-yet-expired lease from a previous session of the same VM alongside a
+// freshly issued one for the current session - so callers that need to
+// confirm an address is actually live should try candidates in order rather
+// than trusting only the single latest-expiry one.
+func MatchHwAddressCandidates(data []DhcpData, targetHwAddress string) []DhcpData {
+	var candidates []DhcpData
 
 	for i := range data {
 		if data[i].HwAddress != targetHwAddress {
@@ -553,10 +555,14 @@ func MatchHwAddress(data []DhcpData, targetHwAddress string) *DhcpData {
 		if err != nil || time.Now().After(expiry) {
 			continue
 		}
-		if best == nil || expiry.After(bestExpiry) {
-			best = &data[i]
-			bestExpiry = expiry
-		}
+		candidates = append(candidates, data[i])
 	}
-	return best
+
+	sort.Slice(candidates, func(i, j int) bool {
+		ei, _ := candidates[i].ExpiresAt()
+		ej, _ := candidates[j].ExpiresAt()
+		return ei.After(ej)
+	})
+
+	return candidates
 }
