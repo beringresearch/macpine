@@ -10,13 +10,19 @@ echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositor
 apk update
 apk upgrade
 
-modprobe squashfs zfs
+apk add --no-cache \
+    zfs \
+    incus \
+    incus-client \
+    ip6tables \
+    lxc \
+    linux-pam \
+    shadow-uidmap \
+    linux-lts
+
 echo "squashfs" >> /etc/modules
 echo "zfs" >> /etc/modules
 
-apk add --no-cache zfs incus incus-client ip6tables lxc linux-pam shadow-uidmap
-
-# Make sure config directories exist before writing into them
 mkdir -p /etc/lxc /etc/pam.d /etc/conf.d /var/lib/incus
 
 > /etc/init.d/incusd
@@ -55,23 +61,22 @@ endmsg
 
 chmod +x /etc/init.d/incusd
 
-# PAM cgroup session support
+# --- PAM cgroup session support ---------------------------------------
 echo "session optional pam_cgfs.so -c freezer,memory,name=systemd,unified" >> /etc/pam.d/system-login
 
-# Standard Incus unprivileged idmap range (must match what Incus itself
-# expects — a small/custom range here causes "newuidmap ... not allowed"
-# errors when starting containers)
+# --- Unprivileged idmap range -------------------------------------------
+# Must match what Incus itself expects. A small/custom range here causes
+# "newuidmap ... not allowed" errors when starting containers.
 echo "root:1000000:1000000000" > /etc/subuid
 echo "root:1000000:1000000000" > /etc/subgid
 
-# If you plan to run systemd based Linux distributions (Debian, Ubuntu, etc.)
+# --- systemd guest support (for Debian/Ubuntu containers) ------------
 echo "systemd_container=yes" >> /etc/conf.d/lxc
 
-# newuidmap/newgidmap must be setuid + executable for unprivileged mapping to work
+# --- newuidmap/newgidmap permissions ---------------------------------
 chmod u+s /usr/bin/newuidmap /usr/bin/newgidmap
 
-# Ensure DNS resolution works before incusd starts — it fetches instance-type
-# data from images.linuxcontainers.org on first run and needs working DNS.
+# --- DNS / network readiness ------------------------------------------
 if ! grep -q '^nameserver' /etc/resolv.conf 2>/dev/null; then
     echo "nameserver 1.1.1.1" >> /etc/resolv.conf
 fi
@@ -86,6 +91,4 @@ for i in $(seq 1 30); do
 done
 
 rc-update add incusd default
-rc-service incusd start
-
 reboot
