@@ -244,8 +244,25 @@ func (c *MachineConfig) Status() (string, int) {
 	pidFile := filepath.Join(c.Location, "alpine.pid")
 
 	if _, err := os.Stat(pidFile); err == nil {
+		var pidErr error
+		pid, pidErr = c.GetInstancePID()
+
+		if pidErr != nil {
+			// Couldn't read the pidfile (e.g. insufficient privileges) - we
+			// can't verify liveness, so fall back to assuming it's running.
+			return "Running", pid
+		}
+
+		if !processAlive(pid) {
+			// The pidfile/sock/qmp files outlived their process - most likely
+			// an unexpected host shutdown/crash left them behind. Clean up
+			// and report the instance as stopped rather than falsely Running.
+			log.Printf("%s's pidfile refers to a process that is no longer running (stale state from an unexpected shutdown); cleaning up", c.Alias)
+			c.removeRuntimeFiles()
+			return "Stopped", 0
+		}
+
 		status = "Running"
-		pid, _ = c.GetInstancePID()
 
 		// check if stopped and return "Paused"
 		execArgs := []string{"-o", "stat=", "-p", strconv.Itoa(pid)}
@@ -254,15 +271,38 @@ func (c *MachineConfig) Status() (string, int) {
 		cmd := exec.Command(execCmd, execArgs...)
 
 		out, _ := cmd.Output()
-		// if err != nil {
-		// 	log.Fatalf("error checking status of qemu process: %v\n", err)
-		// }
-		if strings.TrimSpace(string(out)) == "T" {
+		// ps stat output for a stopped process can carry extra flag
+		// characters (e.g. "TN", "T+"), so check the leading state letter
+		// rather than requiring an exact "T" match.
+		if strings.HasPrefix(strings.TrimSpace(string(out)), "T") {
 			status = "Paused"
 		}
 	}
 
 	return status, pid
+}
+
+// processAlive reports whether pid refers to a live process. EPERM (the
+// process exists but is owned by a different user) still counts as alive.
+func processAlive(pid int) bool {
+	if pid <= 0 {
+		return false
+	}
+	err := syscall.Kill(pid, 0)
+	return err == nil || errors.Is(err, syscall.EPERM)
+}
+
+// removeRuntimeFiles deletes the pid/sock/qmp files qemu creates while
+// running, logging (rather than failing) on errors other than "not found".
+func (c *MachineConfig) removeRuntimeFiles() {
+	pidFile := filepath.Join(c.Location, "alpine.pid")
+	sockFile := filepath.Join(c.Location, "alpine.sock")
+	qmpFile := filepath.Join(c.Location, "alpine.qmp")
+	for _, f := range []string{pidFile, sockFile, qmpFile} {
+		if err := os.Remove(f); err != nil && !errors.Is(err, os.ErrNotExist) {
+			log.Printf("warning: failed to remove %s: %v", f, err)
+		}
+	}
 }
 
 // Stop stops an Alpine VM
@@ -285,14 +325,7 @@ func (c *MachineConfig) Stop() error {
 				// process is already gone; fall through and clean up stale files
 			}
 
-			pidFile := filepath.Join(c.Location, "alpine.pid")
-			sockFile := filepath.Join(c.Location, "alpine.sock")
-			qmpFile := filepath.Join(c.Location, "alpine.qmp")
-			for _, f := range []string{pidFile, sockFile, qmpFile} {
-				if err := os.Remove(f); err != nil && !errors.Is(err, os.ErrNotExist) {
-					log.Printf("warning: failed to remove %s: %v", f, err)
-				}
-			}
+			c.removeRuntimeFiles()
 
 			log.Println(c.Alias + " stopped")
 			return nil
