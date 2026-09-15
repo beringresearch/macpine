@@ -486,11 +486,37 @@ func ConvertStringArrayToDhcpDataArray(dataArray [][]string) []DhcpData {
 	return data
 }
 
+// ExpiresAt parses the lease's expiry timestamp, stored by bootpd as a hex
+// Unix epoch time (e.g. "0x6a8e014a").
+func (d DhcpData) ExpiresAt() (time.Time, error) {
+	sec, err := strconv.ParseInt(strings.TrimPrefix(d.Lease, "0x"), 16, 64)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("could not parse lease value %q: %w", d.Lease, err)
+	}
+	return time.Unix(sec, 0), nil
+}
+
+// MatchHwAddress returns the most recently issued, still-valid lease for the
+// given hardware address, or nil if none is found. dhcpd_leases can retain
+// entries for a MAC address long after they've expired (e.g. from a previous
+// boot of the same VM with a static MAC), so expired entries are ignored
+// rather than treated as the instance's current address.
 func MatchHwAddress(data []DhcpData, targetHwAddress string) *DhcpData {
+	var best *DhcpData
+	var bestExpiry time.Time
+
 	for i := range data {
-		if data[i].HwAddress == targetHwAddress {
-			return &data[i]
+		if data[i].HwAddress != targetHwAddress {
+			continue
+		}
+		expiry, err := data[i].ExpiresAt()
+		if err != nil || time.Now().After(expiry) {
+			continue
+		}
+		if best == nil || expiry.After(bestExpiry) {
+			best = &data[i]
+			bestExpiry = expiry
 		}
 	}
-	return nil
+	return best
 }

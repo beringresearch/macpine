@@ -53,6 +53,21 @@ More information on `chronyd` can be found on [the Arch wiki](https://wiki.archl
     click "Allow" for incoming connection to `qemu` when prompted by macOS as loopback connections (i.e. directly from the host itself)
     will still be allowed.
 
+### Instance hangs on boot with no console output (`qemu` 11.1.1 regression)
+
+On Apple Silicon, `aarch64` instances using `vmnet` networking (`vmnet: true` in `config.yaml`) may fail to boot when using `qemu` 11.1.1: the `qemu-system-aarch64` process pins a CPU core near 100%, produces no serial console output at all, and the instance never acquires a DHCP lease or becomes reachable. This reproduces with a bare `qemu-system-aarch64` invocation (outside of `macpine`), so it is not a `macpine` bug — it appears to be a regression in `qemu` 11.1.1 itself affecting early boot/firmware on the `aarch64` `virt` machine type with HVF acceleration.
+
+Downgrading to `qemu` 10.0.3 resolves the issue. If you have an older `10.0.3` keg still available via Homebrew:
+
+```bash
+brew unlink qemu
+brew link qemu@10.0.3   # or manually symlink the qemu-system-* binaries from
+                         # /opt/homebrew/Cellar/qemu/10.0.3/bin into /opt/homebrew/bin
+brew pin qemu            # prevent `brew upgrade` from reintroducing the regression
+```
+
+If Homebrew has already removed the old keg, you can also build/install `qemu` 10.0.3 from source or an older bottle. Track upstream for a fix before unpinning.
+
 ### Other issues
 
 * If alpine is not able to resize the disk, it will error out with this message: `unable to resize disk: signal: abort trap`. Internally, it runs the command `qemu-img resize <IMAGE_LOCATION> <+SIZE>`. If the `qemu-img resize` command errors out with `dyld[...]: Library not loaded: /opt/homebrew/opt/libunistring/lib/libunistring.2.dylib` then re-installing `gettext` via `brew reinstall gettext` may resolve the issue.
