@@ -42,10 +42,9 @@ jobs:
             bin/alpine_darwin_arm64
             bin/alpine_darwin_amd64
 
-  update-homebrew-formula:
-    name: "Update Homebrew Formula"
-    needs: tagged-release
-    uses: ./.github/workflows/homebrew-bump.yml
-    with:
-      tag: ${{ github.ref_name }}
-    secrets: inherit
+      # No Homebrew formula bump step here: macpine is on Homebrew's
+      # autobump list, so BrewTestBot picks up new tags via the formula's
+      # own `livecheck` block automatically (~every 3 hours) and opens its
+      # own PR. A manual/CI-driven `brew bump-formula-pr` is rejected by
+      # Homebrew's tooling for autobump-eligible formulae, to avoid
+      # duplicate PRs racing the bot's own.
