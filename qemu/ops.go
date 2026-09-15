@@ -57,10 +57,18 @@ func (c *MachineConfig) ResolveMachineIP() error {
 		if err != nil {
 			return err
 		}
-		lip, _ := c.GetIPAddressByMac(dhcpLeasesContent)
+		candidates, _ := c.GetIPAddressCandidates(dhcpLeasesContent)
 
-		if lip != "" {
-			c.MachineIP = lip
+		found := ""
+		for _, ip := range candidates {
+			if c.reachable(ip) {
+				found = ip
+				break
+			}
+		}
+
+		if found != "" {
+			c.MachineIP = found
 			break
 		}
 		fmt.Print(".")
@@ -73,6 +81,21 @@ func (c *MachineConfig) ResolveMachineIP() error {
 	}
 
 	return os.WriteFile(filepath.Join(c.Location, "config.yaml"), config, 0644)
+}
+
+// reachable reports whether a TCP connection to ip:SSHPort can be
+// established within a short timeout. A matched DHCP lease is only trusted
+// once something is actually listening there - vmnet's dhcpd_leases file can
+// retain a stale-but-unexpired entry from a previous session alongside the
+// current one, and ICMP (ping) is unreliable under vmnet-shared NAT, so a
+// real TCP dial is the most direct confirmation available.
+func (c *MachineConfig) reachable(ip string) bool {
+	conn, err := net.DialTimeout("tcp", net.JoinHostPort(ip, c.SSHPort), 2*time.Second)
+	if err != nil {
+		return false
+	}
+	conn.Close()
+	return true
 }
 
 // Exec starts an interactive shell terminal in VM
@@ -641,18 +664,25 @@ func (c *MachineConfig) Start() error {
 // 	return ip
 // }
 
-// AssignIP obtains machine IP address from bootpd.plist. Only applicale to machines created on
-// VMNet
-func (c *MachineConfig) GetIPAddressByMac(dhcpLeasesContent []byte) (string, error) {
+// GetIPAddressCandidates returns every still-valid DHCP lease IP for this
+// instance's MAC address, most recently issued first. There can be more
+// than one - e.g. a leftover, not-yet-expired lease from a previous session
+// of the same VM alongside a freshly issued one - so callers should confirm
+// a candidate is actually reachable before trusting it.
+func (c *MachineConfig) GetIPAddressCandidates(dhcpLeasesContent []byte) ([]string, error) {
 	result := utils.ParseDhcpLeasesFile(string(dhcpLeasesContent))
 	dhcpData := utils.ConvertStringArrayToDhcpDataArray(result)
-	dhcpConfig := utils.MatchHwAddress(dhcpData, c.MACAddress)
+	candidates := utils.MatchHwAddressCandidates(dhcpData, c.MACAddress)
 
-	if dhcpConfig != nil {
-		return dhcpConfig.IpAddress, nil
-	} else {
-		return "", errors.New("no machine dhcp configuration found")
+	if len(candidates) == 0 {
+		return nil, errors.New("no machine dhcp configuration found")
 	}
+
+	ips := make([]string, len(candidates))
+	for i, d := range candidates {
+		ips[i] = d.IpAddress
+	}
+	return ips, nil
 }
 
 // Launch macpine downloads a fresh image and creates a VM directory
