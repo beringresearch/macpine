@@ -47,6 +47,46 @@ func GenerateMACAddress() (string, error) {
 	return mac, nil
 }
 
+// DetectSocketVmnet looks for a running socket_vmnet daemon
+// (https://github.com/lima-vm/socket_vmnet) and its client binary, so that
+// vmnet networking can be used without root privileges for the VM process
+// itself. It returns ok=false if either piece isn't found, in which case
+// callers should fall back to QEMU's native (root-requiring) vmnet-shared
+// netdev.
+func DetectSocketVmnet() (clientPath string, socketPath string, ok bool) {
+	socketCandidates := []string{
+		"/opt/homebrew/var/run/socket_vmnet", // Homebrew on Apple Silicon
+		"/usr/local/var/run/socket_vmnet",    // Homebrew on Intel
+		"/var/run/socket_vmnet",              // manual/MacPorts install
+	}
+	for _, s := range socketCandidates {
+		fi, err := os.Stat(s)
+		if err != nil || fi.Mode()&os.ModeSocket == 0 {
+			continue
+		}
+		socketPath = s
+		break
+	}
+	if socketPath == "" {
+		return "", "", false
+	}
+
+	clientCandidates := []string{
+		"/opt/homebrew/opt/socket_vmnet/bin/socket_vmnet_client",
+		"/usr/local/opt/socket_vmnet/bin/socket_vmnet_client",
+	}
+	for _, c := range clientCandidates {
+		if fi, err := os.Stat(c); err == nil && !fi.IsDir() {
+			return c, socketPath, true
+		}
+	}
+	if p, err := exec.LookPath("socket_vmnet_client"); err == nil {
+		return p, socketPath, true
+	}
+
+	return "", "", false
+}
+
 // Retry retries a function
 func Retry(attempts int, sleep time.Duration, f func() error) (err error) {
 	for i := 0; i < attempts; i++ {
