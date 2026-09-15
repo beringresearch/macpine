@@ -440,8 +440,15 @@ func (c *MachineConfig) Start() error {
 		c.MACAddress = macAddress
 	}
 
+	socketVmnetClient, socketVmnetSocket, useSocketVmnet := "", "", false
+
 	if c.VMNet {
-		networkDevice = "vmnet-shared,id=net0"
+		socketVmnetClient, socketVmnetSocket, useSocketVmnet = utils.DetectSocketVmnet()
+		if useSocketVmnet {
+			networkDevice = "socket,id=net0,fd=3"
+		} else {
+			networkDevice = "vmnet-shared,id=net0"
+		}
 	}
 
 	// Only parse ports of using qemu's default slirp network
@@ -549,7 +556,13 @@ func (c *MachineConfig) Start() error {
 		qemuArgs = append(qemuArgs, mountArgs...)
 	}
 
-	cmd := exec.Command(qemuCmd, qemuArgs...)
+	var cmd *exec.Cmd
+	if useSocketVmnet {
+		log.Println("using socket_vmnet for unprivileged vmnet networking")
+		cmd = exec.Command(socketVmnetClient, append([]string{socketVmnetSocket, qemuCmd}, qemuArgs...)...)
+	} else {
+		cmd = exec.Command(qemuCmd, qemuArgs...)
+	}
 
 	cmd.Stdout = os.Stdout
 

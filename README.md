@@ -51,7 +51,7 @@ Macpine depends on QEMU >= 7.22.0:
 brew install qemu
 ```
 
-> **Known issue:** QEMU 11.1.1 has a regression that can hang `aarch64` instances on boot when using `vmnet` networking (see [Troubleshooting](https://beringresearch.github.io/macpine/troubleshooting/)). If you hit this, pin QEMU to 10.0.3 until it's fixed upstream.
+See [Requirements](#requirements) below for a known QEMU regression and optional passwordless `vmnet` setup.
 
 ## Install from MacPorts
 
@@ -72,6 +72,23 @@ make            # compiles the project into a local bin/ directory
 make install    # installs binaries to /usr/local/bin
                 # PREFIX=/some/other/path make install installs to /some/other/path
 ```
+
+## Requirements
+
+* macOS (Apple Silicon or Intel) and QEMU >= 7.22.0, installed automatically by `brew install macpine` or manually via `brew install qemu`.
+* **Known issue:** QEMU 11.1.1 has a regression that can hang `aarch64` instances on boot when using `vmnet` networking (see [Troubleshooting](https://beringresearch.github.io/macpine/troubleshooting/)). If you hit this, pin QEMU to 10.0.3 until it's fixed upstream.
+* Instances with bridged (`vmnet`) networking require `sudo` for `alpine start`/`stop`/`ssh`/`exec`, **unless** [`socket_vmnet`](https://github.com/lima-vm/socket_vmnet) is installed and running.
+
+### Optional: bridged networking without `sudo`
+
+By default, `vmnet` networking (a real, LAN-reachable IP for the instance) requires root, because QEMU calls macOS's `Vmnet.framework` directly. Installing [`socket_vmnet`](https://github.com/lima-vm/socket_vmnet) removes that requirement: it does the one privileged step once, in the background, and `macpine` talks to it over a Unix socket instead.
+
+```bash
+brew install socket_vmnet
+sudo brew services start socket_vmnet   # one-time; runs persistently in the background
+```
+
+`macpine` detects a running `socket_vmnet` daemon automatically. If it isn't found, `macpine` transparently falls back to QEMU's native `vmnet-shared` networking (requiring `sudo`, as before).
 
 # Getting Started
 
