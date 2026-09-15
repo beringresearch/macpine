@@ -43,47 +43,48 @@ type MachineConfig struct {
 	Tags         []string `yaml:"tags"`
 }
 
+// ResolveMachineIP looks up the instance's DHCP-assigned IP address by MAC
+// address and persists it to config.yaml. It is a no-op unless VMNet is
+// enabled and MachineIP is unset ("" or "localhost").
+func (c *MachineConfig) ResolveMachineIP() error {
+	if !c.VMNet || (c.MachineIP != "" && c.MachineIP != "localhost") {
+		return nil
+	}
+
+	log.Println("getting instance IP address from DHCP leases")
+	for {
+		dhcpLeasesContent, err := os.ReadFile("/var/db/dhcpd_leases")
+		if err != nil {
+			return err
+		}
+		lip, _ := c.GetIPAddressByMac(dhcpLeasesContent)
+
+		if lip != "" {
+			c.MachineIP = lip
+			break
+		}
+		fmt.Print(".")
+		time.Sleep(4 * time.Second)
+	}
+
+	config, err := yaml.Marshal(&c)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(filepath.Join(c.Location, "config.yaml"), config, 0644)
+}
+
 // Exec starts an interactive shell terminal in VM
 func (c *MachineConfig) Exec(cmd string, root bool) (string, error) {
 	if cmd == "" {
 		return "", nil
 	}
-	ip := c.MachineIP
 
-	if c.VMNet {
-		if ip == "localhost" || ip == "" {
-			log.Println("getting instance IP address from DHCP leases")
-			for {
-				dhcpLeasesContent, err := os.ReadFile("/var/db/dhcpd_leases")
-				if err != nil {
-					return "", err
-				}
-				lip, _ := c.GetIPAddressByMac(dhcpLeasesContent)
-				//ip = c.GetIPAddressFromMachine()
-				if lip != "" {
-					c.MachineIP = lip
-					break
-				}
-				fmt.Print(".")
-				time.Sleep(4 * time.Second)
-			}
-
-			config, err := yaml.Marshal(&c)
-
-			if err != nil {
-				c.Stop()
-				c.CleanPIDFile()
-				return "", err
-			}
-
-			err = os.WriteFile(filepath.Join(c.Location, "config.yaml"), config, 0644)
-			if err != nil {
-				c.Stop()
-				c.CleanPIDFile()
-				return "", err
-			}
-		}
-
+	if err := c.ResolveMachineIP(); err != nil {
+		c.Stop()
+		c.CleanPIDFile()
+		return "", err
 	}
 
 	host := c.MachineIP + ":" + c.SSHPort
@@ -275,15 +276,23 @@ func (c *MachineConfig) Stop() error {
 			}
 
 			if err := p.Signal(syscall.SIGKILL); err != nil {
-				return err
+				if errors.Is(err, syscall.EPERM) {
+					return fmt.Errorf("insufficient privileges to stop `%s` (its process is owned by a different user) — try again with sudo", c.Alias)
+				}
+				if !errors.Is(err, syscall.ESRCH) && !errors.Is(err, os.ErrProcessDone) {
+					return err
+				}
+				// process is already gone; fall through and clean up stale files
 			}
 
 			pidFile := filepath.Join(c.Location, "alpine.pid")
 			sockFile := filepath.Join(c.Location, "alpine.sock")
 			qmpFile := filepath.Join(c.Location, "alpine.qmp")
-			os.Remove(pidFile)
-			os.Remove(sockFile)
-			os.Remove(qmpFile)
+			for _, f := range []string{pidFile, sockFile, qmpFile} {
+				if err := os.Remove(f); err != nil && !errors.Is(err, os.ErrNotExist) {
+					log.Printf("warning: failed to remove %s: %v", f, err)
+				}
+			}
 
 			log.Println(c.Alias + " stopped")
 			return nil
@@ -517,6 +526,12 @@ func (c *MachineConfig) Start() error {
 	log.Println("booting " + c.Alias)
 	err = cmd.Run()
 	if err != nil {
+		c.Stop()
+		c.CleanPIDFile()
+		return err
+	}
+
+	if err := c.ResolveMachineIP(); err != nil {
 		c.Stop()
 		c.CleanPIDFile()
 		return err
@@ -842,7 +857,11 @@ func (c *MachineConfig) CreateQemuDiskImage(imageName string) error {
 func (c *MachineConfig) CleanPIDFile() {
 	pidFile := filepath.Join(c.Location, "alpine.pid")
 	if err := os.Remove(pidFile); err != nil && !errors.Is(err, os.ErrNotExist) {
-		log.Fatalf("error deleting pidfile at %s. Manually delete it before proceeding.", pidFile)
+		if errors.Is(err, syscall.EPERM) {
+			log.Printf("warning: insufficient privileges to remove pidfile at %s (owned by a different user) — remove it with sudo, or rerun the command with sudo", pidFile)
+			return
+		}
+		log.Printf("warning: error deleting pidfile at %s: %v. Manually delete it before proceeding.", pidFile, err)
 	}
 }
 

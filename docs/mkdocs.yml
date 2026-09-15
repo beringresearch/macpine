@@ -30,6 +30,7 @@
       - Instance Security: hardening.md
       - Create an Incus container in Macpine: incus_macpine.md
       - Create an LXD container in Macpine: lxd_macpine.md
+    - Troubleshooting: troubleshooting.md
 
  #theme: material
 

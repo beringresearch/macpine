@@ -51,6 +51,8 @@ Macpine depends on QEMU >= 7.22.0:
 brew install qemu
 ```
 
+> **Known issue:** QEMU 11.1.1 has a regression that can hang `aarch64` instances on boot when using `vmnet` networking (see [Troubleshooting](https://beringresearch.github.io/macpine/troubleshooting/)). If you hit this, pin QEMU to 10.0.3 until it's fixed upstream.
+
 ## Install from MacPorts
 
 You can also install `macpine` via [MacPorts](https://www.macports.org):
