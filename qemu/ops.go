@@ -43,6 +43,20 @@ type MachineConfig struct {
 	Tags         []string `yaml:"tags"`
 }
 
+// resolveIPHintDelay is how long ResolveMachineIP waits, after seeing at
+// least one DHCP lease candidate that isn't reachable, before printing a
+// diagnostic hint. A var (not a const) so tests can shorten it.
+var resolveIPHintDelay = 30 * time.Second
+
+// shouldShowResolveIPHint reports whether ResolveMachineIP's polling loop
+// should print its diagnostic hint: only once, and only once we've actually
+// seen a DHCP lease for the instance's MAC that turned out to be
+// unreachable (as opposed to still waiting for the guest to request one at
+// all, which is normal early in boot).
+func shouldShowResolveIPHint(sawCandidate, hintShown bool, elapsed time.Duration) bool {
+	return sawCandidate && !hintShown && elapsed > resolveIPHintDelay
+}
+
 // ResolveMachineIP looks up the instance's DHCP-assigned IP address by MAC
 // address and persists it to config.yaml. It is a no-op unless VMNet is
 // enabled and MachineIP is unset ("" or "localhost").
@@ -52,12 +66,18 @@ func (c *MachineConfig) ResolveMachineIP() error {
 	}
 
 	log.Println("getting instance IP address from DHCP leases")
+	start := time.Now()
+	sawCandidate := false
+	hintShown := false
 	for {
 		dhcpLeasesContent, err := os.ReadFile("/var/db/dhcpd_leases")
 		if err != nil {
 			return err
 		}
 		candidates, _ := c.GetIPAddressCandidates(dhcpLeasesContent)
+		if len(candidates) > 0 {
+			sawCandidate = true
+		}
 
 		found := ""
 		for _, ip := range candidates {
@@ -71,6 +91,17 @@ func (c *MachineConfig) ResolveMachineIP() error {
 			c.MachineIP = found
 			break
 		}
+
+		if shouldShowResolveIPHint(sawCandidate, hintShown, time.Since(start)) {
+			fmt.Println()
+			log.Println("still unable to reach a DHCP-assigned address for " + c.Alias +
+				" - if this instance used to connect fine, check for VPN/security software that " +
+				"may be filtering local network traffic (e.g. `systemextensionsctl list`); " +
+				"uninstalling such software doesn't always remove its network extension, which can " +
+				"keep filtering traffic until it's explicitly deactivated and the machine rebooted")
+			hintShown = true
+		}
+
 		fmt.Print(".")
 		time.Sleep(4 * time.Second)
 	}

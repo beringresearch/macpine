@@ -53,6 +53,20 @@ More information on `chronyd` can be found on [the Arch wiki](https://wiki.archl
     click "Allow" for incoming connection to `qemu` when prompted by macOS as loopback connections (i.e. directly from the host itself)
     will still be allowed.
 
+### Instance gets a DHCP address but can't be reached (VPN / network extension filtering)
+
+If `alpine start`/`ssh`/`exec` resolves a `vmnet` IP address for the instance (or hangs for a long time on "getting instance IP address from DHCP leases" before eventually printing a hint about this), but the connection still never succeeds even though the guest itself finished booting and started `sshd` — the most likely cause is a VPN client or endpoint-security tool's **network extension** filtering or tunneling local network traffic on a per-app basis.
+
+This can affect one terminal app's processes (e.g. iTerm2) while leaving others (a different app, or the instance's own guest-side traffic) completely unaffected, which makes it look like a `macpine`/networking bug rather than a host-level one. A key symptom: a raw connection test run from a *different* process/app succeeds instantly, while the same test from your actual terminal fails with `No route to host`.
+
+**Important**: uninstalling the offending app (FortiClient, and similar corporate VPN/EDR tools, are common culprits) does **not** remove its System Extension — those are separate, persistent, kernel-level components. To fully deactivate one:
+
+1. Check what's active: `systemextensionsctl list`
+2. Remove any relevant entries (VPN/network filter extensions) via **System Settings → General → Login Items & Extensions → Network Extensions**.
+3. Reboot — network extensions can keep their kernel-level hooks alive until the network stack reinitializes, even after being deactivated in System Settings.
+
+Verify with `systemextensionsctl list` again after rebooting to confirm the extension is actually gone before retrying.
+
 ### Instance hangs on boot with no console output (`qemu` 11.1.1 regression)
 
 On Apple Silicon, `aarch64` instances using `vmnet` networking (`vmnet: true` in `config.yaml`) may fail to boot when using `qemu` 11.1.1: the `qemu-system-aarch64` process pins a CPU core near 100%, produces no serial console output at all, and the instance never acquires a DHCP lease or becomes reachable. This reproduces with a bare `qemu-system-aarch64` invocation (outside of `macpine`), so it is not a `macpine` bug — it appears to be a regression in `qemu` 11.1.1 itself affecting early boot/firmware on the `aarch64` `virt` machine type with HVF acceleration.
