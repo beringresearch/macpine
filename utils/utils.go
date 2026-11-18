@@ -537,6 +537,21 @@ func (d DhcpData) ExpiresAt() (time.Time, error) {
 	return time.Unix(sec, 0), nil
 }
 
+// normalizeHwAddress pads each octet of a MAC address to two hex digits.
+// bootpd drops leading zeros when it writes hw_address to dhcpd_leases
+// ("56:a:3b:0:e:f1"), while macpine stores them padded ("56:0a:3b:00:0e:f1").
+func normalizeHwAddress(hwAddress string) string {
+	octets := strings.Split(strings.ToLower(hwAddress), ":")
+	for i, octet := range octets {
+		value, err := strconv.ParseUint(octet, 16, 8)
+		if err != nil {
+			return strings.ToLower(hwAddress)
+		}
+		octets[i] = fmt.Sprintf("%02x", value)
+	}
+	return strings.Join(octets, ":")
+}
+
 // MatchHwAddressCandidates returns every still-valid (unexpired) lease for
 // the given hardware address, most recently issued first. dhcpd_leases can
 // retain more than one entry for a MAC address - e.g. a leftover,
@@ -546,9 +561,10 @@ func (d DhcpData) ExpiresAt() (time.Time, error) {
 // than trusting only the single latest-expiry one.
 func MatchHwAddressCandidates(data []DhcpData, targetHwAddress string) []DhcpData {
 	var candidates []DhcpData
+	target := normalizeHwAddress(targetHwAddress)
 
 	for i := range data {
-		if data[i].HwAddress != targetHwAddress {
+		if normalizeHwAddress(data[i].HwAddress) != target {
 			continue
 		}
 		expiry, err := data[i].ExpiresAt()
