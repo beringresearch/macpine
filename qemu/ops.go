@@ -98,6 +98,18 @@ func (c *MachineConfig) reachable(ip string) bool {
 	return true
 }
 
+// dialHint returns extra guidance for connection errors that are commonly
+// caused by the host environment rather than the VM. On macOS, a terminal app
+// without the Local Network privacy permission gets "no route to host" for
+// LAN addresses such as the vmnet range, even though the VM is healthy.
+func dialHint(err error) string {
+	if runtime.GOOS == "darwin" && errors.Is(err, syscall.EHOSTUNREACH) {
+		return ": the VM may be running but macOS is blocking this terminal app from the local network; " +
+			"enable it in System Settings > Privacy & Security > Local Network, then restart the app"
+	}
+	return ""
+}
+
 // Exec starts an interactive shell terminal in VM
 func (c *MachineConfig) Exec(cmd string, root bool) (string, error) {
 	if cmd == "" {
@@ -161,9 +173,15 @@ func (c *MachineConfig) Exec(cmd string, root bool) (string, error) {
 			break
 		}
 		if i == 10 {
-			return "", err
+			return "", fmt.Errorf("could not connect to %s: %w%s", host, err, dialHint(err))
 		}
 
+		// Show the real reason on the first failure rather than only dots, so
+		// a persistent problem (e.g. macOS blocking local network access) is
+		// not mistaken for a slow boot.
+		if i == 0 {
+			fmt.Fprintf(os.Stderr, "ssh to %s failed (%v)%s; retrying", host, err, dialHint(err))
+		}
 		fmt.Print(".")
 		time.Sleep(4 * time.Second)
 	}

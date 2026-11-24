@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/beringresearch/macpine/host"
@@ -42,14 +43,19 @@ func shell(cmd *cobra.Command, args []string) {
 		log.Fatalf("%s is not running", machineConfig.Alias)
 	}
 
-	for {
+	const maxAttempts = 3
+	for attempt := 1; ; attempt++ {
 		err = host.Exec(machineConfig, "bash")
 
 		if err == nil {
 			break
 		}
 
-		fmt.Print(".")
+		if attempt == maxAttempts {
+			log.Fatalf("\n%v", err)
+		}
+
+		fmt.Fprintf(os.Stderr, "\n%v; retrying (%d/%d)\n", err, attempt, maxAttempts)
 		time.Sleep(4 * time.Second)
 	}
 
