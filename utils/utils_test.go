@@ -60,3 +60,22 @@ func TestMatchHwAddressCandidatesNoMatch(t *testing.T) {
 		t.Fatalf("expected no candidates, got %+v", candidates)
 	}
 }
+
+// bootpd writes each octet of hw_address with %x, so octets below 0x10
+// lose their leading zero in /var/db/dhcpd_leases, while
+// GenerateMACAddress pads every octet to two digits.
+func TestMatchHwAddressCandidatesBootpdFormat(t *testing.T) {
+	expiry := leaseHex(time.Hour)
+	leases := "{\n\tname=alpine\n\tip_address=192.168.64.7\n\thw_address=1,56:a:3b:0:e:f1\n\tidentifier=1,56:a:3b:0:e:f1\n\tlease=" + expiry + "\n}\n" +
+		"{\n\tname=other\n\tip_address=192.168.64.8\n\thw_address=1,56:a0:3b:0:e:f1\n\tidentifier=1,56:a0:3b:0:e:f1\n\tlease=" + expiry + "\n}\n"
+
+	data := ConvertStringArrayToDhcpDataArray(ParseDhcpLeasesFile(leases))
+	candidates := MatchHwAddressCandidates(data, "56:0a:3b:00:0e:f1")
+
+	if len(candidates) != 1 {
+		t.Fatalf("expected 1 candidate, got %d: %+v", len(candidates), candidates)
+	}
+	if candidates[0].IpAddress != "192.168.64.7" {
+		t.Errorf("expected 192.168.64.7, got %s", candidates[0].IpAddress)
+	}
+}
